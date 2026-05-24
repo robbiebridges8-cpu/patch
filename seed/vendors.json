@@ -3037,7 +3037,7 @@
       "Best chips I've ever had. The double-fry thing works. \u2014 Ian, corporate summer party",
       "Fed 250 at a school f\u00eate without breaking a sweat. Proper operation. \u2014 Kim, school f\u00eate"
     ],
-    "booking_notes": "Sustainable MSC-certified fish. Gluten-free batter available on request. Kids' portions available. We leave the site spotless \u2014 no oil smells."
+    "booking_notes": "Sustainable MSC-certified fish. Gluten-free batter available on request. Small portions available. We leave the site spotless \u2014 no oil smells."
   },
   {
     "id": "def01234-5678-49ab-cdef-01234567890a",
@@ -3713,7 +3713,7 @@
       "dessert vans"
     ],
     "short_description": "Mobile espresso bar with pastries from a Hackney bakery. Coffee that actually tastes like coffee.",
-    "long_description": "We're a no-nonsense coffee cart. Good beans (currently on a Kenyan single origin from Origin), good milk (Brades Farm \u2014 it steams like a dream), good equipment (Linea Mini), and baristas who've worked in shops you've actually heard of. We don't do flavoured syrups or complicated menus \u2014 we do espresso, flat whites, filter, and a very good hot chocolate for the kids and the cold-handed. The pastry situation is a collaboration with a bakery in Clapton: almond croissants, pain au chocolat, and a cardamom bun that sells out first. We show up, we make coffee, and we leave. Simple.",
+    "long_description": "We're a no-nonsense coffee cart. Good beans (currently on a Kenyan single origin from Origin), good milk (Brades Farm \u2014 it steams like a dream), good equipment (Linea Mini), and baristas who've worked in shops you've actually heard of. We don't do flavoured syrups or complicated menus \u2014 we do espresso, flat whites, filter, and a very good hot chocolate for the cold-handed. The pastry situation is a collaboration with a bakery in Clapton: almond croissants, pain au chocolat, and a cardamom bun that sells out first. We show up, we make coffee, and we leave. Simple.",
     "base_location": "Hackney Central",
     "travel_radius_miles": 10,
     "price_range": "\u00a3",
@@ -3950,7 +3950,7 @@
     "reviews_sample": [
       "Samosa bar at our Diwali party was the best decision. 15 flavours and people tried every one. \u2014 Anish, Diwali party",
       "Drop-off platters for our office \u2014 200 samosas gone in 20 minutes. Ordering double next time. \u2014 Kate, corporate",
-      "The chocolate samosa is insane. My kids ask for them instead of birthday cake. \u2014 Deepa, birthday"
+      "The chocolate samosa is insane. People ask for them instead of birthday cake. \u2014 Deepa, birthday"
     ],
     "booking_notes": "Drop-off available with 48-hour notice. Live frying station is the premium experience. Halal certified. Can do mini samosas for canap\u00e9 service. Corporate accounts available for regular orders."
   },

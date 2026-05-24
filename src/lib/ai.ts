@@ -31,17 +31,17 @@ export async function aiSearch(query: string): Promise<AIResult> {
     max_tokens: 1024,
     system: `${SCHEMA}
 
-You convert parent search queries into SQL. Generate a SELECT that finds matching vendors. Rules:
+You convert event catering search queries into SQL. Generate a SELECT that finds matching mobile food vendors and caterers. Rules:
 - Only SELECT, never mutations
 - Always filter status = 'live'
 - Return: v.id, v.slug, v.name, v.description, v.base_postcode, v.price_from, v.price_to, v.rating_avg, v.review_count, v.bio
-- JOIN vendor_services/tags/vendor_coverage_areas as needed
+- Use ILIKE and array operators to filter on primary_category, vibe_tags, occasion_fit, dietary_options, signature_items, description
 - Use DISTINCT ON (v.id) or GROUP BY to avoid duplicates
 - Order by relevance (rating, review_count, price fit)
 - LIMIT 15
-- Also extract "chips" — key filters understood from the query
+- Also extract "chips" — key filters understood from the query (e.g. "Pizza", "Wedding", "Under £1000", "Vegan")
 
-Respond with ONLY valid JSON, no markdown: {"sql": "SELECT ...", "chips": ["Age 5", "SW11", ...]}`,
+Respond with ONLY valid JSON, no markdown: {"sql": "SELECT ...", "chips": ["Pizza", "Wedding", ...]}`,
     messages: [{ role: "user", content: query }],
   });
 
@@ -92,16 +92,16 @@ Respond with ONLY valid JSON, no markdown: {"sql": "SELECT ...", "chips": ["Age 
   const narrateResponse = await anthropic.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 2048,
-    system: `You are Patch, an AI that helps parents find kids' party vendors in SW London. Given a parent's search and matching vendors, you:
+    system: `You are Patch, an AI that helps people find mobile food vendors and caterers in London for their events. Given a search query and matching vendors, you:
 
-1. Write a "summary" (2-3 sentences) — contextualise results, be opinionated, sound like a knowledgeable friend not a search engine.
-2. For each vendor, write a "match_note" (1-2 sentences) explaining fit. Use <strong> for key highlights. Be specific about ages, prices, why they work for THIS party.
-3. Set "is_adjacent": true for vendors that don't perfectly match but are worth considering (e.g. a face painter when they asked for entertainment = good add-on).
+1. Write a "summary" (2-3 sentences) — contextualise results, be opinionated, sound like a knowledgeable friend not a search engine. Reference the event type, guest count, budget if mentioned.
+2. For each vendor, write a "match_note" (1-2 sentences) explaining fit. Use <strong> for key highlights. Be specific about pricing, signature dishes, event size, why they work for THIS event.
+3. Set "is_adjacent": true for vendors that don't perfectly match but are worth considering (e.g. a dessert vendor when they asked for main food = good add-on, or a slightly different cuisine that fits the vibe).
 4. Rank by fit (rank 1 = best).
 
 Respond with ONLY valid JSON, no markdown:
 {"summary": "...", "vendors": [{"vendor_id": "uuid", "match_note": "...", "rank": 1, "is_adjacent": false}, ...]}`,
-    messages: [{ role: "user", content: `Parent searched: "${query}"\n\nVendors found:\n${vendorList}` }],
+    messages: [{ role: "user", content: `Client searched: "${query}"\n\nVendors found:\n${vendorList}` }],
   });
 
   try {
