@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Patch — kids' party vendors in SW London</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFAF7;
+    --surface: #FFFFFF;
+    --navy: #0E2444;
+    --navy-2: #1B3A66;
+    --navy-3: #4A6184;
+    --text: #1A1A1A;
+    --text-2: #5C6470;
+    --text-3: #8E96A1;
+    --rule: #E5E5E0;
+    --rule-2: #D4D4CD;
+    --accent: #B5891C;          /* muted gold — punctuation only */
+    --accent-soft: #F4ECD4;
+    --good: #2D6A4F;
+    --good-soft: #D4E6DC;
+    --warn-soft: #F4E8D4;
+    --warn: #8C6516;
+    --shadow: 0 2px 8px rgba(14, 36, 68, 0.06);
+    --shadow-h: 0 4px 14px rgba(14, 36, 68, 0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; font-size: inherit; }
+  img { display: block; max-width: 100%; }
+
+  ::selection { background: var(--navy); color: white; }
+
+  /* ─────────── HEADER ─────────── */
+  header {
+    background: var(--navy);
+    color: white;
+    padding: 18px 0;
+  }
+  .header-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: white;
+    flex-shrink: 0;
+  }
+  .logo-mark {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    color: var(--navy);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .logo-loc {
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    font-weight: 400;
+    margin-left: 4px;
+    padding-left: 10px;
+    border-left: 1px solid rgba(255,255,255,0.2);
+  }
+  .nav-links {
+    display: flex;
+    gap: 28px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.8);
+    font-weight: 400;
+  }
+  .nav-links a:hover { color: white; }
+  .nav-cta {
+    padding: 8px 14px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 4px;
+    font-size: 13px;
+    color: white;
+    font-weight: 500;
+  }
+  .nav-cta:hover { background: rgba(255,255,255,0.08); }
+
+  /* ─────────── SEARCH ROW ─────────── */
+  .search-row {
+    background: var(--navy);
+    padding: 0 0 32px;
+  }
+  .search-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+  .search-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+  .search-bar {
+    background: var(--surface);
+    border-radius: 6px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+  }
+  .search-input {
+    flex: 1;
+    padding: 16px 20px;
+    font-size: 16px;
+    font-family: inherit;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    min-width: 0;
+  }
+  .search-input::placeholder { color: var(--text-3); }
+  .search-btn {
+    background: var(--accent);
+    color: var(--navy);
+    padding: 12px 22px;
+    margin: 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .search-btn:hover { background: #9F7715; }
+  .search-btn svg { width: 14px; height: 14px; }
+
+  /* ─────────── BREADCRUMB / QUERY ECHO ─────────── */
+  .crumb-bar {
+    border-bottom: 1px solid var(--rule);
+    padding: 16px 0;
+    background: var(--surface);
+  }
+  .crumb-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .crumb-inner .sep { color: var(--text-3); }
+  .crumb-inner a:hover { color: var(--navy); }
+  .crumb-current { color: var(--navy); font-weight: 500; }
+
+  /* ─────────── PARSED CHIPS ─────────── */
+  .parsed-row {
+    background: var(--surface);
+    border-bottom: 1px solid var(--rule);
+    padding: 14px 0;
+  }
+  .parsed-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .parsed-label {
+    font-size: 12px;
+    color: var(--text-3);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-right: 4px;
+  }
+  .chip {
+    background: var(--surface);
+    border: 1px solid var(--rule-2);
+    border-radius: 4px;
+    padding: 5px 11px;
+    font-size: 13px;
+    color: var(--text);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+  }
+  .chip-x {
+    color: var(--text-3);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .chip-x:hover { color: var(--navy); }
+
+  /* ─────────── MAIN LAYOUT ─────────── */
+  main {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 28px;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 36px;
+    align-items: start;
+  }
+
+  /* ─────────── AI NOTE ─────────── */
+  .ai-note {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--navy);
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .ai-note-tag {
+    background: var(--navy);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .ai-note-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .ai-note-text strong { font-weight: 600; color: var(--navy); }
+
+  /* ─────────── RESULTS HEADER ─────────── */
+  .results-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .results-count {
+    font-size: 14px;
+    color: var(--text-2);
+  }
+  .results-count strong { color: var(--navy); font-weight: 600; }
+  .sort {
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border: 1px solid var(--rule-2);
+    border-radius: 4px;
+    background: var(--surface);
+  }
+  .sort:hover { border-color: var(--navy-3); }
+  .sort svg { width: 10px; height: 10px; }
+
+  /* ─────────── VENDOR ROW ─────────── */
+  .vendor {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    margin-bottom: 14px;
+    display: grid;
+    grid-template-columns: 260px 1fr 200px;
+    overflow: hidden;
+    transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
+    cursor: pointer;
+  }
+  .vendor:hover {
+    box-shadow: var(--shadow-h);
+    border-color: var(--rule-2);
+  }
+  .vendor.featured {
+    border-color: var(--navy);
+    border-left: 4px solid var(--navy);
+  }
+
+  .vendor-photo-wrap {
+    position: relative;
+    height: 100%;
+    min-height: 220px;
+    background: var(--bg);
+  }
+  .vendor-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .photo-count {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(14, 36, 68, 0.85);
+    color: white;
+    padding: 4px 9px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .photo-count svg { width: 11px; height: 11px; }
+  .photo-tag {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: var(--navy);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .vendor-body {
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .vendor-cat {
+    font-size: 11px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .vendor-name {
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--navy);
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+    line-height: 1.25;
+  }
+  .vendor-meta {
+    font-size: 13px;
+    color: var(--text-2);
+    margin-bottom: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+  .vendor-meta .dot { color: var(--text-3); }
+  .vendor-meta .verified {
+    color: var(--good);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .vendor-meta .verified svg { width: 11px; height: 11px; }
+
+  .vendor-match {
+    background: var(--accent-soft);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+    margin-bottom: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .vendor-match-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    margin-top: 1px;
+  }
+  .vendor-match strong { font-weight: 600; color: var(--warn); }
+
+  .vendor-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: auto;
+  }
+  .vendor-tag {
+    font-size: 12px;
+    padding: 3px 9px;
+    background: var(--bg);
+    color: var(--text-2);
+    border-radius: 3px;
+    border: 1px solid var(--rule);
+    font-weight: 400;
+  }
+  .vendor-tag.good {
+    background: var(--good-soft);
+    color: var(--good);
+    border-color: transparent;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .vendor-tag.good svg { width: 10px; height: 10px; }
+
+  /* ─────────── PRICE COLUMN ─────────── */
+  .vendor-price-col {
+    border-left: 1px solid var(--rule);
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: linear-gradient(to bottom, var(--surface), #FBFBF8);
+  }
+  .price-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 14px;
+    font-size: 13px;
+  }
+  .price-rating .stars {
+    color: var(--accent);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .price-rating .stars svg { width: 12px; height: 12px; fill: currentColor; }
+  .price-rating .count { color: var(--text-2); }
+  .price-from {
+    font-size: 11px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .price-amount {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .price-unit {
+    font-size: 12px;
+    color: var(--text-2);
+    margin-bottom: 14px;
+  }
+  .price-cta {
+    background: var(--navy);
+    color: white;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 13px;
+    text-align: center;
+    transition: background 0.15s;
+  }
+  .price-cta:hover { background: var(--navy-2); }
+  .price-secondary {
+    margin-top: 8px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-2);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-color: var(--rule-2);
+  }
+  .price-secondary:hover { color: var(--navy); text-decoration-color: var(--navy); }
+
+  /* ─────────── SIDEBAR ─────────── */
+  .sidebar {
+    position: sticky;
+    top: 28px;
+  }
+  .side-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  .side-title {
+    font-size: 11px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .side-title svg { width: 12px; height: 12px; }
+
+  .side-filter {
+    margin-bottom: 18px;
+  }
+  .side-filter:last-child { margin-bottom: 0; }
+  .side-filter-label {
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .side-filter-value {
+    font-size: 12px;
+    color: var(--text-2);
+    font-weight: 400;
+  }
+  .side-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 13px;
+    color: var(--text-2);
+    cursor: pointer;
+  }
+  .side-checkbox:hover { color: var(--navy); }
+  .side-checkbox input {
+    accent-color: var(--navy);
+    margin: 0;
+  }
+  .side-checkbox.checked { color: var(--text); }
+  .side-count {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-left: auto;
+  }
+
+  .followups-card {
+    background: var(--navy);
+    color: white;
+    padding: 18px;
+    border-radius: 6px;
+  }
+  .followups-card .side-title { color: rgba(255,255,255,0.6); margin-bottom: 14px; }
+  .followup {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.9);
+    line-height: 1.4;
+    background: rgba(255,255,255,0.06);
+    margin-bottom: 6px;
+    transition: background 0.15s;
+  }
+  .followup:hover { background: rgba(255,255,255,0.12); color: white; }
+  .followup:last-child { margin-bottom: 0; }
+  .followup .arrow {
+    color: var(--accent);
+    margin-right: 6px;
+    font-weight: 600;
+  }
+
+  /* ─────────── FOOTER ─────────── */
+  footer {
+    border-top: 1px solid var(--rule);
+    padding: 28px;
+    background: var(--surface);
+    font-size: 13px;
+    color: var(--text-2);
+    margin-top: 40px;
+  }
+  .footer-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .footer-inner a { color: var(--text-2); }
+  .footer-inner a:hover { color: var(--navy); }
+
+  /* ─────────── RESPONSIVE ─────────── */
+  @media (max-width: 1020px) {
+    main { grid-template-columns: 1fr; }
+    .sidebar { position: static; display: none; }
+  }
+  @media (max-width: 760px) {
+    .header-inner { gap: 12px; }
+    .nav-links { display: none; }
+    .logo-loc { display: none; }
+    .vendor { grid-template-columns: 1fr; }
+    .vendor-photo-wrap { min-height: 200px; max-height: 200px; }
+    .vendor-price-col { border-left: none; border-top: 1px solid var(--rule); flex-direction: row; align-items: center; gap: 16px; }
+    .price-rating { margin-bottom: 0; }
+    .price-cta { padding: 10px 18px; }
+    .price-from, .price-amount, .price-unit { margin-bottom: 0; display: inline; }
+    .price-amount { margin-right: 4px; }
+    .price-block { flex: 1; }
+    .crumb-inner { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <a href="#" class="logo">
+      <span class="logo-mark">P</span>
+      <span>Patch</span>
+      <span class="logo-loc">South West London</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#">How it works</a>
+      <a href="#">For vendors</a>
+      <a href="#">Sign in</a>
+      <a href="#" class="nav-cta">List your service</a>
+    </nav>
+  </div>
+</header>
+
+<!-- SEARCH -->
+<section class="search-row">
+  <div class="search-inner">
+    <div class="search-label">Tell us what you're after</div>
+    <div class="search-bar">
+      <input type="text" class="search-input" value="Something fun for a 5-year-old's birthday in SW11, ~12 kids, budget £400, garden, something active" />
+      <button class="search-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        Search again
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- BREADCRUMB -->
+<div class="crumb-bar">
+  <div class="crumb-inner">
+    <a href="#">South West London</a>
+    <span class="sep">/</span>
+    <a href="#">Kids' parties</a>
+    <span class="sep">/</span>
+    <span class="crumb-current">SW11 Battersea</span>
+  </div>
+</div>
+
+<!-- PARSED -->
+<div class="parsed-row">
+  <div class="parsed-inner">
+    <span class="parsed-label">We understood</span>
+    <span class="chip">Age 5 <span class="chip-x">×</span></span>
+    <span class="chip">~12 kids <span class="chip-x">×</span></span>
+    <span class="chip">SW11 Battersea <span class="chip-x">×</span></span>
+    <span class="chip">Up to £400 <span class="chip-x">×</span></span>
+    <span class="chip">Outdoor / garden <span class="chip-x">×</span></span>
+    <span class="chip">Active <span class="chip-x">×</span></span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main>
+
+  <div>
+    <!-- AI NOTE -->
+    <div class="ai-note">
+      <span class="ai-note-tag">Patch</span>
+      <div class="ai-note-text">
+        <strong>5 vendors match your brief.</strong> For an active outdoor 5th in Battersea with ~12 kids and £400 to play with, you've got room for a centrepiece — bouncy castle or active entertainer — plus a face painter on the side. Three options fit cleanly; two are worth considering as alternatives.
+      </div>
+    </div>
+
+    <!-- RESULTS HEAD -->
+    <div class="results-head">
+      <div class="results-count"><strong>5 vendors</strong> · SW11 and within 3 miles</div>
+      <button class="sort">
+        Best match
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+
+    <!-- VENDOR 1 -->
+    <article class="vendor featured">
+      <div class="vendor-photo-wrap">
+        <span class="photo-tag">Top match</span>
+        <img class="vendor-photo" src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&q=80" alt="Bouncy castle in a garden">
+        <span class="photo-count">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="m21 17-5-5L7 21"/></svg>
+          12 photos
+        </span>
+      </div>
+      <div class="vendor-body">
+        <div class="vendor-cat">Bouncy castle hire</div>
+        <h2 class="vendor-name">Battersea Bounce Co.</h2>
+        <div class="vendor-meta">
+          <span>Battersea SW11</span>
+          <span class="dot">·</span>
+          <span>1.2 mi away</span>
+          <span class="dot">·</span>
+          <span>Family-run, 8 yrs</span>
+          <span class="dot">·</span>
+          <span class="verified">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 6v6c0 5 3.4 9.4 8 10 4.6-.6 8-5 8-10V6z"/></svg>
+            ID verified
+          </span>
+        </div>
+        <div class="vendor-match">
+          <span class="vendor-match-icon">P</span>
+          <div>The 12ft princess castle fits a standard SW11 garden, takes up to 14 kids aged 4–7, and four hours' hire leaves <strong>~£220 of your budget</strong> for food and a face painter.</div>
+        </div>
+        <div class="vendor-tags">
+          <span class="vendor-tag good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Garden-friendly</span>
+          <span class="vendor-tag good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Fits 12+ kids</span>
+          <span class="vendor-tag">£10m PL insured</span>
+          <span class="vendor-tag">PAT tested</span>
+          <span class="vendor-tag">Setup included</span>
+        </div>
+      </div>
+      <div class="vendor-price-col">
+        <div>
+          <div class="price-rating">
+            <span class="stars">
+              <svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5 2 7.5L12 17l-6.5 4 2-7.5L2 9h7z"/></svg>
+              4.92
+            </span>
+            <span class="count">(34 bookings)</span>
+          </div>
+          <div class="price-block">
+            <div class="price-from">From</div>
+            <div class="price-amount">£180</div>
+            <div class="price-unit">4hr hire, weekend</div>
+          </div>
+        </div>
+        <div>
+          <a href="#" class="price-cta">View &amp; contact</a>
+          <a href="#" class="price-secondary">Check availability</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- VENDOR 2 -->
+    <article class="vendor">
+      <div class="vendor-photo-wrap">
+        <img class="vendor-photo" src="https://images.unsplash.com/photo-1607453998774-d533f65dac99?w=800&q=80" alt="Kids playing with parachute at a party">
+        <span class="photo-count">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="m21 17-5-5L7 21"/></svg>
+          8 photos
+        </span>
+      </div>
+      <div class="vendor-body">
+        <div class="vendor-cat">Entertainer · games &amp; dance</div>
+        <h2 class="vendor-name">Miss Coco's Party Club</h2>
+        <div class="vendor-meta">
+          <span>Clapham SW4</span>
+          <span class="dot">·</span>
+          <span>0.8 mi away</span>
+          <span class="dot">·</span>
+          <span>Books up fast</span>
+          <span class="dot">·</span>
+          <span class="verified">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 6v6c0 5 3.4 9.4 8 10 4.6-.6 8-5 8-10V6z"/></svg>
+            DBS checked
+          </span>
+        </div>
+        <div class="vendor-match">
+          <span class="vendor-match-icon">P</span>
+          <div>Outdoor games-led entertainer specialising in the 4–6 age band. 90 minutes of parachute, races, musical statues — high-energy and structured. <strong>Parents commonly rebook for siblings.</strong></div>
+        </div>
+        <div class="vendor-tags">
+          <span class="vendor-tag good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Active</span>
+          <span class="vendor-tag good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Age 5 sweet spot</span>
+          <span class="vendor-tag">DBS checked</span>
+          <span class="vendor-tag">High energy</span>
+          <span class="vendor-tag">Music included</span>
+        </div>
+      </div>
+      <div class="vendor-price-col">
+        <div>
+          <div class="price-rating">
+            <span class="stars">
+              <svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5 2 7.5L12 17l-6.5 4 2-7.5L2 9h7z"/></svg>
+              4.87
+            </span>
+            <span class="count">(52 bookings)</span>
+          </div>
+          <div class="price-block">
+            <div class="price-from">From</div>
+            <div class="price-amount">£245</div>
+            <div class="price-unit">90 min party</div>
+          </div>
+        </div>
+        <div>
+          <a href="#" class="price-cta">View &amp; contact</a>
+          <a href="#" class="price-secondary">Check availability</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- VENDOR 3 -->
+    <article class="vendor">
+      <div class="vendor-photo-wrap">
+        <img class="vendor-photo" src="https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=800&q=80" alt="Children playing football together">
+        <span class="photo-count">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="m21 17-5-5L7 21"/></svg>
+          6 photos
+        </span>
+      </div>
+      <div class="vendor-body">
+        <div class="vendor-cat">Football-themed party · coach-led</div>
+        <h2 class="vendor-name">Little Kickers Battersea</h2>
+        <div class="vendor-meta">
+          <span>Battersea Park area</span>
+          <span class="dot">·</span>
+          <span>1.5 mi away</span>
+          <span class="dot">·</span>
+          <span>All skill levels</span>
+        </div>
+        <div class="vendor-match">
+          <span class="vendor-match-icon">P</span>
+          <div>If your 5-year-old is in an "everything is football" phase, this is the cleanest fit. They bring the kit, run drills and a mini tournament, and let every kid feel like they scored.</div>
+        </div>
+        <div class="vendor-tags">
+          <span class="vendor-tag good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Outdoor</span>
+          <span class="vendor-tag good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Very active</span>
+          <span class="vendor-tag">Themed</span>
+          <span class="vendor-tag">Coach-led</span>
+        </div>
+      </div>
+      <div class="vendor-price-col">
+        <div>
+          <div class="price-rating">
+            <span class="stars">
+              <svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5 2 7.5L12 17l-6.5 4 2-7.5L2 9h7z"/></svg>
+              4.79
+            </span>
+            <span class="count">(18 bookings)</span>
+          </div>
+          <div class="price-block">
+            <div class="price-from">From</div>
+            <div class="price-amount">£195</div>
+            <div class="price-unit">1 hour</div>
+          </div>
+        </div>
+        <div>
+          <a href="#" class="price-cta">View &amp; contact</a>
+          <a href="#" class="price-secondary">Check availability</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- DIVIDER FOR ADJACENT -->
+    <div class="results-head" style="margin-top: 28px; margin-bottom: 14px; border-bottom: none; padding-bottom: 0;">
+      <div class="results-count">Adjacent — worth considering</div>
+    </div>
+
+    <!-- VENDOR 4 -->
+    <article class="vendor">
+      <div class="vendor-photo-wrap">
+        <img class="vendor-photo" src="https://images.unsplash.com/photo-1606503153255-59d8b8b82176?w=800&q=80" alt="Face painter at work">
+        <span class="photo-count">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="m21 17-5-5L7 21"/></svg>
+          5 photos
+        </span>
+      </div>
+      <div class="vendor-body">
+        <div class="vendor-cat">Face painter · add-on</div>
+        <h2 class="vendor-name">Ruby Paints Faces</h2>
+        <div class="vendor-meta">
+          <span>Wandsworth SW18</span>
+          <span class="dot">·</span>
+          <span>0.6 mi away</span>
+          <span class="dot">·</span>
+          <span>Solo artist</span>
+        </div>
+        <div class="vendor-match">
+          <span class="vendor-match-icon">P</span>
+          <div>Not a main event, but a strong add-on if you've got <strong>~£80 left after the castle</strong>. Twelve kids in about an hour — gives parents a calm-down moment mid-party.</div>
+        </div>
+        <div class="vendor-tags">
+          <span class="vendor-tag">Gentle option</span>
+          <span class="vendor-tag">DBS checked</span>
+          <span class="vendor-tag">Eco paints</span>
+          <span class="vendor-tag">Pair with castle</span>
+        </div>
+      </div>
+      <div class="vendor-price-col">
+        <div>
+          <div class="price-rating">
+            <span class="stars">
+              <svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5 2 7.5L12 17l-6.5 4 2-7.5L2 9h7z"/></svg>
+              4.95
+            </span>
+            <span class="count">(41 bookings)</span>
+          </div>
+          <div class="price-block">
+            <div class="price-from">From</div>
+            <div class="price-amount">£80</div>
+            <div class="price-unit">1 hour</div>
+          </div>
+        </div>
+        <div>
+          <a href="#" class="price-cta">View &amp; contact</a>
+          <a href="#" class="price-secondary">Add to plan</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- VENDOR 5 -->
+    <article class="vendor">
+      <div class="vendor-photo-wrap">
+        <img class="vendor-photo" src="https://images.unsplash.com/photo-1564769662533-4f00a87b4056?w=800&q=80" alt="Kids doing science experiments">
+        <span class="photo-count">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="m21 17-5-5L7 21"/></svg>
+          9 photos
+        </span>
+      </div>
+      <div class="vendor-body">
+        <div class="vendor-cat">Science party · hands-on</div>
+        <h2 class="vendor-name">Professor Pop's Lab</h2>
+        <div class="vendor-meta">
+          <span>Tooting SW17</span>
+          <span class="dot">·</span>
+          <span>2.1 mi away</span>
+          <span class="dot">·</span>
+          <span>Garden setup OK</span>
+        </div>
+        <div class="vendor-match">
+          <span class="vendor-match-icon">P</span>
+          <div>Flagging in case <strong>"active" is flexible</strong>. Hands-on rather than running-around, but 5-year-olds tend to lose their minds over the dry-ice section.</div>
+        </div>
+        <div class="vendor-tags">
+          <span class="vendor-tag">Educational</span>
+          <span class="vendor-tag">Hands-on</span>
+          <span class="vendor-tag">Outdoor-friendly</span>
+          <span class="vendor-tag">Memorable</span>
+        </div>
+      </div>
+      <div class="vendor-price-col">
+        <div>
+          <div class="price-rating">
+            <span class="stars">
+              <svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5 2 7.5L12 17l-6.5 4 2-7.5L2 9h7z"/></svg>
+              4.83
+            </span>
+            <span class="count">(23 bookings)</span>
+          </div>
+          <div class="price-block">
+            <div class="price-from">From</div>
+            <div class="price-amount">£295</div>
+            <div class="price-unit">75 min</div>
+          </div>
+        </div>
+        <div>
+          <a href="#" class="price-cta">View &amp; contact</a>
+          <a href="#" class="price-secondary">Check availability</a>
+        </div>
+      </div>
+    </article>
+
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="side-card">
+      <div class="side-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+        Refine filters
+      </div>
+
+      <div class="side-filter">
+        <div class="side-filter-label">
+          Budget
+          <span class="side-filter-value">£0 – £400</span>
+        </div>
+        <input type="range" min="0" max="800" value="400" style="width: 100%; accent-color: var(--navy);" />
+      </div>
+
+      <div class="side-filter">
+        <div class="side-filter-label">Service type</div>
+        <label class="side-checkbox checked"><input type="checkbox" checked> Bouncy castles <span class="side-count">12</span></label>
+        <label class="side-checkbox checked"><input type="checkbox" checked> Entertainers <span class="side-count">18</span></label>
+        <label class="side-checkbox"><input type="checkbox"> Soft play <span class="side-count">7</span></label>
+        <label class="side-checkbox"><input type="checkbox"> Face painters <span class="side-count">9</span></label>
+        <label class="side-checkbox"><input type="checkbox"> Party food <span class="side-count">14</span></label>
+        <label class="side-checkbox"><input type="checkbox"> Magicians <span class="side-count">5</span></label>
+      </div>
+
+      <div class="side-filter">
+        <div class="side-filter-label">Trust signals</div>
+        <label class="side-checkbox checked"><input type="checkbox" checked> DBS checked</label>
+        <label class="side-checkbox checked"><input type="checkbox" checked> PL insured</label>
+        <label class="side-checkbox"><input type="checkbox"> Reviewed by parents</label>
+      </div>
+
+      <div class="side-filter">
+        <div class="side-filter-label">Distance</div>
+        <label class="side-checkbox"><input type="radio" name="d"> Walking distance</label>
+        <label class="side-checkbox checked"><input type="radio" name="d" checked> Within 3 miles</label>
+        <label class="side-checkbox"><input type="radio" name="d"> Anywhere in SW London</label>
+      </div>
+    </div>
+
+    <div class="followups-card">
+      <div class="side-title">Ask Patch</div>
+      <button class="followup"><span class="arrow">→</span>Only options under £200 total</button>
+      <button class="followup"><span class="arrow">→</span>Combine a castle and a face painter inside £400</button>
+      <button class="followup"><span class="arrow">→</span>Anything quieter for sensitive kids?</button>
+      <button class="followup"><span class="arrow">→</span>Who's free on Sat 14 June?</button>
+      <button class="followup"><span class="arrow">→</span>Indoor backup if it rains</button>
+    </div>
+
+  </aside>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span>© 2026 Patch · Local services worth booking</span>
+    <span><a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="#">For vendors</a> · <a href="#">Contact</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,37 @@
+.card {
+  background: var(--navy);
+  color: white;
+  padding: 18px;
+  border-radius: 6px;
+}
+.title {
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.followup {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.9);
+  line-height: 1.4;
+  background: rgba(255,255,255,0.06);
+  margin-bottom: 6px;
+  transition: background 0.15s;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.followup:hover { background: rgba(255,255,255,0.12); color: white; }
+.followup:last-child { margin-bottom: 0; }
+.arrow {
+  color: var(--accent);
+  margin-right: 6px;
+  font-weight: 600;
+}

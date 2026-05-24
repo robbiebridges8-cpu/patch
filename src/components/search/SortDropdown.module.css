@@ -1,0 +1,14 @@
+.sort {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 500;
+  padding: 6px 10px;
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+  background: var(--surface);
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+}
+.sort:hover { border-color: var(--navy-3); }
+.sort:focus { border-color: var(--navy); }

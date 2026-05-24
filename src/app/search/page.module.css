@@ -1,0 +1,110 @@
+.crumbBar {
+  border-bottom: 1px solid var(--rule);
+  padding: 16px 0;
+  background: var(--surface);
+}
+.crumbInner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.crumbInner a:hover { color: var(--navy); }
+.sep { color: var(--text-3); }
+.crumbCurrent { color: var(--navy); font-weight: 500; }
+
+.main {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 28px;
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 36px;
+  align-items: start;
+}
+.sidebar {
+  position: sticky;
+  top: 28px;
+}
+
+.resultsHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule);
+}
+.resultsCount {
+  font-size: 14px;
+  color: var(--text-2);
+}
+.resultsCount strong { color: var(--navy); font-weight: 600; }
+.sort {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+  background: var(--surface);
+  cursor: pointer;
+  font-family: inherit;
+}
+.sort:hover { border-color: var(--navy-3); }
+.sort svg { width: 10px; height: 10px; }
+
+.divider {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 28px;
+  margin-bottom: 14px;
+}
+.dividerText {
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+.footer {
+  border-top: 1px solid var(--rule);
+  padding: 28px;
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--text-2);
+  margin-top: 40px;
+}
+.footerInner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.footerInner a { color: var(--text-2); text-decoration: none; }
+.footerInner a:hover { color: var(--navy); }
+
+.empty {
+  text-align: center;
+  padding: 64px 20px;
+  font-size: 16px;
+  color: var(--text-3);
+}
+
+@media (max-width: 1020px) {
+  .main { grid-template-columns: 1fr; }
+  .sidebar { position: static; display: none; }
+}
+@media (max-width: 760px) {
+  .crumbInner { font-size: 12px; }
+}

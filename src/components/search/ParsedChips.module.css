@@ -1,0 +1,41 @@
+.row {
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+  padding: 14px 0;
+}
+.inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.label {
+  font-size: 12px;
+  color: var(--text-3);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-right: 4px;
+}
+.chip {
+  background: var(--surface);
+  border: 1px solid var(--rule-2);
+  border-radius: 4px;
+  padding: 5px 11px;
+  font-size: 13px;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+.chipX {
+  color: var(--text-3);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.chipX:hover { color: var(--navy); }
