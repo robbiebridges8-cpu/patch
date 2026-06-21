@@ -1,117 +1,72 @@
+"use client";
+
+import { useState } from "react";
 import type { VendorMatch } from "@/types/vendor";
 import styles from "./VendorRow.module.css";
 
-const CheckIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-    <polyline points="20 6 9 17 4 12"/>
-  </svg>
-);
-
-const PhotoIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="3" y="5" width="18" height="14" rx="2"/>
-    <circle cx="9" cy="11" r="2"/>
-    <path d="m21 17-5-5L7 21"/>
-  </svg>
-);
-
-const ShieldIcon = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 2 4 6v6c0 5 3.4 9.4 8 10 4.6-.6 8-5 8-10V6z"/>
-  </svg>
-);
-
-const StarIcon = () => (
-  <svg viewBox="0 0 24 24">
-    <path d="M12 2l3 7h7l-5.5 4.5 2 7.5L12 17l-6.5 4 2-7.5L2 9h7z"/>
-  </svg>
-);
-
 export default function VendorRow({ match }: { match: VendorMatch }) {
   const v = match.vendor;
-  const cls = [styles.vendor, match.featured ? styles.featured : ""].filter(Boolean).join(" ");
+  const [hover, setHover] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   return (
-    <article className={cls}>
-      <div className={styles.photoWrap}>
-        {match.featured && <span className={styles.photoTag}>Top match</span>}
+    <article
+      className={styles.row}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{ boxShadow: hover ? "var(--shadow-hover)" : "none" }}
+    >
+      <a href={`/vendors/${v.slug}`} className={styles.mediaBox}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className={styles.photo} src={match.photoUrl} alt={v.name} />
-        <span className={styles.photoCount}>
-          <PhotoIcon />
-          {match.photoCount} photos
-        </span>
-      </div>
+        <img
+          className={styles.photo}
+          src={match.photoUrl}
+          alt={v.name}
+          style={{ transform: hover ? "scale(1.02)" : "scale(1)" }}
+        />
+      </a>
 
       <div className={styles.body}>
-        <div className={styles.cat}>{match.category}</div>
-        <h2 className={styles.name}><a href={`/vendors/${v.slug}`} style={{ color: "inherit", textDecoration: "none" }}>{v.name}</a></h2>
-        <div className={styles.meta}>
-          {match.metaLine.split(" · ").map((segment, i, arr) => {
-            const isVerified = segment.includes("verified") || segment.includes("insured") || segment.includes("hygiene");
-            return (
-              <span key={i}>
-                {i > 0 && <span className={styles.dot}>· </span>}
-                {isVerified ? (
-                  <span className={styles.verified}>
-                    <ShieldIcon />
-                    {segment}
-                  </span>
-                ) : (
-                  segment
-                )}
-              </span>
-            );
-          })}
+        <div className={styles.topRow}>
+          <span className={styles.eyebrow}>{match.category}</span>
+          {match.priceLabel && (
+            <span className={styles.priceSignal}>{match.priceLabel}</span>
+          )}
         </div>
 
+        <h3 className={styles.title}>
+          <a href={`/vendors/${v.slug}`}>{v.name}</a>
+        </h3>
+
         {match.matchReason && (
-          <div className={styles.match}>
-            <span className={styles.matchIcon}>P</span>
-            <div dangerouslySetInnerHTML={{ __html: match.matchReason }} />
+          <p className={styles.oneLiner}>{match.matchReason.replace(/<[^>]*>/g, "")}</p>
+        )}
+
+        {match.matchedTags.length > 0 && (
+          <div className={styles.attributes}>
+            {match.matchedTags.slice(0, 3).map((t) => (
+              <span key={t.label} className={styles.attrChip}>{t.label}</span>
+            ))}
           </div>
         )}
 
-        <div className={styles.tags}>
-          {match.matchedTags.map((t) =>
-            t.good ? (
-              <span key={t.label} className={styles.tagGood}>
-                <CheckIcon />
-                {t.label}
-              </span>
-            ) : (
-              <span key={t.label} className={styles.tag}>{t.label}</span>
-            )
-          )}
-        </div>
-      </div>
-
-      <div className={styles.priceCol}>
-        <div>
-          {match.rating > 0 ? (
-            <div className={styles.rating}>
-              <span className={styles.stars}>
-                <StarIcon />
-                {match.rating.toFixed(2)}
-              </span>
-              <span className={styles.count}>({match.bookingCount} reviews)</span>
-            </div>
-          ) : (
-            <div className={styles.rating}>
-              <span className={styles.count}>New vendor</span>
-            </div>
-          )}
-          <div>
-            <div className={styles.priceFrom}>From</div>
-            <div className={styles.priceAmount}>{match.priceLabel}</div>
-            <div className={styles.priceUnit}>{match.priceUnit}</div>
-          </div>
-        </div>
-        <div>
-          <a href={`/vendors/${v.slug}`} className={styles.cta}>View &amp; contact</a>
-          <a href={`/vendors/${v.slug}`} className={styles.secondary}>
-            View profile
-          </a>
+        <div className={styles.bottomRow}>
+          <span className={styles.location}>
+            {match.distance}
+            {v.ratingAvg && v.ratingAvg > 0 ? ` · ${v.ratingAvg.toFixed(1)}★` : ""}
+            {match.bookingCount > 0 ? ` · ${match.bookingCount} reviews` : ""}
+          </span>
+          <button
+            type="button"
+            className={styles.saveBtn}
+            aria-label={saved ? "Saved" : "Save"}
+            aria-pressed={saved}
+            onClick={() => setSaved(!saved)}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
+            </svg>
+          </button>
         </div>
       </div>
     </article>

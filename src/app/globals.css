@@ -1,33 +1,191 @@
 @import "tailwindcss";
 
+/* Patch — Design System Tokens
+ * Components reference --color-* semantics only, never raw hex.
+ */
+
 :root {
-  --bg: #FAFAF7;
-  --surface: #FFFFFF;
-  --navy: #0E2444;
-  --navy-2: #1B3A66;
-  --navy-3: #4A6184;
-  --text: #1A1A1A;
-  --text-2: #5C6470;
-  --text-3: #8E96A1;
-  --rule: #E5E5E0;
-  --rule-2: #D4D4CD;
-  --accent: #B5891C;
-  --accent-soft: #F4ECD4;
-  --good: #2D6A4F;
-  --good-soft: #D4E6DC;
-  --warn-soft: #F4E8D4;
-  --warn: #8C6516;
-  --shadow: 0 2px 8px rgba(14, 36, 68, 0.06);
-  --shadow-h: 0 4px 14px rgba(14, 36, 68, 0.10);
+  /* ── Primitives ── */
+
+  /* Paper — warm near-white */
+  --paper-0:   #FFFFFF;
+  --paper-50:  #FDFCFA;
+  --paper-100: #F6F4EF;
+  --paper-200: #EFEBE3;
+
+  /* Greige — warm neutrals */
+  --greige-900: #1B1815;
+  --greige-700: #5A5249;
+  --greige-500: #8E8579;
+  --greige-400: #ABA294;
+  --greige-300: #D6CFC3;
+  --greige-200: #E7E2D9;
+  --greige-100: #F1EDE6;
+
+  /* Ink — the single dark zone */
+  --ink-900:   #1B1815;
+  --ink-800:   #262119;
+  --ink-border: rgba(244, 241, 236, 0.14);
+
+  /* Coral — the one accent */
+  --coral-600: #C5371F;
+  --coral-500: #F5503F;
+  --coral-400: #FB6E5C;
+  --coral-100: #FEE9E4;
+
+  /* Functional */
+  --success: #3F7A57;
+  --warning: #C68A1E;
+  --error:   #B23A2E;
+
+  /* ── Semantic tokens ── */
+
+  /* Surfaces */
+  --color-surface-page:       var(--paper-50);
+  --color-surface-raised:     var(--paper-0);
+  --color-surface-sunken:     var(--paper-100);
+  --color-surface-band:       var(--paper-200);
+  --color-surface-ink:        var(--ink-900);
+  --color-surface-ink-raised: var(--ink-800);
+
+  /* Text */
+  --color-text-primary:     var(--greige-900);
+  --color-text-secondary:   var(--greige-700);
+  --color-text-muted:       var(--greige-500);
+  --color-text-disabled:    var(--greige-400);
+  --color-text-on-ink:      #F4F1EC;
+  --color-text-on-ink-muted: #B3AA9D;
+
+  /* Borders */
+  --color-border:        var(--greige-200);
+  --color-border-strong: var(--greige-300);
+  --color-border-faint:  var(--greige-100);
+  --color-border-on-ink: var(--ink-border);
+
+  /* Accent */
+  --color-accent:          var(--coral-500);
+  --color-accent-hover:    var(--coral-600);
+  --color-accent-on-dark:  var(--coral-400);
+  --color-accent-tint:     var(--coral-100);
+  --color-accent-on-light: var(--coral-600);
+  --color-on-accent:       #FFFFFF;
+
+  /* Functional */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error:   var(--error);
+
+  /* Focus */
+  --color-focus: var(--coral-500);
+
+  /* ── Fonts ── */
+  --font-display: var(--font-bricolage), 'Bricolage Grotesque', 'Schibsted Grotesk', system-ui, sans-serif;
+  --font-ui:      var(--font-inter), 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:    var(--font-geist-mono), 'Geist Mono', 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* ── Typography scale ── */
+  --type-display-xl-size: 52px;
+  --type-display-xl-line: 56px;
+  --type-display-xl-weight: 600;
+  --type-display-xl-track: -0.02em;
+
+  --type-display-size: 40px;
+  --type-display-line: 44px;
+  --type-display-weight: 600;
+  --type-display-track: -0.015em;
+
+  --type-answer-size: 24px;
+  --type-answer-line: 34px;
+  --type-answer-weight: 500;
+  --type-answer-track: -0.01em;
+
+  --type-h2-size: 28px;
+  --type-h2-line: 34px;
+  --type-h2-weight: 600;
+  --type-h2-track: -0.01em;
+
+  --type-h3-size: 20px;
+  --type-h3-line: 26px;
+  --type-h3-weight: 600;
+
+  --type-h4-size: 17px;
+  --type-h4-line: 24px;
+  --type-h4-weight: 600;
+
+  --type-body-lg-size: 17px;
+  --type-body-lg-line: 27px;
+
+  --type-body-size: 15px;
+  --type-body-line: 24px;
+
+  --type-body-sm-size: 13.5px;
+  --type-body-sm-line: 20px;
+
+  --type-label-size: 12px;
+  --type-label-line: 14px;
+  --type-label-weight: 600;
+  --type-label-track: 0.04em;
+
+  --type-meta-size: 12px;
+  --type-meta-line: 16px;
+  --type-meta-weight: 500;
+  --type-meta-track: 0.01em;
+
+  /* ── Spacing ── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-14: 56px;
+  --space-18: 72px;
+  --space-24: 96px;
+
+  /* Containers */
+  --container-page:    1240px;
+  --container-results: 1120px;
+  --container-read:    680px;
+
+  /* Gutters */
+  --gutter-mobile:  24px;
+  --gutter-desktop: 32px;
+
+  /* Layout */
+  --sidebar-width: 260px;
+  --header-height: 64px;
+
+  /* ── Radius ── */
+  --radius-input: 8px;
+  --radius-card:  12px;
+  --radius-panel: 16px;
+  --radius-pill:  999px;
+
+  /* ── Elevation ── */
+  --shadow-none:  none;
+  --shadow-hover: 0 4px 16px -6px rgba(27, 24, 21, 0.14);
+  --shadow-pop:   0 8px 28px -8px rgba(27, 24, 21, 0.18);
+  --scrim-photo: linear-gradient(to top, rgba(27, 24, 21, 0.55), transparent 60%);
+
+  /* ── Motion ── */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 260ms;
+  --stagger-chip: 40ms;
+  --stagger-row:  50ms;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
-  background: var(--bg);
-  color: var(--text);
-  font-size: 15px;
-  line-height: 1.5;
+  background: var(--color-surface-page);
+  color: var(--color-text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -36,4 +194,17 @@ a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; font-size: inherit; }
 img { display: block; max-width: 100%; }
 
-::selection { background: var(--navy); color: white; }
+::selection { background: var(--color-accent); color: white; }
+
+/* Focus ring — 2px coral outline at 2px offset, everywhere */
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

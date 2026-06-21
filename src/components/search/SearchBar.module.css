@@ -1,54 +1,60 @@
-.searchRow {
-  background: var(--navy);
-  padding: 0 0 32px;
-}
-.inner {
-  max-width: 1240px;
-  margin: 0 auto;
-  padding: 0 28px;
-}
-.label {
-  font-size: 12px;
-  color: rgba(255,255,255,0.6);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 10px;
-}
 .bar {
-  background: var(--surface);
-  border-radius: 6px;
-  padding: 0;
   display: flex;
   align-items: center;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-5);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 12px;
+  box-shadow: none;
+  transition: border-color var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out);
 }
+
+.bar.focused {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-pop);
+}
+
+.icon {
+  flex: 0 0 auto;
+}
+
 .input {
   flex: 1;
-  padding: 16px 20px;
-  font-size: 16px;
-  font-family: inherit;
-  background: transparent;
+  min-width: 0;
+  height: 40px;
   border: none;
   outline: none;
-  color: var(--text);
-  min-width: 0;
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  color: var(--color-text-primary);
 }
-.input::placeholder { color: var(--text-3); }
+
+.input::placeholder {
+  color: var(--color-text-disabled);
+}
+
 .btn {
-  background: var(--accent);
-  color: var(--navy);
-  padding: 12px 22px;
-  margin: 6px;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 14px;
-  display: flex;
+  flex: 0 0 auto;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  height: 44px;
+  padding: 0 20px;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1;
+  border-radius: var(--radius-input);
+  border: 1px solid transparent;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
   cursor: pointer;
-  border: none;
-  font-family: inherit;
+  white-space: nowrap;
+  transition: background var(--motion-base) var(--ease-out);
 }
-.btn:hover { background: #9F7715; }
-.btn svg { width: 14px; height: 14px; }
+
+.btn:hover {
+  background: var(--color-accent-hover);
+}

@@ -3,24 +3,6 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import styles from "./FilterSidebar.module.css";
 
-const SERVICE_LABELS: Record<string, string> = {
-  "pizza vans / wood-fired pizza trailers": "Pizza vans",
-  "burger trucks and trailers": "Burger trucks",
-  "taco trucks and Mexican": "Tacos & Mexican",
-  "BBQ and smoker catering": "BBQ & smoker",
-  "grazing tables and charcuterie": "Grazing & charcuterie",
-  "ice cream vans and gelato carts": "Ice cream & gelato",
-  "dessert vans (donuts, churros, crepes, waffles)": "Dessert vans",
-  "coffee carts and mobile baristas": "Coffee carts",
-  "drop-off canapés and finger food": "Canapés & finger food",
-  "bao, dumplings, and Asian street food": "Asian street food",
-  "Indian street food (chaat, dosa, curries)": "Indian street food",
-  "Middle Eastern (falafel, mezze, shawarma)": "Middle Eastern",
-  "pie and mash / British comfort": "British comfort",
-  "vegan and plant-based specialists": "Vegan & plant-based",
-  "cocktail bars and mobile bartenders": "Cocktail bars",
-};
-
 export default function FilterSidebarLive({
   typeCounts,
   activeTypes,
@@ -63,86 +45,81 @@ export default function FilterSidebarLive({
     navigate({ budget: val >= 800 ? undefined : String(val) });
   }
 
-  function handleSetting(val: string) {
-    navigate({ setting: val === "any" ? undefined : val });
-  }
+  const budgetVal = currentBudget || 800;
+  const budgetPct = Math.round(((budgetVal - 50) / (800 - 50)) * 100);
 
-  // Sort types by count descending, only show those with vendors
   const sortedTypes = Object.entries(typeCounts)
     .sort((a, b) => b[1] - a[1])
     .filter(([, count]) => count > 0);
 
   return (
-    <div className={styles.card}>
-      <div className={styles.title}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M3 6h18M6 12h12M10 18h4"/>
-        </svg>
-        Refine results
+    <aside className={styles.sidebar}>
+      <div className={styles.sidebarHead}>
+        <h3 className={styles.sidebarTitle}>Filters</h3>
       </div>
 
-      <div className={styles.filter}>
-        <div className={styles.filterLabel}>
-          Budget
-          <span className={styles.filterValue}>
-            {currentBudget && currentBudget < 800 ? `Up to £${currentBudget}` : "Any"}
+      {/* Type chips */}
+      <div className={styles.section}>
+        <span className={styles.sectionLabel}>Type</span>
+        <div className={styles.chipGrid}>
+          {sortedTypes.map(([type]) => {
+            const label = type;
+            const isSelected = activeTypes.includes(type);
+            return (
+              <button
+                key={type}
+                type="button"
+                className={`${styles.filterChip} ${isSelected ? styles.filterChipSelected : ""}`}
+                onClick={() => toggleType(type)}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Budget */}
+      <div className={styles.section}>
+        <span className={styles.sectionLabel}>Budget</span>
+        <div className={styles.budgetRow}>
+          <span className={styles.budgetLabel}>Up to</span>
+          <span className={styles.budgetValue}>
+            {currentBudget && currentBudget < 800 ? `£${currentBudget}` : "Any"}
           </span>
         </div>
-        <input
-          type="range"
-          min="50"
-          max="800"
-          step="50"
-          defaultValue={currentBudget || 800}
-          className={styles.range}
-          onChange={handleBudget}
-        />
+        <div className={styles.sliderTrack}>
+          <div className={styles.sliderFill} style={{ width: `${budgetPct}%` }} />
+          <div className={styles.sliderThumb} style={{ left: `${budgetPct}%` }} />
+          <input
+            type="range"
+            min="50"
+            max="800"
+            step="50"
+            defaultValue={budgetVal}
+            className={styles.sliderInput}
+            onChange={handleBudget}
+          />
+        </div>
       </div>
 
-      <div className={styles.filter}>
-        <div className={styles.filterLabel}>Service type</div>
-        {sortedTypes.map(([type, count]) => (
-          <label
-            key={type}
-            className={`${styles.checkbox} ${activeTypes.includes(type) ? styles.checked : ""}`}
-          >
-            <input
-              type="checkbox"
-              checked={activeTypes.includes(type)}
-              onChange={() => toggleType(type)}
-            />
-            {SERVICE_LABELS[type] || type}
-            <span className={styles.sideCount}>{count}</span>
-          </label>
-        ))}
-      </div>
-
-      <div className={styles.filter}>
-        <div className={styles.filterLabel}>Setting</div>
+      {/* Setup */}
+      <div className={styles.section}>
+        <span className={styles.sectionLabel}>Setting</span>
         {["any", "indoor", "outdoor"].map((val) => (
-          <label
-            key={val}
-            className={`${styles.checkbox} ${(currentSetting || "any") === val ? styles.checked : ""}`}
-          >
+          <label key={val} className={styles.checkRow}>
+            <span className={styles.checkBox} data-checked={(currentSetting || "any") === val ? "" : undefined} />
             <input
               type="radio"
               name="setting"
               checked={(currentSetting || "any") === val}
-              onChange={() => handleSetting(val)}
+              onChange={() => navigate({ setting: val === "any" ? undefined : val })}
+              className={styles.srOnly}
             />
             {val === "any" ? "Any" : val.charAt(0).toUpperCase() + val.slice(1)}
           </label>
         ))}
       </div>
-
-      {(activeTypes.length > 0 || currentBudget || currentSetting) && (
-        <button
-          className={styles.clearBtn}
-          onClick={() => navigate({ type: undefined, budget: undefined, setting: undefined })}
-        >
-          Clear all filters
-        </button>
-      )}
-    </div>
+    </aside>
   );
 }

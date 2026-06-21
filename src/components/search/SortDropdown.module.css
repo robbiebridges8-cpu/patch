@@ -1,14 +1,15 @@
 .sort {
   font-size: 13px;
-  color: var(--text);
+  color: var(--color-text-primary);
   font-weight: 500;
   padding: 6px 10px;
-  border: 1px solid var(--rule-2);
-  border-radius: 4px;
-  background: var(--surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-input);
+  background: var(--color-surface-raised);
   font-family: inherit;
   cursor: pointer;
   outline: none;
+  transition: border-color var(--motion-base) var(--ease-out);
 }
-.sort:hover { border-color: var(--navy-3); }
-.sort:focus { border-color: var(--navy); }
+.sort:hover { border-color: var(--color-text-muted); }
+.sort:focus { border-color: var(--color-accent); }
