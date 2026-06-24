@@ -160,13 +160,16 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
   if (query && hasAI && hasVoyage) {
     try {
+      console.log("[search] calling aiSearch...");
       const ai = await aiSearch(query);
+      console.log(`[search] aiSearch returned: chips=${ai.chips.length} summary=${ai.summary.length}chars vendorMatches=${ai.vendorMatches.length} vendorIds=${ai.vendorIds.length}`);
       chips = ai.chips;
       aiSummary = ai.summary;
       usedAI = true;
 
       const matchedIds = ai.vendorMatches.map((m) => m.vendor_id);
       const fullVendors = matchedIds.length > 0 ? await getVendorsByIds(matchedIds) : [];
+      console.log(`[search] fetched ${fullVendors.length} full vendors for ${matchedIds.length} matched IDs`);
       const vendorMap = new Map(fullVendors.map((v) => [v.id as string, v]));
       const sortedAIMatches = [...ai.vendorMatches].sort((a, b) => a.rank - b.rank);
 
@@ -179,9 +182,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           i === 0,
           m.is_adjacent,
         ));
+      console.log(`[search] final matches: ${matches.length}`);
     } catch (e) {
-      console.error("AI search failed, falling back:", e);
+      console.error("[search] AI search failed, falling back:", e);
       const filtered = filterVendors(allVendors, params);
+      console.log(`[search] fallback filter returned ${filtered.length} vendors`);
       const sorted = sortVendors(filtered, sort);
       matches = sorted.map((v, i) => toVendorMatch(v, i + 1, v.description as string || "", i === 0, false));
       chips = query.split(/,\s*/).map((c) => c.trim()).filter(Boolean);
