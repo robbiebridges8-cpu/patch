@@ -159,7 +159,7 @@ async function vectorSearch(
 ): Promise<VendorResult[]> {
   const vecStr = `[${queryEmbedding.join(",")}]`;
 
-  const { data, error } = await supabase.rpc("match_vendors", {
+  const rpcParams = {
     query_embedding: vecStr,
     filter_categories: parsed.categories.length > 0 ? parsed.categories : null,
     filter_dietary: parsed.dietary.length > 0 ? parsed.dietary : null,
@@ -168,16 +168,21 @@ async function vectorSearch(
     search_lat: geo?.lat ?? null,
     search_lng: geo?.lng ?? null,
     match_limit: 15,
-  });
+  };
+  console.log("[vectorSearch] RPC params:", JSON.stringify({
+    ...rpcParams,
+    query_embedding: `[${queryEmbedding.length} floats]`,
+  }));
+
+  const { data, error } = await supabase.rpc("match_vendors", rpcParams);
 
   if (error) {
-    console.error("match_vendors RPC failed:", error.message);
+    console.error("[vectorSearch] RPC failed:", error.message, error.details, error.hint);
     return fallbackSearch(parsed);
   }
 
-  // RPC returns DISTINCT ON v.id but not sorted by similarity globally.
-  // Sort by similarity descending and take top N.
   const results = (data || []) as VendorResult[];
+  console.log(`[vectorSearch] returned ${results.length} results`);
   results.sort((a, b) => (b.similarity || 0) - (a.similarity || 0));
   return results.slice(0, 15);
 }
@@ -301,14 +306,17 @@ Respond with ONLY valid JSON:
 export async function aiSearch(query: string): Promise<AIResult> {
   // 1. Parse → structured filters + semantic string
   const parsed = await parseQuery(query);
+  console.log("[aiSearch] parsed:", JSON.stringify(parsed));
 
   // 2. Geocode location (if any)
   const geo = parsed.location ? await geocodeLocation(parsed.location) : null;
+  console.log("[aiSearch] geo:", geo);
 
   // 3. Embed the semantic query via Voyage
   let queryEmbedding: number[];
   try {
     queryEmbedding = await embedQuery(parsed.semantic_query);
+    console.log(`[aiSearch] embedding: ${queryEmbedding.length} dims`);
   } catch (err) {
     console.error("Embedding failed, using fallback:", err);
     const results = await fallbackSearch(parsed);
