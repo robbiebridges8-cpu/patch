@@ -100,10 +100,18 @@ Respond with ONLY valid JSON:
 
 // ── Step 2: Geocode location via postcodes.io ──
 
+// London bounding box for place-name disambiguation
+const LONDON_BOUNDS = { latMin: 51.28, latMax: 51.70, lngMin: -0.51, lngMax: 0.33 };
+
+function isInLondon(lat: number, lng: number): boolean {
+  return lat >= LONDON_BOUNDS.latMin && lat <= LONDON_BOUNDS.latMax
+    && lng >= LONDON_BOUNDS.lngMin && lng <= LONDON_BOUNDS.lngMax;
+}
+
 async function geocodeLocation(location: string): Promise<{ lat: number; lng: number } | null> {
   if (!location) return null;
 
-  // Try as postcode
+  // Try as postcode first
   try {
     const res = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(location)}`);
     if (res.ok) {
@@ -112,13 +120,18 @@ async function geocodeLocation(location: string): Promise<{ lat: number; lng: nu
     }
   } catch { /* fall through */ }
 
-  // Try as place name
+  // Try as place name — fetch multiple results, prefer the London one
   try {
-    const res = await fetch(`https://api.postcodes.io/places?q=${encodeURIComponent(location)}&limit=1`);
+    const res = await fetch(`https://api.postcodes.io/places?q=${encodeURIComponent(location)}&limit=10`);
     if (res.ok) {
       const data = await res.json();
       if (data.result?.length > 0) {
-        return { lat: data.result[0].latitude, lng: data.result[0].longitude };
+        // Prefer a result inside London
+        const londonMatch = data.result.find((p: { latitude: number; longitude: number }) =>
+          isInLondon(p.latitude, p.longitude)
+        );
+        const best = londonMatch || data.result[0];
+        return { lat: best.latitude, lng: best.longitude };
       }
     }
   } catch { /* fall through */ }
