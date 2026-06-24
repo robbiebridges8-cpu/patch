@@ -139,16 +139,18 @@ function countByCategory(vendors: Record<string, unknown>[]) {
   return counts;
 }
 
-const hasAI = !!process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== "sk-ant-xxx";
-const hasVoyage = !!process.env.VOYAGE_API_KEY;
-
 export default async function SearchPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
   const query = params.q || "";
   const sort = params.sort || "reviews";
   const activeTypes = params.type ? params.type.split(",") : [];
 
+  // Check at request time, not module load time (matters for serverless cold starts)
+  const hasAI = !!process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== "sk-ant-xxx";
+  const hasVoyage = !!process.env.VOYAGE_API_KEY;
+
   const allVendors = await getAllVendors();
+  console.log(`[search] hasAI=${hasAI} hasVoyage=${hasVoyage} query="${query}" vendors=${allVendors.length}`);
   const typeCounts = countByCategory(allVendors);
 
   let matches: VendorMatch[];
