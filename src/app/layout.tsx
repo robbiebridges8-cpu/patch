@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Bricolage_Grotesque, Geist_Mono } from "next/font/google";
+import { Oswald, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -8,9 +8,9 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
-const bricolage = Bricolage_Grotesque({
+const oswald = Oswald({
   subsets: ["latin"],
-  variable: "--font-bricolage",
+  variable: "--font-oswald",
   weight: ["400", "500", "600", "700"],
 });
 
@@ -62,7 +62,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en-GB" className={`${inter.variable} ${bricolage.variable} ${geistMono.variable}`}>
+    <html lang="en-GB" className={`${inter.variable} ${oswald.variable} ${geistMono.variable}`}>
       <body>
         {children}
       </body>

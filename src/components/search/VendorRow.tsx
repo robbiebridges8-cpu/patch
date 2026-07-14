@@ -14,7 +14,10 @@ export default function VendorRow({ match }: { match: VendorMatch }) {
       className={styles.row}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      style={{ boxShadow: hover ? "var(--shadow-hover)" : "none" }}
+      style={{
+        boxShadow: hover ? "var(--shadow-hover)" : "none",
+        transform: hover ? "translate(-2px, -2px)" : "none",
+      }}
     >
       <a href={`/vendors/${v.slug}`} className={styles.mediaBox}>
         {/* eslint-disable-next-line @next/next/no-img-element */}

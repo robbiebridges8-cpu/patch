@@ -21,7 +21,8 @@
   font-size: var(--type-display-xl-size);
   line-height: var(--type-display-xl-line);
   font-weight: var(--type-display-xl-weight);
-  letter-spacing: var(--type-display-xl-track);
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
   color: var(--color-text-primary);
   text-wrap: balance;
 }
@@ -190,7 +191,8 @@
   font-size: var(--type-display-size);
   line-height: var(--type-display-line);
   font-weight: var(--type-display-weight);
-  letter-spacing: var(--type-display-track);
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
   color: var(--color-text-on-ink);
   margin-bottom: var(--space-5);
 }

@@ -4,9 +4,10 @@
   gap: var(--space-5);
   padding: var(--space-4);
   background: var(--color-surface-raised);
-  border: 1px solid var(--color-border);
+  border: 2px solid var(--color-text-primary);
   border-radius: var(--radius-card);
-  transition: box-shadow var(--motion-base) var(--ease-out);
+  transition: box-shadow var(--motion-base) var(--ease-out),
+              transform var(--motion-base) var(--ease-out);
 }
 
 /* Media */
