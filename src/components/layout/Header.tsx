@@ -21,12 +21,12 @@ export default function Header() {
 
         <nav className={styles.nav}>
           <Link href="/for-vendors" className={styles.navLink}>List your service</Link>
-          <button className={styles.accountBtn} type="button" aria-label="Account menu">
+          <Link href="/vendor/dashboard" className={styles.accountBtn} aria-label="Vendor sign in">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M4 6h16M4 12h16M4 18h16"/>
+              <path d="M20 21a8 8 0 0 0-16 0"/>
+              <circle cx="12" cy="7" r="4"/>
             </svg>
-            <span className={styles.avatar}>A</span>
-          </button>
+          </Link>
         </nav>
       </div>
     </header>
