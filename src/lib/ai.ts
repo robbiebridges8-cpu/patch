@@ -16,7 +16,7 @@ function extractJSON(text: string): string {
 
 // ── Interfaces ──
 
-interface ParsedQuery {
+export interface ParsedQuery {
   categories: string[];
   dietary: string[];
   budget_max: number | null;
@@ -42,7 +42,7 @@ interface AIResult {
   vendorIds: string[];
 }
 
-interface VendorResult {
+export interface VendorResult {
   vendor_id: string;
   vendor_slug: string;
   vendor_name: string;
@@ -314,7 +314,93 @@ Respond with ONLY valid JSON:
   }
 }
 
-// ── Main export ──
+// ── Streaming-friendly exports ──
+//
+// The page renders in two stages so cards appear before the slow narration:
+//   1. quickSearch()  — parse, then embed + geocode in parallel, then vector search.
+//   2. narrate()      — the heavy Claude call, streamed into a Suspense boundary.
+
+export interface QuickSearchResult {
+  parsed: ParsedQuery;
+  chips: string[];
+  results: VendorResult[];
+  usedFallback: boolean;
+}
+
+export async function quickSearch(query: string): Promise<QuickSearchResult> {
+  const parsed = await parseQuery(query);
+  console.log("[quickSearch] parsed:", JSON.stringify(parsed));
+
+  // Embed and geocode are independent once we have the parse — run them together.
+  const [embedding, geo] = await Promise.all([
+    embedQuery(parsed.semantic_query).catch((err) => {
+      console.error("[quickSearch] embed failed:", err);
+      return null;
+    }),
+    parsed.location ? geocodeLocation(parsed.location) : Promise.resolve(null),
+  ]);
+
+  let results: VendorResult[];
+  let usedFallback = false;
+  if (!embedding) {
+    results = await fallbackSearch(parsed);
+    usedFallback = true;
+  } else {
+    results = await vectorSearch(parsed, embedding, geo);
+  }
+
+  return { parsed, chips: parsed.chips, results, usedFallback };
+}
+
+export async function narrate(
+  query: string,
+  parsed: ParsedQuery,
+  results: VendorResult[],
+): Promise<{ summary: string; vendors: AIVendorMatch[] }> {
+  return narrateResults(query, parsed, results);
+}
+
+/**
+ * Lightweight reasoning summary for the streamed AI note.
+ * Prose (not JSON) at a small token budget — an order of magnitude faster than
+ * narrateResults() and immune to the truncation/parse failures that hits.
+ */
+export async function narrateSummary(
+  query: string,
+  parsed: ParsedQuery,
+  results: VendorResult[],
+): Promise<{ summary: string }> {
+  const top = results.slice(0, 6).map((r, i) => {
+    const parts = [
+      `${i + 1}. ${r.vendor_name}`,
+      r.service_category ? `(${r.service_category})` : null,
+      r.vendor_base_postcode || null,
+      r.distance_miles != null ? `${r.distance_miles.toFixed(1)} mi` : null,
+      r.vendor_price_from ? `from £${r.vendor_price_from}` : null,
+      r.service_dietary_options?.length ? `dietary: ${r.service_dietary_options.join(", ")}` : null,
+    ];
+    return parts.filter(Boolean).join(" · ");
+  }).join("\n");
+
+  try {
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 320,
+      system: `You are Patch — a calm, knowledgeable concierge for mobile food and catering in London. Given a client's search and the top ranked vendors, write a SHORT reasoned summary: 2–3 sentences, light first person ("I'd lean…", "I've put…"), reasoning about why these fit the occasion (cuisine, guest count, budget, area). Wrap 2–4 key phrases in <strong> tags. British English, £ not $, sentence case, no emoji. Output ONLY the summary sentences — no preamble, no JSON, no lists.`,
+      messages: [{
+        role: "user",
+        content: `Client searched: "${query}"\nParsed intent: ${JSON.stringify(parsed)}\n\nTop vendors:\n${top}`,
+      }],
+    });
+    const text = response.content[0].type === "text" ? response.content[0].text.trim() : "";
+    return { summary: text };
+  } catch (err) {
+    console.error("[narrateSummary] failed:", err);
+    return { summary: "" };
+  }
+}
+
+// ── Main export (legacy, single-shot) ──
 
 export async function aiSearch(query: string): Promise<AIResult> {
   // 1. Parse → structured filters + semantic string

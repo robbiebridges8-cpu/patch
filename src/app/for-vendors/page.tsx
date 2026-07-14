@@ -1,5 +1,11 @@
 import Header from "@/components/layout/Header";
 
+export const metadata = {
+  title: "List your service",
+  description: "Get matched with clients actively looking for what you cook. No commission, no per-lead fees — £20/month to be listed, matched, and reviewed on Patch.",
+  alternates: { canonical: "/for-vendors" },
+};
+
 export default function ForVendorsPage() {
   return (
     <>

@@ -1,7 +1,15 @@
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Search",
+  description: "Describe your occasion and Patch returns a reasoned shortlist of mobile food vendors in London.",
+  robots: { index: false, follow: true },
+};
+
+import { Suspense } from "react";
+import { quickSearch, narrateSummary, type VendorResult } from "@/lib/ai";
+import { categoryPhoto } from "@/lib/categoryPhoto";
 import { supabase } from "@/lib/supabase";
-import { aiSearch } from "@/lib/ai";
 import Header from "@/components/layout/Header";
 import SearchBar from "@/components/search/SearchBar";
 import ParsedChips from "@/components/search/ParsedChips";
@@ -9,6 +17,7 @@ import AINote from "@/components/search/AINote";
 import VendorRow from "@/components/search/VendorRow";
 import FilterSidebarLive from "@/components/search/FilterSidebarLive";
 import FollowupsCard from "@/components/search/FollowupsCard";
+import { ResultsSkeleton, SidebarSkeleton, AINoteSkeleton } from "@/components/search/SearchSkeleton";
 import type { VendorMatch } from "@/types/vendor";
 import styles from "./page.module.css";
 
@@ -20,183 +29,249 @@ interface SearchParams {
   setting?: string;
 }
 
-const VENDOR_SELECT = `
-  *,
-  vendor_photos ( url, alt_text, position ),
-  vendor_services ( id, category, dietary_options, capacity_min, capacity_max )
-`;
+// ── Mappers ──
 
-async function getAllVendors() {
-  const { data, error } = await supabase
-    .from("vendors")
-    .select(VENDOR_SELECT)
-    .eq("status", "live");
-  if (error) console.error("getAllVendors error:", error);
-  return data || [];
-}
-
-async function getVendorsByIds(ids: string[]) {
-  const { data, error } = await supabase
-    .from("vendors")
-    .select(VENDOR_SELECT)
-    .in("id", ids)
-    .eq("status", "live");
-  if (error) console.error("getVendorsByIds error:", error);
-  return data || [];
-}
-
-function getVendorCategory(v: Record<string, unknown>): string {
-  const services = (v.vendor_services as Record<string, unknown>[]) || [];
-  if (services.length > 0 && services[0].category) return services[0].category as string;
-  return "Vendor";
-}
-
-function getVendorDietary(v: Record<string, unknown>): string[] {
-  const services = (v.vendor_services as Record<string, unknown>[]) || [];
-  if (services.length > 0) return (services[0].dietary_options as string[]) || [];
-  return [];
-}
-
-function toVendorMatch(
-  v: Record<string, unknown>,
-  rank: number,
-  matchNote: string,
-  featured: boolean,
-  adjacent: boolean
-): VendorMatch {
-  const photos = (v.vendor_photos as Record<string, unknown>[]) || [];
-  const sortedPhotos = [...photos].sort((a, b) => (a.position as number) - (b.position as number));
-  const category = getVendorCategory(v);
-  const dietary = getVendorDietary(v);
-
+function resultToMatch(r: VendorResult, rank: number, note: string, adjacent = false): VendorMatch {
+  const dietary = r.service_dietary_options || [];
   return {
     vendor: {
-      id: v.id as string, slug: v.slug as string, name: v.name as string,
-      description: v.description as string | null, status: v.status as "live",
-      ownerId: v.owner_id as string | null, contactEmail: v.contact_email as string | null,
-      contactPhone: v.contact_phone as string | null, website: v.website as string | null,
-      instagram: v.instagram as string | null, whatsapp: v.whatsapp as string | null,
-      basePostcode: v.base_postcode as string | null,
-      coverageRadiusMiles: v.coverage_radius_miles as number,
-      priceFrom: v.price_from as number | null, priceTo: v.price_to as number | null,
-      priceNotes: v.price_notes as string | null, bio: v.bio as string | null,
-      faq: null, cancellationPolicy: v.cancellation_policy as string | null,
-      minLeadDays: v.min_lead_days as number, maxAdvanceDays: v.max_advance_days as number,
-      ratingAvg: v.rating_avg as number | null, reviewCount: v.review_count as number,
-      createdAt: v.created_at as string, updatedAt: v.updated_at as string,
+      id: r.vendor_id, slug: r.vendor_slug, name: r.vendor_name,
+      description: r.vendor_description, status: "live",
+      ownerId: null, contactEmail: null, contactPhone: null, website: null,
+      instagram: null, whatsapp: null, basePostcode: r.vendor_base_postcode,
+      coverageRadiusMiles: r.vendor_coverage_radius_miles,
+      priceFrom: r.vendor_price_from, priceTo: null, priceNotes: r.vendor_price_notes,
+      bio: r.vendor_bio, faq: null, cancellationPolicy: null,
+      minLeadDays: 0, maxAdvanceDays: 0,
+      ratingAvg: r.vendor_rating_avg, reviewCount: r.vendor_review_count,
+      createdAt: "", updatedAt: "",
     },
-    rank, featured, adjacent, matchReason: matchNote,
+    rank, featured: rank === 1, adjacent, matchReason: note,
     matchedTags: dietary.slice(0, 3).map((d) => ({ label: d, good: true })),
-    category,
-    distance: `${v.base_postcode}`,
-    metaLine: [v.base_postcode, (v.review_count as number) > 0 ? `${v.review_count} reviews` : null].filter(Boolean).join(" · "),
-    photoUrl: sortedPhotos.length > 0 ? sortedPhotos[0].url as string : "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80",
-    photoCount: photos.length,
-    rating: (v.rating_avg as number) || 0,
-    bookingCount: v.review_count as number,
-    priceLabel: v.price_from ? `from £${v.price_from}` : "Enquire",
-    priceUnit: v.price_notes ? (v.price_notes as string).split('.')[0] : "",
+    category: r.service_category || "Vendor",
+    distance: r.vendor_base_postcode || "",
+    metaLine: "",
+    photoUrl: categoryPhoto(r.service_category),
+    photoCount: 0,
+    rating: r.vendor_rating_avg || 0,
+    bookingCount: r.vendor_review_count,
+    priceLabel: r.vendor_price_from ? `from £${r.vendor_price_from}` : "Enquire",
+    priceUnit: "",
   };
 }
 
-function filterVendors(vendors: Record<string, unknown>[], params: SearchParams) {
-  let results = [...vendors];
+function rowToMatch(v: Record<string, unknown>, rank: number, note: string): VendorMatch {
+  const services = (v.vendor_services as Record<string, unknown>[]) || [];
+  const svc = services[0] || {};
+  const dietary = (svc.dietary_options as string[]) || [];
+  return {
+    vendor: {
+      id: v.id as string, slug: v.slug as string, name: v.name as string,
+      description: v.description as string | null, status: "live",
+      ownerId: null, contactEmail: null, contactPhone: null, website: null,
+      instagram: null, whatsapp: null, basePostcode: v.base_postcode as string | null,
+      coverageRadiusMiles: (v.coverage_radius_miles as number) ?? 5,
+      priceFrom: v.price_from as number | null, priceTo: null,
+      priceNotes: v.price_notes as string | null, bio: v.bio as string | null,
+      faq: null, cancellationPolicy: null, minLeadDays: 0, maxAdvanceDays: 0,
+      ratingAvg: v.rating_avg as number | null, reviewCount: (v.review_count as number) ?? 0,
+      createdAt: "", updatedAt: "",
+    },
+    rank, featured: rank === 1, adjacent: false, matchReason: note,
+    matchedTags: dietary.slice(0, 3).map((d) => ({ label: d, good: true })),
+    category: (svc.category as string) || "Vendor",
+    distance: (v.base_postcode as string) || "",
+    metaLine: "",
+    photoUrl: categoryPhoto(svc.category as string),
+    photoCount: 0,
+    rating: (v.rating_avg as number) || 0,
+    bookingCount: (v.review_count as number) || 0,
+    priceLabel: v.price_from ? `from £${v.price_from}` : "Enquire",
+    priceUnit: "",
+  };
+}
+
+// ── Sidebar (its own boundary so it never blocks results) ──
+
+async function SidebarData({
+  activeTypes, currentBudget, currentSetting,
+}: {
+  activeTypes: string[];
+  currentBudget?: number;
+  currentSetting?: string;
+}) {
+  const { data } = await supabase
+    .from("vendor_services")
+    .select("category")
+    .not("category", "is", null);
+
+  const counts: Record<string, number> = {};
+  for (const row of data || []) {
+    const c = (row as { category: string | null }).category;
+    if (c) counts[c] = (counts[c] || 0) + 1;
+  }
+
+  return (
+    <FilterSidebarLive
+      typeCounts={counts}
+      activeTypes={activeTypes}
+      currentBudget={currentBudget}
+      currentSetting={currentSetting}
+    />
+  );
+}
+
+// ── Streamed AI reasoning note ──
+
+async function StreamedNote({ promise }: { promise: Promise<{ summary: string }> }) {
+  let n: { summary: string } | null = null;
+  try {
+    n = await promise;
+  } catch {
+    return null; // reasoning is a nice-to-have; cards already rendered
+  }
+  if (!n?.summary) return null;
+  return (
+    <div className={styles.answerRow}>
+      <AINote html={n.summary} />
+    </div>
+  );
+}
+
+// ── AI results (fast cards first, narration streams in) ──
+
+async function AIResults({ query }: { query: string }) {
+  let quick: Awaited<ReturnType<typeof quickSearch>>;
+  try {
+    quick = await quickSearch(query);
+  } catch (e) {
+    console.error("[search] quickSearch failed:", e);
+    return (
+      <div className={styles.errorBox} role="alert">
+        <strong>Search hit a snag.</strong> We couldn&apos;t reach the matching engine just now —
+        please try that search again in a moment.
+      </div>
+    );
+  }
+
+  if (quick.results.length === 0) {
+    return (
+      <div className={styles.empty}>
+        No vendors match &ldquo;{query}&rdquo; yet. Try broadening the occasion, budget, or area.
+      </div>
+    );
+  }
+
+  const matches = quick.results.map((r, i) => resultToMatch(r, i + 1, r.vendor_description || ""));
+  // Kick off the heavy narration but don't await it — it streams into its own boundary.
+  const narratePromise = quick.usedFallback
+    ? null
+    : narrateSummary(query, quick.parsed, quick.results);
+
+  return (
+    <>
+      {quick.chips.length > 0 && (
+        <div className={styles.chipsRow}>
+          <ParsedChips chips={quick.chips} />
+        </div>
+      )}
+
+      {narratePromise && (
+        <Suspense fallback={<AINoteSkeleton />}>
+          <StreamedNote promise={narratePromise} />
+        </Suspense>
+      )}
+
+      <div className={styles.vendorList}>
+        {matches.map((m) => (
+          <VendorRow key={m.vendor.id} match={m} />
+        ))}
+      </div>
+
+      <div className={styles.askPatch}>
+        <FollowupsCard />
+      </div>
+    </>
+  );
+}
+
+// ── Keyword fallback (no AI keys configured) ──
+
+async function KeywordResults({
+  query, params, hasAI, hasVoyage,
+}: {
+  query: string;
+  params: SearchParams;
+  hasAI: boolean;
+  hasVoyage: boolean;
+}) {
+  const { data } = await supabase
+    .from("vendors")
+    .select("*, vendor_services ( category, dietary_options )")
+    .eq("status", "live");
+
+  let rows = (data as Record<string, unknown>[]) || [];
+
   if (params.type) {
     const types = params.type.split(",");
-    results = results.filter((v) => types.includes(getVendorCategory(v)));
+    rows = rows.filter((v) => {
+      const svc = ((v.vendor_services as Record<string, unknown>[]) || [])[0];
+      return types.includes((svc?.category as string) || "");
+    });
   }
   if (params.budget) {
     const max = parseInt(params.budget, 10);
-    if (!isNaN(max)) results = results.filter((v) => (v.price_from as number | null) === null || (v.price_from as number) <= max);
+    if (!isNaN(max)) rows = rows.filter((v) => (v.price_from as number | null) == null || (v.price_from as number) <= max);
   }
-  if (params.q) {
-    const terms = params.q.toLowerCase().split(/\s+/);
-    results = results.filter((v) => {
-      const searchable = `${v.name} ${v.description} ${v.bio} ${getVendorCategory(v)}`.toLowerCase();
-      return terms.some((t) => searchable.includes(t));
+  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+  if (terms.length) {
+    rows = rows.filter((v) => {
+      const svc = ((v.vendor_services as Record<string, unknown>[]) || [])[0];
+      const hay = `${v.name} ${v.description} ${v.bio} ${svc?.category || ""}`.toLowerCase();
+      return terms.some((t) => hay.includes(t));
     });
   }
-  return results;
+  rows.sort((a, b) => ((b.review_count as number) || 0) - ((a.review_count as number) || 0));
+
+  const matches = rows.map((v, i) => rowToMatch(v, i + 1, (v.description as string) || ""));
+  const note = `<strong>${matches.length} vendor${matches.length !== 1 ? "s" : ""}</strong> found${
+    !hasAI ? ". Add an Anthropic API key to enable AI-powered matching." : !hasVoyage ? ". Add a Voyage API key to enable semantic search." : "."
+  }`;
+
+  return (
+    <>
+      <div className={styles.answerRow}>
+        <AINote html={note} />
+      </div>
+      {matches.length > 0 ? (
+        <div className={styles.vendorList}>
+          {matches.map((m) => (
+            <VendorRow key={m.vendor.id} match={m} />
+          ))}
+        </div>
+      ) : (
+        <div className={styles.empty}>No vendors match your filters. Try broadening your search.</div>
+      )}
+    </>
+  );
 }
 
-function sortVendors(vendors: Record<string, unknown>[], sort: string) {
-  const sorted = [...vendors];
-  switch (sort) {
-    case "rating": sorted.sort((a, b) => ((b.rating_avg as number) || 0) - ((a.rating_avg as number) || 0)); break;
-    case "price_low": sorted.sort((a, b) => ((a.price_from as number) || 9999) - ((b.price_from as number) || 9999)); break;
-    case "price_high": sorted.sort((a, b) => ((b.price_from as number) || 0) - ((a.price_from as number) || 0)); break;
-    default: sorted.sort((a, b) => ((b.review_count as number) || 0) - ((a.review_count as number) || 0)); break;
-  }
-  return sorted;
-}
-
-function countByCategory(vendors: Record<string, unknown>[]) {
-  const counts: Record<string, number> = {};
-  for (const v of vendors) {
-    const cat = getVendorCategory(v);
-    if (cat && cat !== "Vendor") counts[cat] = (counts[cat] || 0) + 1;
-  }
-  return counts;
-}
-
-export default async function SearchPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const params = await searchParams;
-  const query = params.q || "";
-  const sort = params.sort || "reviews";
-  const activeTypes = params.type ? params.type.split(",") : [];
-
-  // Check at request time, not module load time (matters for serverless cold starts)
+async function Results({ query, params }: { query: string; params: SearchParams }) {
   const hasAI = !!process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== "sk-ant-xxx";
   const hasVoyage = !!process.env.VOYAGE_API_KEY;
 
-  const allVendors = await getAllVendors();
-  console.log(`[search] hasAI=${hasAI} hasVoyage=${hasVoyage} query="${query}" vendors=${allVendors.length}`);
-  const typeCounts = countByCategory(allVendors);
+  if (hasAI && hasVoyage) return <AIResults query={query} />;
+  return <KeywordResults query={query} params={params} hasAI={hasAI} hasVoyage={hasVoyage} />;
+}
 
-  let matches: VendorMatch[];
-  let chips: string[] = [];
-  let aiSummary = "";
-  let usedAI = false;
+// ── Page ──
 
-  if (query && hasAI && hasVoyage) {
-    try {
-      console.log("[search] calling aiSearch...");
-      const ai = await aiSearch(query);
-      console.log(`[search] aiSearch returned: chips=${ai.chips.length} summary=${ai.summary.length}chars vendorMatches=${ai.vendorMatches.length} vendorIds=${ai.vendorIds.length}`);
-      chips = ai.chips;
-      aiSummary = ai.summary;
-      usedAI = true;
-
-      const matchedIds = ai.vendorMatches.map((m) => m.vendor_id);
-      const fullVendors = matchedIds.length > 0 ? await getVendorsByIds(matchedIds) : [];
-      console.log(`[search] fetched ${fullVendors.length} full vendors for ${matchedIds.length} matched IDs`);
-      const vendorMap = new Map(fullVendors.map((v) => [v.id as string, v]));
-      const sortedAIMatches = [...ai.vendorMatches].sort((a, b) => a.rank - b.rank);
-
-      matches = sortedAIMatches
-        .filter((m) => vendorMap.has(m.vendor_id))
-        .map((m, i) => toVendorMatch(
-          vendorMap.get(m.vendor_id)!,
-          m.rank,
-          m.match_note,
-          i === 0,
-          m.is_adjacent,
-        ));
-      console.log(`[search] final matches: ${matches.length}`);
-    } catch (e) {
-      console.error("[search] AI search failed, falling back:", e);
-      const filtered = filterVendors(allVendors, params);
-      console.log(`[search] fallback filter returned ${filtered.length} vendors`);
-      const sorted = sortVendors(filtered, sort);
-      matches = sorted.map((v, i) => toVendorMatch(v, i + 1, v.description as string || "", i === 0, false));
-      chips = query.split(/,\s*/).map((c) => c.trim()).filter(Boolean);
-    }
-  } else {
-    const filtered = filterVendors(allVendors, params);
-    const sorted = sortVendors(filtered, sort);
-    matches = sorted.map((v, i) => toVendorMatch(v, i + 1, v.description as string || "", i === 0, false));
-    if (query) chips = query.split(/,\s*/).map((c) => c.trim()).filter(Boolean);
-  }
+export default async function SearchPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const params = await searchParams;
+  const query = (params.q || "").trim();
+  const sort = params.sort || "reviews";
+  const activeTypes = params.type ? params.type.split(",") : [];
+  const boundaryKey = `${query}|${params.type || ""}|${params.budget || ""}|${params.setting || ""}|${sort}`;
 
   return (
     <>
@@ -209,46 +284,26 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
         <div className={styles.layout}>
           <div className={styles.sidebarWrap}>
-            <FilterSidebarLive
-              typeCounts={typeCounts}
-              activeTypes={activeTypes}
-              currentBudget={params.budget ? parseInt(params.budget, 10) : undefined}
-              currentSetting={params.setting}
-            />
+            <Suspense fallback={<SidebarSkeleton />}>
+              <SidebarData
+                activeTypes={activeTypes}
+                currentBudget={params.budget ? parseInt(params.budget, 10) : undefined}
+                currentSetting={params.setting}
+              />
+            </Suspense>
           </div>
 
           <div className={styles.results}>
-            {chips.length > 0 && (
-              <div className={styles.chipsRow}>
-                <ParsedChips chips={chips} />
+            {query ? (
+              <Suspense key={boundaryKey} fallback={<ResultsSkeleton />}>
+                <Results query={query} params={params} />
+              </Suspense>
+            ) : (
+              <div className={styles.empty}>
+                Describe your occasion above — the vibe, guest count, budget, and area —
+                and Patch will put together a shortlist.
               </div>
             )}
-
-            {aiSummary && (
-              <div className={styles.answerRow}>
-                <AINote html={aiSummary} />
-              </div>
-            )}
-
-            {query && !usedAI && (
-              <div className={styles.answerRow}>
-                <AINote html={`<strong>${matches.length} vendor${matches.length !== 1 ? "s" : ""}</strong> found${!hasAI ? ". Add your Anthropic API key to enable AI-powered matching." : !hasVoyage ? ". Add your Voyage API key to enable semantic search." : "."}`} />
-              </div>
-            )}
-
-            <div className={styles.vendorList}>
-              {matches.map((m) => (
-                <VendorRow key={m.vendor.id} match={m} />
-              ))}
-            </div>
-
-            {matches.length === 0 && (
-              <div className={styles.empty}>No vendors match your filters. Try broadening your search.</div>
-            )}
-
-            <div className={styles.askPatch}>
-              <FollowupsCard />
-            </div>
           </div>
         </div>
       </main>

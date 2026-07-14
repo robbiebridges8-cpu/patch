@@ -1,5 +1,11 @@
 import Header from "@/components/layout/Header";
 
+export const metadata = {
+  title: "Terms of Service",
+  description: "The terms that govern your use of Patch.",
+  alternates: { canonical: "/terms" },
+};
+
 export default function TermsPage() {
   return (
     <>

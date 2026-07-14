@@ -19,9 +19,41 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+const DESCRIPTION =
+  "Describe your occasion in plain words. Patch returns a short, reasoned shortlist of mobile food vendors and caterers in London who actually fit.";
+
 export const metadata: Metadata = {
-  title: "Patch — mobile food & catering vendors in London",
-  description: "Describe your occasion in plain words. Patch returns a short, reasoned shortlist of mobile food vendors who actually fit.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Patch — mobile food & catering vendors in London",
+    template: "%s · Patch",
+  },
+  description: DESCRIPTION,
+  applicationName: "Patch",
+  keywords: [
+    "mobile food vendors", "London caterers", "street food catering",
+    "event catering London", "food trucks", "private party catering",
+  ],
+  openGraph: {
+    type: "website",
+    siteName: "Patch",
+    locale: "en_GB",
+    url: SITE_URL,
+    title: "Patch — mobile food & catering vendors in London",
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Patch — mobile food & catering vendors in London",
+    description: DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
+  alternates: { canonical: "/" },
 };
 
 export default function RootLayout({

@@ -1,5 +1,11 @@
 import Header from "@/components/layout/Header";
 
+export const metadata = {
+  title: "About",
+  description: "Patch is an AI-native marketplace matching London event organisers with vetted mobile food vendors and caterers.",
+  alternates: { canonical: "/about" },
+};
+
 export default function AboutPage() {
   return (
     <>

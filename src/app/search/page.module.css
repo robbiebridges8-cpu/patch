@@ -50,6 +50,20 @@
   color: var(--color-text-muted);
 }
 
+.errorBox {
+  padding: var(--space-5);
+  border-radius: var(--radius-lg, 16px);
+  background: var(--color-surface-raised, #fff6f2);
+  border: 1px solid var(--color-accent, #e8896b);
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-size);
+  line-height: 1.6;
+}
+
+.errorBox strong {
+  color: var(--color-text-primary);
+}
+
 @media (max-width: 1020px) {
   .layout { flex-direction: column; gap: var(--space-6); }
   .sidebarWrap { position: static; display: none; }

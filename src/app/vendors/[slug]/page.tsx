@@ -1,7 +1,11 @@
 export const dynamic = "force-dynamic";
 
+import { cache } from "react";
+import type { Metadata } from "next";
 import { supabase } from "@/lib/supabase";
+import { categoryPhoto } from "@/lib/categoryPhoto";
 import Header from "@/components/layout/Header";
+import EnquiryButton from "@/components/vendor/EnquiryForm";
 import { notFound } from "next/navigation";
 import styles from "./page.module.css";
 
@@ -15,12 +19,12 @@ const Check = () => (
   </svg>
 );
 
-async function getVendor(slug: string) {
+const getVendor = cache(async function getVendor(slug: string) {
   const { data } = await supabase
     .from("vendors")
     .select(`
       *,
-      vendor_services ( id, service_type, title, description, price_from, price_to, age_min, age_max, capacity_min, capacity_max, setting, duration_minutes, position ),
+      vendor_services ( id, service_type, category, dietary_options, title, description, price_from, price_to, age_min, age_max, capacity_min, capacity_max, setting, duration_minutes, position ),
       vendor_photos ( id, url, alt_text, position ),
       vendor_tag_assignments ( tag_id, tags ( slug, name, category ) ),
       reviews ( id, rating, title, body, party_date, child_age, guest_count, created_at ),
@@ -31,6 +35,35 @@ async function getVendor(slug: string) {
     .single();
 
   return data;
+});
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const vendor = await getVendor(slug);
+  if (!vendor) return { title: "Vendor not found" };
+
+  const photos = (vendor.vendor_photos as { url: string; position: number }[]) || [];
+  const hero = [...photos].sort((a, b) => a.position - b.position)[0]?.url;
+  const desc =
+    (vendor.description as string) ||
+    `${vendor.name} — mobile food & catering in London on Patch.`;
+
+  return {
+    title: vendor.name as string,
+    description: desc.slice(0, 160),
+    alternates: { canonical: `/vendors/${slug}` },
+    openGraph: {
+      type: "profile",
+      title: `${vendor.name} · Patch`,
+      description: desc.slice(0, 200),
+      url: `/vendors/${slug}`,
+      images: hero ? [{ url: hero }] : undefined,
+    },
+  };
 }
 
 export default async function VendorPage({
@@ -61,11 +94,9 @@ export default async function VendorPage({
     return tag.category !== "credential";
   });
 
-  const serviceTypes = [...new Set(services.map((s) => s.service_type as string))];
-  const category = serviceTypes
-    .slice(0, 2)
-    .map((t) => (t as string).replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()))
-    .join(" · ");
+  const categories = [...new Set(services.map((s) => s.category as string).filter(Boolean))];
+  const category = categories.slice(0, 2).join(" · ") || "Mobile catering";
+  const heroFallback = categoryPhoto(categories[0], 1200);
 
   return (
     <>
@@ -89,7 +120,7 @@ export default async function VendorPage({
               </>
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
-              <img className={styles.mainPhoto} src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&q=80" alt={vendor.name as string} />
+              <img className={styles.mainPhoto} src={heroFallback} alt={vendor.name as string} />
             )}
           </div>
 
@@ -150,9 +181,11 @@ export default async function VendorPage({
             </div>
 
             <div className={styles.ctaRow}>
-              <a href={`mailto:${vendor.contact_email as string}`} className={styles.ctaPrimary}>
-                Get in touch
-              </a>
+              <EnquiryButton
+                vendorId={vendor.id as string}
+                vendorName={vendor.name as string}
+                className={styles.ctaPrimary}
+              />
               {vendor.website && (
                 <a href={vendor.website as string} target="_blank" rel="noopener noreferrer" className={styles.ctaSecondary}>
                   Visit website
@@ -248,9 +281,11 @@ export default async function VendorPage({
             </>
           )}
 
-          <a href={`mailto:${vendor.contact_email as string}`} className={styles.sideCtaPrimary}>
-            Get in touch
-          </a>
+          <EnquiryButton
+            vendorId={vendor.id as string}
+            vendorName={vendor.name as string}
+            className={styles.sideCtaPrimary}
+          />
           {vendor.contact_phone && (
             <a href={`tel:${vendor.contact_phone as string}`} className={styles.sideCtaSecondary}>
               Call {vendor.contact_phone as string}

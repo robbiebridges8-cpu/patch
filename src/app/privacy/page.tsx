@@ -1,5 +1,11 @@
 import Header from "@/components/layout/Header";
 
+export const metadata = {
+  title: "Privacy Policy",
+  description: "How Patch collects, uses, and protects your data.",
+  alternates: { canonical: "/privacy" },
+};
+
 export default function PrivacyPage() {
   return (
     <>

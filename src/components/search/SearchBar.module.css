@@ -58,3 +58,35 @@
 .btn:hover {
   background: var(--color-accent-hover);
 }
+
+.btn:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--color-on-accent) 40%, transparent);
+  border-top-color: var(--color-on-accent);
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 1.6s;
+  }
+}

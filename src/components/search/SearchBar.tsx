@@ -1,19 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./SearchBar.module.css";
 
 export default function SearchBar({ query }: { query: string }) {
   const [value, setValue] = useState(query);
   const [focused, setFocused] = useState(false);
+  const [pending, setPending] = useState(false);
   const router = useRouter();
+
+  // Clear the pending state once the new results (new query prop) have arrived.
+  useEffect(() => {
+    setValue(query);
+    setPending(false);
+  }, [query]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (value.trim()) {
-      router.push(`/search?q=${encodeURIComponent(value.trim())}`);
-    }
+    const q = value.trim();
+    if (!q || q === query) return;
+    setPending(true);
+    router.push(`/search?q=${encodeURIComponent(q)}`);
   }
 
   return (
@@ -34,8 +42,15 @@ export default function SearchBar({ query }: { query: string }) {
         onBlur={() => setFocused(false)}
         placeholder="pizza van for a 40th in Hackney, July, ~50 in the garden, ~£600"
       />
-      <button type="submit" className={styles.btn}>
-        Find vendors
+      <button type="submit" className={styles.btn} disabled={pending}>
+        {pending ? (
+          <span className={styles.pending}>
+            <span className={styles.spinner} aria-hidden="true" />
+            Searching…
+          </span>
+        ) : (
+          "Find vendors"
+        )}
       </button>
     </form>
   );
