@@ -10,6 +10,7 @@ import Header from "@/components/layout/Header";
 import { createClient } from "@/lib/supabase/server";
 import EditListingForm from "./EditListingForm";
 import ClaimListingForm from "./ClaimListingForm";
+import BillingCard from "./BillingCard";
 import { signOut } from "./actions";
 import styles from "../vendor.module.css";
 
@@ -70,7 +71,12 @@ async function LeadsCard({ vendorId }: { vendorId: string }) {
   );
 }
 
-export default async function VendorDashboard() {
+export default async function VendorDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ billing?: string }>;
+}) {
+  const { billing } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/vendor/login");
@@ -80,6 +86,14 @@ export default async function VendorDashboard() {
     .select("id, name, slug, description, contact_email, contact_phone, price_from, price_notes, status, primary_category")
     .eq("owner_id", user.id)
     .maybeSingle();
+
+  const { data: sub } = vendor
+    ? await supabase
+        .from("subscriptions")
+        .select("status, stripe_customer_id")
+        .eq("vendor_id", vendor.id as string)
+        .maybeSingle()
+    : { data: null };
 
   return (
     <>
@@ -94,6 +108,17 @@ export default async function VendorDashboard() {
             <button className={styles.btnGhost} type="submit">Sign out</button>
           </form>
         </div>
+
+        {billing === "success" && (
+          <div className={`${styles.notice} ${styles.noticeOk}`}>
+            Payment received — your subscription is being confirmed. It may take a moment to show as active.
+          </div>
+        )}
+        {billing === "cancelled" && (
+          <div className={`${styles.notice} ${styles.noticeErr}`}>
+            Checkout cancelled — no charge was made. You can subscribe any time below.
+          </div>
+        )}
 
         {!vendor ? (
           <ClaimListingForm />
@@ -119,6 +144,11 @@ export default async function VendorDashboard() {
                 }}
               />
             </div>
+
+            <BillingCard
+              status={(sub?.status as string) ?? null}
+              hasCustomer={!!sub?.stripe_customer_id}
+            />
 
             <LeadsCard vendorId={vendor.id as string} />
           </>
