@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Generated seed artifacts (large; reproducible from scripts/seed-500.mjs)
+seed/sql/
+seed/locations.json
+seed/emb-cache.json
