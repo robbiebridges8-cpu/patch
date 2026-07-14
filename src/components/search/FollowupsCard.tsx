@@ -1,17 +1,31 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import styles from "./FollowupsCard.module.css";
 
 const followups = [
-  "Only the ones with their own gazebo?",
-  "Swap pizza for tacos?",
-  "Anything under £500?",
-  "Who can do gluten-free properly?",
+  "only the ones with their own gazebo",
+  "swap to tacos instead",
+  "keep it under £500",
+  "must do gluten-free properly",
 ];
 
 export default function FollowupsCard() {
   const [value, setValue] = useState("");
+  const [pending, setPending] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentQuery = searchParams.get("q") || "";
+
+  function refine(text: string) {
+    const t = text.trim();
+    if (!t) return;
+    // Fold the refinement into the current brief so the AI re-parses the whole intent.
+    const combined = currentQuery ? `${currentQuery}, ${t}` : t;
+    setPending(true);
+    router.push(`/search?q=${encodeURIComponent(combined)}`);
+  }
 
   return (
     <section className={styles.panel}>
@@ -23,31 +37,38 @@ export default function FollowupsCard() {
       </div>
 
       <p className={styles.note}>
-        Want me to tighten this? I can filter to vans with their own gazebo, or swap the cuisine entirely.
+        Want me to tighten this? Add a detail and I&apos;ll rework the shortlist around it.
       </p>
 
       <div className={styles.followups}>
         {followups.map((f) => (
-          <button key={f} type="button" className={styles.followup}>
+          <button key={f} type="button" className={styles.followup} onClick={() => refine(f)} disabled={pending}>
             {f}
           </button>
         ))}
       </div>
 
-      <div className={styles.inputRow}>
+      <form
+        className={styles.inputRow}
+        onSubmit={(e) => {
+          e.preventDefault();
+          refine(value);
+        }}
+      >
         <input
           type="text"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="Refine, swap, or ask anything…"
           className={styles.input}
+          disabled={pending}
         />
-        <button type="button" className={styles.sendBtn} aria-label="Ask">
+        <button type="submit" className={styles.sendBtn} aria-label="Refine search" disabled={pending || !value.trim()}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M5 12h14M13 6l6 6-6 6" />
           </svg>
         </button>
-      </div>
+      </form>
     </section>
   );
 }

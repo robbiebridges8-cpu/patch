@@ -285,7 +285,7 @@ let seed = 20260714;
 function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
 const pick = (a) => a[Math.floor(rnd() * a.length)];
 const pickN = (a, n) => { const s = new Set(); while (s.size < Math.min(n, a.length)) s.add(pick(a)); return [...s]; };
-const slugify = (s) => s.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const slugify = (s) => s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const sqlStr = (s) => (s == null ? "NULL" : `'${String(s).replace(/'/g, "''")}'`);
 const sqlArr = (a) => (a && a.length ? `ARRAY[${a.map((x) => `'${String(x).replace(/'/g, "''")}'`).join(",")}]::text[]` : "ARRAY[]::text[]");
 const money = (min, max) => Math.round((min + rnd() * (max - min)) / 25) * 25;
