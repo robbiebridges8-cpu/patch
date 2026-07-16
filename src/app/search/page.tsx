@@ -26,10 +26,10 @@ import styles from "./page.module.css";
 
 interface SearchParams {
   q?: string;
-  type?: string;
+  type?: string; // cuisine pre-filter (from quick-start chips), not a sidebar control
+  diet?: string; // comma-separated dietary needs
   budget?: string;
   sort?: string;
-  setting?: string;
 }
 
 // ── "Why it fits" — deterministic, query-specific signals (no AI, instant) ──
@@ -132,21 +132,6 @@ function rowToMatch(v: Record<string, unknown>, rank: number, note: string): Ven
   };
 }
 
-// ── Category counts for the filters ──
-
-async function getCategoryCounts(): Promise<Record<string, number>> {
-  const { data } = await supabase
-    .from("vendor_services")
-    .select("category")
-    .not("category", "is", null);
-  const counts: Record<string, number> = {};
-  for (const row of data || []) {
-    const c = (row as { category: string | null }).category;
-    if (c) counts[c] = (counts[c] || 0) + 1;
-  }
-  return counts;
-}
-
 // ── Apply the chosen sort to the ranked matches ──
 
 function applySort(matches: VendorMatch[], sort?: string): VendorMatch[] {
@@ -182,6 +167,7 @@ async function StreamedNote({ promise }: { promise: Promise<{ summary: string }>
 async function AIResults({ query, params }: { query: string; params: SearchParams }) {
   const overrides = {
     categories: params.type ? params.type.split(",") : undefined,
+    dietary: params.diet ? params.diet.split(",") : undefined,
     budgetMax: params.budget ? parseInt(params.budget, 10) : undefined,
   };
   let quick: Awaited<ReturnType<typeof quickSearch>>;
@@ -364,7 +350,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const params = await searchParams;
   const query = (params.q || "").trim();
   const sort = params.sort || "best";
-  const activeTypes = params.type ? params.type.split(",") : [];
+  const activeDietary = params.diet ? params.diet.split(",") : [];
   const budget = params.budget ? parseInt(params.budget, 10) : undefined;
 
   if (!query) {
@@ -384,9 +370,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     );
   }
 
-  const typeCounts = await getCategoryCounts();
-  const activeCount = activeTypes.length + (budget ? 1 : 0) + (params.setting ? 1 : 0);
-  const boundaryKey = `${query}|${params.type || ""}|${params.budget || ""}|${params.setting || ""}|${sort}`;
+  const activeCount = activeDietary.length + (budget ? 1 : 0);
+  const boundaryKey = `${query}|${params.type || ""}|${params.diet || ""}|${params.budget || ""}|${sort}`;
 
   return (
     <>
@@ -399,20 +384,13 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
         <div className={styles.layout}>
           <div className={styles.sidebarWrap}>
-            <FilterSidebarLive
-              typeCounts={typeCounts}
-              activeTypes={activeTypes}
-              currentBudget={budget}
-              currentSetting={params.setting}
-            />
+            <FilterSidebarLive activeDietary={activeDietary} currentBudget={budget} />
           </div>
 
           <div className={styles.results}>
             <SearchToolbar
-              typeCounts={typeCounts}
-              activeTypes={activeTypes}
+              activeDietary={activeDietary}
               currentBudget={budget}
-              currentSetting={params.setting}
               currentSort={sort}
               activeCount={activeCount}
             />
