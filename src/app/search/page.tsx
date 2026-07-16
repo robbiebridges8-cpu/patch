@@ -17,8 +17,9 @@ import ParsedChips from "@/components/search/ParsedChips";
 import AINote from "@/components/search/AINote";
 import VendorRow from "@/components/search/VendorRow";
 import FilterSidebarLive from "@/components/search/FilterSidebarLive";
+import SearchToolbar from "@/components/search/SearchToolbar";
 import FollowupsCard from "@/components/search/FollowupsCard";
-import { ResultsSkeleton, SidebarSkeleton, AINoteSkeleton } from "@/components/search/SearchSkeleton";
+import { ResultsSkeleton, AINoteSkeleton } from "@/components/search/SearchSkeleton";
 import type { VendorMatch } from "@/types/vendor";
 import styles from "./page.module.css";
 
@@ -130,34 +131,32 @@ function rowToMatch(v: Record<string, unknown>, rank: number, note: string): Ven
   };
 }
 
-// ── Sidebar (its own boundary so it never blocks results) ──
+// ── Category counts for the filters ──
 
-async function SidebarData({
-  activeTypes, currentBudget, currentSetting,
-}: {
-  activeTypes: string[];
-  currentBudget?: number;
-  currentSetting?: string;
-}) {
+async function getCategoryCounts(): Promise<Record<string, number>> {
   const { data } = await supabase
     .from("vendor_services")
     .select("category")
     .not("category", "is", null);
-
   const counts: Record<string, number> = {};
   for (const row of data || []) {
     const c = (row as { category: string | null }).category;
     if (c) counts[c] = (counts[c] || 0) + 1;
   }
+  return counts;
+}
 
-  return (
-    <FilterSidebarLive
-      typeCounts={counts}
-      activeTypes={activeTypes}
-      currentBudget={currentBudget}
-      currentSetting={currentSetting}
-    />
-  );
+// ── Apply the chosen sort to the ranked matches ──
+
+function applySort(matches: VendorMatch[], sort?: string): VendorMatch[] {
+  if (!sort || sort === "best") return matches; // keep relevance order
+  const out = [...matches];
+  switch (sort) {
+    case "rating": out.sort((a, b) => (b.rating || 0) - (a.rating || 0)); break;
+    case "price_low": out.sort((a, b) => (a.vendor.priceFrom ?? Infinity) - (b.vendor.priceFrom ?? Infinity)); break;
+    case "price_high": out.sort((a, b) => (b.vendor.priceFrom ?? -1) - (a.vendor.priceFrom ?? -1)); break;
+  }
+  return out;
 }
 
 // ── Streamed AI reasoning note ──
@@ -179,10 +178,14 @@ async function StreamedNote({ promise }: { promise: Promise<{ summary: string }>
 
 // ── AI results (fast cards first, narration streams in) ──
 
-async function AIResults({ query }: { query: string }) {
+async function AIResults({ query, params }: { query: string; params: SearchParams }) {
+  const overrides = {
+    categories: params.type ? params.type.split(",") : undefined,
+    budgetMax: params.budget ? parseInt(params.budget, 10) : undefined,
+  };
   let quick: Awaited<ReturnType<typeof quickSearch>>;
   try {
-    quick = await quickSearch(query);
+    quick = await quickSearch(query, overrides);
   } catch (e) {
     console.error("[search] quickSearch failed:", e);
     return (
@@ -201,10 +204,14 @@ async function AIResults({ query }: { query: string }) {
     );
   }
 
-  const matches = quick.results.map((r, i) => resultToMatch(r, i + 1, quick.parsed));
-  // The vector search already ranks by fit, so the top rows are the strongest
-  // matches — flag them as Patch's recommendations and pin them at the top.
-  const recCount = matches.length >= 4 ? 2 : matches.length >= 2 ? 1 : 0;
+  // Category/budget are pre-filtered in the vector search (see overrides); here
+  // we just apply the chosen sort. Default "best" keeps relevance order.
+  const sortActive = !!params.sort && params.sort !== "best";
+  let matches = quick.results.map((r, i) => resultToMatch(r, i + 1, quick.parsed));
+  matches = applySort(matches, params.sort);
+
+  // Only pin recommendations when showing the default "best match" order.
+  const recCount = sortActive ? 0 : matches.length >= 4 ? 2 : matches.length >= 2 ? 1 : 0;
   matches.forEach((m, i) => { m.featured = i < recCount; });
   const recommended = matches.slice(0, recCount);
   const others = matches.slice(recCount);
@@ -327,7 +334,7 @@ async function Results({ query, params }: { query: string; params: SearchParams 
   const hasAI = !!process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== "sk-ant-xxx";
   const hasVoyage = !!process.env.VOYAGE_API_KEY;
 
-  if (hasAI && hasVoyage) return <AIResults query={query} />;
+  if (hasAI && hasVoyage) return <AIResults query={query} params={params} />;
   return <KeywordResults query={query} params={params} hasAI={hasAI} hasVoyage={hasVoyage} />;
 }
 
@@ -336,8 +343,29 @@ async function Results({ query, params }: { query: string; params: SearchParams 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
   const query = (params.q || "").trim();
-  const sort = params.sort || "reviews";
+  const sort = params.sort || "best";
   const activeTypes = params.type ? params.type.split(",") : [];
+  const budget = params.budget ? parseInt(params.budget, 10) : undefined;
+
+  if (!query) {
+    return (
+      <>
+        <Header />
+        <main className={styles.main}>
+          <div className={styles.searchWrap}>
+            <SearchBar query={query} />
+          </div>
+          <div className={styles.empty}>
+            Describe your occasion above — the vibe, guest count, budget, and area —
+            and Patch will put together a shortlist.
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  const typeCounts = await getCategoryCounts();
+  const activeCount = activeTypes.length + (budget ? 1 : 0) + (params.setting ? 1 : 0);
   const boundaryKey = `${query}|${params.type || ""}|${params.budget || ""}|${params.setting || ""}|${sort}`;
 
   return (
@@ -351,26 +379,26 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
         <div className={styles.layout}>
           <div className={styles.sidebarWrap}>
-            <Suspense fallback={<SidebarSkeleton />}>
-              <SidebarData
-                activeTypes={activeTypes}
-                currentBudget={params.budget ? parseInt(params.budget, 10) : undefined}
-                currentSetting={params.setting}
-              />
-            </Suspense>
+            <FilterSidebarLive
+              typeCounts={typeCounts}
+              activeTypes={activeTypes}
+              currentBudget={budget}
+              currentSetting={params.setting}
+            />
           </div>
 
           <div className={styles.results}>
-            {query ? (
-              <Suspense key={boundaryKey} fallback={<ResultsSkeleton />}>
-                <Results query={query} params={params} />
-              </Suspense>
-            ) : (
-              <div className={styles.empty}>
-                Describe your occasion above — the vibe, guest count, budget, and area —
-                and Patch will put together a shortlist.
-              </div>
-            )}
+            <SearchToolbar
+              typeCounts={typeCounts}
+              activeTypes={activeTypes}
+              currentBudget={budget}
+              currentSetting={params.setting}
+              currentSort={sort}
+              activeCount={activeCount}
+            />
+            <Suspense key={boundaryKey} fallback={<ResultsSkeleton />}>
+              <Results query={query} params={params} />
+            </Suspense>
           </div>
         </div>
       </main>

@@ -7,7 +7,6 @@ export default function FilterSidebarLive({
   typeCounts,
   activeTypes,
   currentBudget,
-  currentSetting,
 }: {
   typeCounts: Record<string, number>;
   activeTypes: string[];
@@ -103,23 +102,6 @@ export default function FilterSidebarLive({
         </div>
       </div>
 
-      {/* Setup */}
-      <div className={styles.section}>
-        <span className={styles.sectionLabel}>Setting</span>
-        {["any", "indoor", "outdoor"].map((val) => (
-          <label key={val} className={styles.checkRow}>
-            <span className={styles.checkBox} data-checked={(currentSetting || "any") === val ? "" : undefined} />
-            <input
-              type="radio"
-              name="setting"
-              checked={(currentSetting || "any") === val}
-              onChange={() => navigate({ setting: val === "any" ? undefined : val })}
-              className={styles.srOnly}
-            />
-            {val === "any" ? "Any" : val.charAt(0).toUpperCase() + val.slice(1)}
-          </label>
-        ))}
-      </div>
     </aside>
   );
 }

@@ -328,8 +328,15 @@ export interface QuickSearchResult {
   usedFallback: boolean;
 }
 
-export async function quickSearch(query: string): Promise<QuickSearchResult> {
+export async function quickSearch(
+  query: string,
+  overrides?: { categories?: string[]; budgetMax?: number },
+): Promise<QuickSearchResult> {
   const parsed = await parseQuery(query);
+  // Explicit sidebar filters take precedence and become RPC pre-filters, so the
+  // vector search only considers eligible vendors (not a post-filter of the top-N).
+  if (overrides?.categories?.length) parsed.categories = overrides.categories;
+  if (overrides?.budgetMax != null) parsed.budget_max = overrides.budgetMax;
   console.log("[quickSearch] parsed:", JSON.stringify(parsed));
 
   // Embed and geocode are independent once we have the parse — run them together.

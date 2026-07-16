@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import styles from "./SortDropdown.module.css";
 
 const OPTIONS = [
-  { value: "reviews", label: "Most reviewed" },
+  { value: "best", label: "Best match" },
   { value: "rating", label: "Highest rated" },
   { value: "price_low", label: "Price: low to high" },
   { value: "price_high", label: "Price: high to low" },
@@ -16,7 +16,8 @@ export default function SortDropdown({ current }: { current: string }) {
 
   function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const params = new URLSearchParams(searchParams.toString());
-    params.set("sort", e.target.value);
+    if (e.target.value === "best") params.delete("sort");
+    else params.set("sort", e.target.value);
     router.push(`/search?${params.toString()}`);
   }
 
