@@ -24,6 +24,7 @@ export interface ParsedQuery {
   location: string | null;
   setting: string | null;
   season: string | null;
+  event_date: string | null;
   semantic_query: string;
   chips: string[];
 }
@@ -67,11 +68,12 @@ export interface VendorResult {
 // ── Step 1: Parse user query → structured filters + semantic string ──
 
 async function parseQuery(query: string): Promise<ParsedQuery> {
+  const today = new Date().toISOString().slice(0, 10);
   const response = await anthropic.messages.create({
     // Haiku: this is structured extraction, not reasoning — much faster time-to-cards.
     model: "claude-haiku-4-5-20251001",
     max_tokens: 1024,
-    system: `You parse event catering search queries into structured filters. Extract what you can; leave null for anything not mentioned.
+    system: `You parse event catering search queries into structured filters. Extract what you can; leave null for anything not mentioned. Today's date is ${today}.
 
 Categories (use ONLY these exact values, and only when the cuisine is clearly implied; leave empty if unsure): African, Asian street food, BBQ, British comfort, Burgers, Canapés, Caribbean, Chinese, Cocktail bar, Coffee, Crêpes & waffles, Desserts, Doughnuts, Fish & chips, Fried chicken, Grazing & cheese, Greek, Ice cream, Indian, Japanese, Korean, Middle Eastern, Pizza, Seafood, Spanish, Tacos & Mexican, Thai, Vegan
 Dietary (use ONLY these): vegan, vegetarian, gluten-free, halal, dairy-free, nut-free
@@ -81,8 +83,10 @@ For semantic_query: rewrite the user's intent as a rich, descriptive sentence su
 
 For chips: short, machine-terse labels shown to the user as parsed-intent readback. Examples: "Hackney", "~50 guests", "July", "garden", "≤ £600", "pizza". Lowercase/abbreviated, 2-6 chips.
 
+For event_date: if the query implies a specific calendar date (e.g. "August 15", "next Saturday", "on the 3rd", "12th July"), resolve it to an ISO date "YYYY-MM-DD" using today's date above; otherwise null. A vague season/month with no day stays null.
+
 Respond with ONLY valid JSON:
-{"categories": [], "dietary": [], "budget_max": null, "guest_count": null, "location": null, "setting": null, "season": null, "semantic_query": "...", "chips": []}`,
+{"categories": [], "dietary": [], "budget_max": null, "guest_count": null, "location": null, "setting": null, "season": null, "event_date": null, "semantic_query": "...", "chips": []}`,
     messages: [{ role: "user", content: query }],
   });
 
@@ -92,7 +96,7 @@ Respond with ONLY valid JSON:
   } catch {
     return {
       categories: [], dietary: [], budget_max: null, guest_count: null,
-      location: null, setting: null, season: null,
+      location: null, setting: null, season: null, event_date: null,
       semantic_query: query,
       chips: query.split(/,\s*/).map((s) => s.trim()).filter(Boolean),
     };

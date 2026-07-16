@@ -211,6 +211,25 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
   let matches = quick.results.map((r, i) => resultToMatch(r, i + 1, quick.parsed));
   matches = applySort(matches, params.sort);
 
+  // Availability: if the brief names a date, flag who's free and float them up
+  // so buyers don't waste an enquiry on a booked vendor.
+  const eventDate = quick.parsed.event_date;
+  if (eventDate) {
+    const { data: blocked } = await supabase
+      .from("vendor_blocked_dates")
+      .select("vendor_id")
+      .eq("blocked_date", eventDate)
+      .in("vendor_id", matches.map((m) => m.vendor.id));
+    const bookedIds = new Set((blocked || []).map((b) => (b as { vendor_id: string }).vendor_id));
+    const label = new Date(`${eventDate}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    matches.forEach((m) => {
+      const booked = bookedIds.has(m.vendor.id);
+      m.matchedTags = [{ label: booked ? `Booked ${label}` : `Free ${label}`, good: !booked }, ...m.matchedTags].slice(0, 4);
+    });
+    // Available first (stable sort keeps the prior order within each group).
+    matches = [...matches].sort((a, b) => Number(bookedIds.has(a.vendor.id)) - Number(bookedIds.has(b.vendor.id)));
+  }
+
   // Only pin recommendations when showing the default "best match" order.
   const recCount = sortActive ? 0 : matches.length >= 4 ? 2 : matches.length >= 2 ? 1 : 0;
   matches.forEach((m, i) => { m.featured = i < recCount; });
