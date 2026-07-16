@@ -73,7 +73,7 @@ function matchSignals(parsed: ParsedQuery | null, r: VendorResult): MatchedTag[]
 
 // ── Mappers ──
 
-function resultToMatch(r: VendorResult, rank: number, parsed: ParsedQuery | null): VendorMatch {
+function resultToMatch(r: VendorResult, rank: number, parsed: ParsedQuery | null, photoUrl?: string): VendorMatch {
   return {
     vendor: {
       id: r.vendor_id, slug: r.vendor_slug, name: r.vendor_name,
@@ -92,7 +92,7 @@ function resultToMatch(r: VendorResult, rank: number, parsed: ParsedQuery | null
     category: r.service_category || "Vendor",
     distance: r.vendor_base_postcode || "",
     metaLine: "",
-    photoUrl: categoryPhoto(r.service_category),
+    photoUrl: photoUrl || categoryPhoto(r.service_category),
     photoCount: 0,
     rating: r.vendor_rating_avg || 0,
     bookingCount: r.vendor_review_count,
@@ -191,10 +191,22 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
     );
   }
 
+  // Real vendor photos where they exist (else category stock).
+  const { data: photoRows } = await supabase
+    .from("vendor_photos")
+    .select("vendor_id, url, position")
+    .in("vendor_id", quick.results.map((r) => r.vendor_id))
+    .order("position", { ascending: true });
+  const photoByVendor = new Map<string, string>();
+  for (const row of photoRows || []) {
+    const p = row as { vendor_id: string; url: string };
+    if (!photoByVendor.has(p.vendor_id)) photoByVendor.set(p.vendor_id, p.url);
+  }
+
   // Category/budget are pre-filtered in the vector search (see overrides); here
   // we just apply the chosen sort. Default "best" keeps relevance order.
   const sortActive = !!params.sort && params.sort !== "best";
-  let matches = quick.results.map((r, i) => resultToMatch(r, i + 1, quick.parsed));
+  let matches = quick.results.map((r, i) => resultToMatch(r, i + 1, quick.parsed, photoByVendor.get(r.vendor_id)));
   matches = applySort(matches, params.sort);
 
   // Availability: if the brief names a date, flag who's free and float them up

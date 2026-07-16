@@ -10,6 +10,7 @@ import Header from "@/components/layout/Header";
 import { createClient } from "@/lib/supabase/server";
 import EditListingForm from "./EditListingForm";
 import ClaimListingForm from "./ClaimListingForm";
+import PhotoManager from "./PhotoManager";
 import BillingCard from "./BillingCard";
 import { signOut } from "./actions";
 import styles from "../vendor.module.css";
@@ -95,6 +96,14 @@ export default async function VendorDashboard({
         .maybeSingle()
     : { data: null };
 
+  const { data: photos } = vendor
+    ? await supabase
+        .from("vendor_photos")
+        .select("id, url")
+        .eq("vendor_id", vendor.id as string)
+        .order("position", { ascending: true })
+    : { data: [] };
+
   return (
     <>
       <Header />
@@ -152,6 +161,16 @@ export default async function VendorDashboard({
                   dietary_options: vendor.dietary_options as string[] | null,
                   vibe_tags: vendor.vibe_tags as string[] | null,
                 }}
+              />
+            </div>
+
+            <div className={styles.card}>
+              <div className={styles.cardHead}>
+                <span className={styles.cardTitle}>Photos</span>
+              </div>
+              <PhotoManager
+                vendorId={vendor.id as string}
+                initial={(photos as { id: string; url: string }[]) || []}
               />
             </div>
 
