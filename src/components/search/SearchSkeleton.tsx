@@ -1,4 +1,5 @@
 import styles from "./SearchSkeleton.module.css";
+import SearchingIndicator from "./SearchingIndicator";
 
 /** Shimmer block sized like the streamed AI reasoning note. */
 export function AINoteSkeleton() {
@@ -33,18 +34,12 @@ function CardSkeleton() {
 export function ResultsSkeleton() {
   return (
     <div role="status" aria-label="Finding vendors">
-      <div className={styles.chips} aria-hidden="true">
-        <span className={styles.chip} />
-        <span className={styles.chip} />
-        <span className={styles.chip} />
-      </div>
-      <AINoteSkeleton />
+      <SearchingIndicator />
       <div className={styles.list}>
         {Array.from({ length: 5 }).map((_, i) => (
           <CardSkeleton key={i} />
         ))}
       </div>
-      <span className={styles.srOnly}>Finding vendors that fit your occasion…</span>
     </div>
   );
 }

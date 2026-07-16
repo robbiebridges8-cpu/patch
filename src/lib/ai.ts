@@ -68,11 +68,12 @@ export interface VendorResult {
 
 async function parseQuery(query: string): Promise<ParsedQuery> {
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-6",
+    // Haiku: this is structured extraction, not reasoning — much faster time-to-cards.
+    model: "claude-haiku-4-5-20251001",
     max_tokens: 1024,
     system: `You parse event catering search queries into structured filters. Extract what you can; leave null for anything not mentioned.
 
-Categories (use ONLY these exact values): Pizza, Burgers, Tacos, BBQ, Grazing, Coffee cart, Desserts
+Categories (use ONLY these exact values, and only when the cuisine is clearly implied; leave empty if unsure): African, Asian street food, BBQ, British comfort, Burgers, Canapés, Caribbean, Chinese, Cocktail bar, Coffee, Crêpes & waffles, Desserts, Doughnuts, Fish & chips, Fried chicken, Grazing & cheese, Greek, Ice cream, Indian, Japanese, Korean, Middle Eastern, Pizza, Seafood, Spanish, Tacos & Mexican, Thai, Vegan
 Dietary (use ONLY these): vegan, vegetarian, gluten-free, halal, dairy-free, nut-free
 Setting: indoor, outdoor, or null
 
@@ -386,7 +387,7 @@ export async function narrateSummary(
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 320,
-      system: `You are Patch — a calm, knowledgeable concierge for mobile food and catering in London. Given a client's search and the top ranked vendors, write a SHORT reasoned summary: 2–3 sentences, light first person ("I'd lean…", "I've put…"), reasoning about why these fit the occasion (cuisine, guest count, budget, area). Wrap 2–4 key phrases in <strong> tags. British English, £ not $, sentence case, no emoji. Output ONLY the summary sentences — no preamble, no JSON, no lists.`,
+      system: `You are Patch — a calm, knowledgeable concierge for mobile food and catering in London. The vendors are given in ranked order of fit; the top one or two are shown to the client as "Patch recommends". Write a SHORT reasoned summary: 2–3 sentences, light first person ("I'd lean…", "I've put…"). LEAD by endorsing the top one or two by name (they are the featured recommendations) and why they fit, then a sentence on the wider set. Reason about the occasion — cuisine, guest count, budget, area. Wrap the recommended vendor names and 1–2 other key phrases in <strong> tags. British English, £ not $, sentence case, no emoji. Output ONLY the summary sentences — no preamble, no JSON, no lists.`,
       messages: [{
         role: "user",
         content: `Client searched: "${query}"\nParsed intent: ${JSON.stringify(parsed)}\n\nTop vendors:\n${top}`,

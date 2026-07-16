@@ -163,6 +163,13 @@ async function AIResults({ query }: { query: string }) {
   }
 
   const matches = quick.results.map((r, i) => resultToMatch(r, i + 1, r.vendor_description || ""));
+  // The vector search already ranks by fit, so the top rows are the strongest
+  // matches — flag them as Patch's recommendations and pin them at the top.
+  const recCount = matches.length >= 4 ? 2 : matches.length >= 2 ? 1 : 0;
+  matches.forEach((m, i) => { m.featured = i < recCount; });
+  const recommended = matches.slice(0, recCount);
+  const others = matches.slice(recCount);
+
   // Kick off the heavy narration but don't await it — it streams into its own boundary.
   const narratePromise = quick.usedFallback
     ? null
@@ -182,11 +189,32 @@ async function AIResults({ query }: { query: string }) {
         </Suspense>
       )}
 
-      <div className={styles.vendorList}>
-        {matches.map((m) => (
-          <VendorRow key={m.vendor.id} match={m} />
-        ))}
-      </div>
+      {recCount > 0 ? (
+        <>
+          <h2 className={styles.groupLabel}>{recCount > 1 ? "Patch recommends" : "Top match"}</h2>
+          <div className={styles.vendorList}>
+            {recommended.map((m) => (
+              <VendorRow key={m.vendor.id} match={m} />
+            ))}
+          </div>
+          {others.length > 0 && (
+            <>
+              <h2 className={styles.groupLabel}>More options</h2>
+              <div className={styles.vendorList}>
+                {others.map((m) => (
+                  <VendorRow key={m.vendor.id} match={m} />
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        <div className={styles.vendorList}>
+          {matches.map((m) => (
+            <VendorRow key={m.vendor.id} match={m} />
+          ))}
+        </div>
+      )}
 
       <div className={styles.askPatch}>
         <FollowupsCard />

@@ -31,7 +31,15 @@ export default function VendorRow({ match }: { match: VendorMatch }) {
 
       <div className={styles.body}>
         <div className={styles.topRow}>
-          <span className={styles.eyebrow}>{match.category}</span>
+          <span className={styles.eyebrow}>
+            {match.featured && (
+              <span className={styles.recBadge}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3 7h7l-5.5 4.5 2 7.5L12 17l-6.5 4 2-7.5L2 9h7z" /></svg>
+                Patch recommends
+              </span>
+            )}
+            {match.category}
+          </span>
           {match.priceLabel && (
             <span className={styles.priceSignal}>{match.priceLabel}</span>
           )}
