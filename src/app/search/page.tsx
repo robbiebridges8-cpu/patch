@@ -7,9 +7,10 @@ export const metadata = {
 };
 
 import { Suspense } from "react";
-import { quickSearch, narrateSummary, type VendorResult } from "@/lib/ai";
+import { quickSearch, narrateSummary, type VendorResult, type ParsedQuery } from "@/lib/ai";
 import { categoryPhoto } from "@/lib/categoryPhoto";
 import { supabase } from "@/lib/supabase";
+import type { MatchedTag } from "@/types/vendor";
 import Header from "@/components/layout/Header";
 import SearchBar from "@/components/search/SearchBar";
 import ParsedChips from "@/components/search/ParsedChips";
@@ -29,10 +30,48 @@ interface SearchParams {
   setting?: string;
 }
 
+// ── "Why it fits" — deterministic, query-specific signals (no AI, instant) ──
+
+function matchSignals(parsed: ParsedQuery | null, r: VendorResult): MatchedTag[] {
+  const sig: MatchedTag[] = [];
+
+  // Capacity vs guest count
+  if (r.service_capacity_max) {
+    if (parsed?.guest_count) {
+      const fits = r.service_capacity_max >= parsed.guest_count &&
+        (!r.service_capacity_min || r.service_capacity_min <= parsed.guest_count);
+      sig.push({ label: `Serves ${parsed.guest_count}`, good: fits });
+    } else {
+      sig.push({ label: `Up to ${r.service_capacity_max}`, good: false });
+    }
+  }
+  // Distance (only present when the search had a location)
+  if (r.distance_miles != null) {
+    const d = r.distance_miles;
+    sig.push({ label: `${d < 10 ? d.toFixed(1) : Math.round(d)} mi away`, good: d <= r.vendor_coverage_radius_miles });
+  }
+  // Budget
+  if (parsed?.budget_max && r.vendor_price_from != null) {
+    sig.push({ label: `from £${r.vendor_price_from}`, good: r.vendor_price_from <= parsed.budget_max });
+  }
+  // Dietary the buyer asked for
+  const dietary = r.service_dietary_options || [];
+  for (const d of parsed?.dietary || []) {
+    if (dietary.includes(d)) sig.push({ label: d, good: true });
+  }
+  // Fill with the vendor's own dietary badges if we have room
+  if (sig.length < 3) {
+    for (const d of dietary) {
+      if (sig.length >= 3) break;
+      if (!sig.some((s) => s.label === d)) sig.push({ label: d, good: false });
+    }
+  }
+  return sig.slice(0, 4);
+}
+
 // ── Mappers ──
 
-function resultToMatch(r: VendorResult, rank: number, note: string, adjacent = false): VendorMatch {
-  const dietary = r.service_dietary_options || [];
+function resultToMatch(r: VendorResult, rank: number, parsed: ParsedQuery | null): VendorMatch {
   return {
     vendor: {
       id: r.vendor_id, slug: r.vendor_slug, name: r.vendor_name,
@@ -46,8 +85,8 @@ function resultToMatch(r: VendorResult, rank: number, note: string, adjacent = f
       ratingAvg: r.vendor_rating_avg, reviewCount: r.vendor_review_count,
       createdAt: "", updatedAt: "",
     },
-    rank, featured: rank === 1, adjacent, matchReason: note,
-    matchedTags: dietary.slice(0, 3).map((d) => ({ label: d, good: true })),
+    rank, featured: rank === 1, adjacent: false, matchReason: r.vendor_description || "",
+    matchedTags: matchSignals(parsed, r),
     category: r.service_category || "Vendor",
     distance: r.vendor_base_postcode || "",
     metaLine: "",
@@ -162,7 +201,7 @@ async function AIResults({ query }: { query: string }) {
     );
   }
 
-  const matches = quick.results.map((r, i) => resultToMatch(r, i + 1, r.vendor_description || ""));
+  const matches = quick.results.map((r, i) => resultToMatch(r, i + 1, quick.parsed));
   // The vector search already ranks by fit, so the top rows are the strongest
   // matches — flag them as Patch's recommendations and pin them at the top.
   const recCount = matches.length >= 4 ? 2 : matches.length >= 2 ? 1 : 0;

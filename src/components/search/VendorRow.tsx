@@ -55,8 +55,13 @@ export default function VendorRow({ match }: { match: VendorMatch }) {
 
         {match.matchedTags.length > 0 && (
           <div className={styles.attributes}>
-            {match.matchedTags.slice(0, 3).map((t) => (
-              <span key={t.label} className={styles.attrChip}>{t.label}</span>
+            {match.matchedTags.slice(0, 4).map((t) => (
+              <span key={t.label} className={`${styles.attrChip} ${t.good ? styles.attrChipMet : ""}`}>
+                {t.good && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+                )}
+                {t.label}
+              </span>
             ))}
           </div>
         )}

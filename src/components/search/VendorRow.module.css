@@ -117,17 +117,26 @@
 
 .attrChip {
   height: 28px;
-  padding: 0 14px;
+  padding: 0 12px;
   display: inline-flex;
   align-items: center;
+  gap: 5px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--color-border-strong);
   font-family: var(--font-ui);
   font-size: 12.5px;
   font-weight: 500;
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary);
   background: transparent;
   cursor: default;
+}
+
+/* A signal that matches the buyer's brief — checked and emphasised. */
+.attrChipMet {
+  color: var(--color-accent-on-light);
+  border-color: var(--color-accent);
+  background: var(--color-accent-tint);
+  font-weight: 600;
 }
 
 .bottomRow {
