@@ -127,6 +127,29 @@ export async function claimListing(_prev: ActionState, formData: FormData): Prom
   return { ok: true };
 }
 
+const LEAD_STATUSES = ["sent", "viewed", "replied", "booked", "declined", "expired"] as const;
+
+export async function setEnquiryStatus(enquiryId: string, status: string): Promise<ActionState> {
+  if (!LEAD_STATUSES.includes(status as (typeof LEAD_STATUSES)[number])) {
+    return { error: "Unknown status." };
+  }
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Your session expired. Please sign in again." };
+
+  const { error } = await supabase
+    .from("enquiries")
+    .update({
+      status,
+      responded_at: status === "replied" || status === "booked" ? new Date().toISOString() : null,
+    })
+    .eq("id", enquiryId);
+
+  if (error) return { error: error.message };
+  revalidatePath("/vendor/dashboard");
+  return { ok: true };
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();

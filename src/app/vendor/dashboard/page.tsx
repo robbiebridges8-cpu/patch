@@ -11,22 +11,10 @@ import { createClient } from "@/lib/supabase/server";
 import EditListingForm from "./EditListingForm";
 import ClaimListingForm from "./ClaimListingForm";
 import PhotoManager from "./PhotoManager";
+import LeadRow, { type Lead } from "./LeadRow";
 import BillingCard from "./BillingCard";
 import { signOut } from "./actions";
 import styles from "../vendor.module.css";
-
-interface Lead {
-  id: string;
-  parent_name: string | null;
-  parent_email: string | null;
-  parent_phone: string | null;
-  party_date: string | null;
-  guest_count: number | null;
-  party_postcode: string | null;
-  message: string | null;
-  status: string;
-  created_at: string;
-}
 
 async function LeadsCard({ vendorId }: { vendorId: string }) {
   const supabase = await createClient();
@@ -37,36 +25,19 @@ async function LeadsCard({ vendorId }: { vendorId: string }) {
     .order("created_at", { ascending: false });
 
   const leads = (data as Lead[]) || [];
+  const newCount = leads.filter((l) => l.status === "sent" || l.status === "viewed").length;
 
   return (
     <div className={styles.card}>
       <div className={styles.cardHead}>
         <span className={styles.cardTitle}>Enquiries ({leads.length})</span>
+        {newCount > 0 && <span className={styles.badge}>{newCount} new</span>}
       </div>
 
       {leads.length === 0 ? (
         <div className={styles.empty}>No enquiries yet. They&apos;ll appear here the moment a client gets in touch.</div>
       ) : (
-        leads.map((l) => (
-          <div key={l.id} className={styles.lead}>
-            <div className={styles.leadHead}>
-              <span className={styles.leadName}>{l.parent_name || "Enquiry"}</span>
-              <span className={styles.leadDate}>
-                {new Date(l.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-              </span>
-            </div>
-            <div className={styles.leadMeta}>
-              {[
-                l.parent_email,
-                l.parent_phone,
-                l.party_date ? `Event: ${new Date(l.party_date).toLocaleDateString("en-GB")}` : null,
-                l.guest_count ? `${l.guest_count} guests` : null,
-                l.party_postcode,
-              ].filter(Boolean).join(" · ")}
-            </div>
-            {l.message && <div className={styles.leadMsg}>{l.message}</div>}
-          </div>
-        ))
+        leads.map((l) => <LeadRow key={l.id} lead={l} />)
       )}
     </div>
   );

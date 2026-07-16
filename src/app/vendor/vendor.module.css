@@ -198,6 +198,50 @@ select.input { appearance: none; background-image: none; cursor: pointer; }
 .leadMeta { font-size: 13px; color: var(--color-text-secondary, #6b6459); margin-bottom: 8px; }
 .leadMsg { font-size: 15px; line-height: 1.6; color: var(--color-text-primary, #241f19); white-space: pre-wrap; }
 
+.leadNew { border-color: var(--color-accent, #c0392b); border-left-width: 4px; }
+
+.leadStatus {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--color-surface-sunken, #f0ebe4);
+  color: var(--color-text-secondary, #6b6459);
+}
+.status_new { background: color-mix(in srgb, var(--color-accent, #c0392b) 16%, transparent); color: var(--color-accent, #a62f22); }
+.status_booked { background: #e9f6ee; color: #2f6d4f; }
+.status_declined { background: #f3efe9; color: #9a9186; }
+.status_replied { background: #eef2fb; color: #3b5ca8; }
+
+.leadActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  align-items: center;
+}
+
+.statusBtn {
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border-strong, #d9d1c5);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary, #6b6459);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+.statusBtn:hover { border-color: var(--color-text-primary); color: var(--color-text-primary); }
+.statusBtnActive {
+  border-color: var(--color-accent, #c0392b);
+  background: var(--color-accent, #c0392b);
+  color: #fff;
+}
+
 .empty {
   text-align: center;
   padding: 40px 20px;
