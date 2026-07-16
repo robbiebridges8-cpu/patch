@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Oswald, Geist_Mono } from "next/font/google";
+import ShortlistTray from "@/components/shortlist/ShortlistTray";
 import "./globals.css";
 
 const inter = Inter({
@@ -65,6 +66,7 @@ export default function RootLayout({
     <html lang="en-GB" className={`${inter.variable} ${oswald.variable} ${geistMono.variable}`}>
       <body>
         {children}
+        <ShortlistTray />
       </body>
     </html>
   );

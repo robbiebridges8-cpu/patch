@@ -1,0 +1,47 @@
+"use client";
+
+import Link from "next/link";
+import { useShortlist } from "@/lib/useShortlist";
+import styles from "./ShortlistTray.module.css";
+
+export default function ShortlistTray() {
+  const { items, remove, clear } = useShortlist();
+  if (items.length === 0) return null;
+
+  return (
+    <div className={styles.wrap} role="region" aria-label="Your shortlist">
+      <div className={styles.inner}>
+        <div className={styles.left}>
+          <span className={styles.count}>{items.length}</span>
+          <span className={styles.label}>
+            {items.length === 1 ? "vendor shortlisted" : "vendors shortlisted"}
+          </span>
+          <div className={styles.thumbs}>
+            {items.slice(0, 6).map((i) => (
+              <span key={i.slug} className={styles.thumb} title={i.name}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={i.photoUrl} alt="" />
+                <button
+                  type="button"
+                  className={styles.remove}
+                  aria-label={`Remove ${i.name}`}
+                  onClick={() => remove(i.slug)}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.right}>
+          <button type="button" className={styles.clear} onClick={clear}>Clear</button>
+          <Link href="/shortlist" className={styles.cta}>
+            Compare &amp; enquire
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
