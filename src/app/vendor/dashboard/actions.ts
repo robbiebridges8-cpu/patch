@@ -150,6 +150,67 @@ export async function setEnquiryStatus(enquiryId: string, status: string): Promi
   return { ok: true };
 }
 
+async function geocode(postcode: string): Promise<{ lat: number; lng: number } | null> {
+  if (!postcode) return null;
+  try {
+    const res = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.result) return { lat: data.result.latitude, lng: data.result.longitude };
+    }
+  } catch { /* ignore */ }
+  return null;
+}
+
+export async function createListing(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Your session expired. Please sign in again." };
+
+  const name = str(formData.get("name"), 200);
+  const category = str(formData.get("category"), 100);
+  const description = str(formData.get("description"), 2000);
+  const postcode = str(formData.get("postcode"), 20);
+  if (!name) return { error: "Your business needs a name." };
+
+  const geo = postcode ? await geocode(postcode) : null;
+
+  const { data: vendorId, error } = await supabase.rpc("create_vendor_listing", {
+    p_name: name,
+    p_category: category,
+    p_description: description,
+    p_postcode: postcode,
+    p_lat: geo?.lat ?? null,
+    p_lng: geo?.lng ?? null,
+  });
+
+  if (error) return { error: error.message };
+
+  // Embed the new listing so it's searchable the moment it's published.
+  if (typeof vendorId === "string") {
+    const r = await reembedVendor(supabase, vendorId);
+    if (!r.ok) console.error("[reembed] new listing", vendorId, r.error);
+  }
+
+  revalidatePath("/vendor/dashboard");
+  return { ok: true };
+}
+
+export async function publishListing(vendorId: string): Promise<ActionState> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Your session expired. Please sign in again." };
+
+  const { error } = await supabase
+    .from("vendors")
+    .update({ status: "live" })
+    .eq("id", vendorId)
+    .eq("owner_id", user.id);
+  if (error) return { error: error.message };
+  revalidatePath("/vendor/dashboard");
+  return { ok: true };
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();

@@ -9,7 +9,8 @@ import { redirect } from "next/navigation";
 import Header from "@/components/layout/Header";
 import { createClient } from "@/lib/supabase/server";
 import EditListingForm from "./EditListingForm";
-import ClaimListingForm from "./ClaimListingForm";
+import CreateListingForm from "./CreateListingForm";
+import PublishButton from "./PublishButton";
 import PhotoManager from "./PhotoManager";
 import AvailabilityManager from "./AvailabilityManager";
 import LeadRow, { type Lead } from "./LeadRow";
@@ -111,9 +112,18 @@ export default async function VendorDashboard({
         )}
 
         {!vendor ? (
-          <ClaimListingForm />
+          <CreateListingForm />
         ) : (
           <>
+            {vendor.status !== "live" && (
+              <div className={styles.publishBanner}>
+                <div>
+                  <strong>Your listing is a draft.</strong> It won&apos;t appear in search or to buyers until you publish it.
+                </div>
+                <PublishButton vendorId={vendor.id as string} />
+              </div>
+            )}
+
             <div className={styles.card}>
               <div className={styles.cardHead}>
                 <span className={styles.cardTitle}>Listing</span>
