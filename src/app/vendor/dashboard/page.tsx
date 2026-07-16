@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import EditListingForm from "./EditListingForm";
 import ClaimListingForm from "./ClaimListingForm";
 import PhotoManager from "./PhotoManager";
+import AvailabilityManager from "./AvailabilityManager";
 import LeadRow, { type Lead } from "./LeadRow";
 import BillingCard from "./BillingCard";
 import { signOut } from "./actions";
@@ -73,6 +74,15 @@ export default async function VendorDashboard({
         .select("id, url")
         .eq("vendor_id", vendor.id as string)
         .order("position", { ascending: true })
+    : { data: [] };
+
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const { data: blocked } = vendor
+    ? await supabase
+        .from("vendor_blocked_dates")
+        .select("blocked_date")
+        .eq("vendor_id", vendor.id as string)
+        .gte("blocked_date", todayIso)
     : { data: [] };
 
   return (
@@ -142,6 +152,16 @@ export default async function VendorDashboard({
               <PhotoManager
                 vendorId={vendor.id as string}
                 initial={(photos as { id: string; url: string }[]) || []}
+              />
+            </div>
+
+            <div className={styles.card}>
+              <div className={styles.cardHead}>
+                <span className={styles.cardTitle}>Availability</span>
+              </div>
+              <AvailabilityManager
+                vendorId={vendor.id as string}
+                initial={((blocked as { blocked_date: string }[]) || []).map((b) => b.blocked_date)}
               />
             </div>
 
