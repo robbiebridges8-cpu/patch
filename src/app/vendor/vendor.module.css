@@ -82,6 +82,35 @@
 
 .textarea { resize: vertical; line-height: 1.5; }
 
+select.input { appearance: none; background-image: none; cursor: pointer; }
+
+.hint { font-weight: 400; color: var(--color-text-muted, #9a9186); }
+
+.chipCheckRow { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.chipCheck {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-border-strong, #d9d1c5);
+  border-radius: 999px;
+  font-size: 14px;
+  color: var(--color-text-secondary, #6b6459);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+
+.chipCheck input { accent-color: var(--color-accent, #c0392b); margin: 0; }
+
+.chipCheck:has(input:checked) {
+  border-color: var(--color-accent, #c0392b);
+  background: var(--color-accent-tint, #f7e4df);
+  color: var(--color-accent-on-light, #a62f22);
+  font-weight: 600;
+}
+
 .row2 { display: flex; gap: 14px; }
 .row2 > * { flex: 1; min-width: 0; }
 

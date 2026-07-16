@@ -12,43 +12,89 @@ function str(v: FormDataEntryValue | null, max: number): string | null {
   return s ? s.slice(0, max) : null;
 }
 
+function num(v: FormDataEntryValue | null): number | null {
+  const s = v ? String(v).trim() : "";
+  if (!s) return null;
+  const n = Number(s);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
+const sameArr = (a: unknown, b: string[]) =>
+  JSON.stringify((Array.isArray(a) ? a : []).slice().sort()) === JSON.stringify(b.slice().sort());
+
 export async function updateListing(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Your session expired. Please sign in again." };
 
   const id = String(formData.get("vendorId") || "");
-  const priceRaw = formData.get("price_from");
-  const price = priceRaw && String(priceRaw).trim() ? Number(priceRaw) : null;
-  const newDescription = str(formData.get("description"), 2000);
+  const name = str(formData.get("name"), 200);
+  const category = str(formData.get("category"), 100);
+  const description = str(formData.get("description"), 2000);
+  const bio = str(formData.get("bio"), 5000);
+  const dietary = formData.getAll("dietary").map(String).filter(Boolean);
+  const vibeRaw = str(formData.get("vibe"), 500);
+  const vibe = vibeRaw ? vibeRaw.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 12) : [];
+  const capMin = num(formData.get("capacity_min"));
+  const capMax = num(formData.get("capacity_max"));
+  const coverage = num(formData.get("coverage_radius_miles"));
 
-  // Was the embedding-relevant text (description) actually changed?
+  if (!name) return { error: "Your business needs a name." };
+
   const { data: before } = await supabase
     .from("vendors")
-    .select("description")
+    .select("name, primary_category, description, bio, dietary_options, vibe_tags")
     .eq("id", id)
     .eq("owner_id", user.id)
     .maybeSingle();
-  const descriptionChanged = !!before && before.description !== newDescription;
+  if (!before) return { error: "We couldn't find your listing." };
 
   const { error } = await supabase
     .from("vendors")
     .update({
-      description: newDescription,
+      name,
+      primary_category: category,
+      description,
+      bio,
       contact_email: str(formData.get("contact_email"), 320),
       contact_phone: str(formData.get("contact_phone"), 30),
-      price_from: price != null && Number.isFinite(price) && price >= 0 ? price : null,
+      website: str(formData.get("website"), 500),
+      instagram: str(formData.get("instagram"), 100),
+      price_from: num(formData.get("price_from")),
       price_notes: str(formData.get("price_notes"), 500),
+      coverage_radius_miles: coverage ?? 5,
+      typical_event_size_min: capMin,
+      typical_event_size_max: capMax,
+      dietary_options: dietary,
+      vibe_tags: vibe,
     })
     .eq("id", id)
     .eq("owner_id", user.id);
 
   if (error) return { error: error.message };
 
-  // Auto re-embed so AI search reflects the new text. Best-effort: a Voyage
-  // failure (e.g. rate limit) leaves the old vector in place; the save still
-  // succeeds. Only runs when the searchable text actually changed.
-  if (descriptionChanged) {
+  // Keep the service row (what search reads) in sync with the listing.
+  await supabase
+    .from("vendor_services")
+    .update({
+      title: name,
+      description,
+      category,
+      dietary_options: dietary,
+      capacity_min: capMin,
+      capacity_max: capMax,
+    })
+    .eq("vendor_id", id);
+
+  // Re-embed only when the searchable text actually changed (best-effort).
+  const changed =
+    before.name !== name ||
+    before.primary_category !== category ||
+    before.description !== description ||
+    before.bio !== bio ||
+    !sameArr(before.dietary_options, dietary) ||
+    !sameArr(before.vibe_tags, vibe);
+  if (changed) {
     const r = await reembedVendor(supabase, id);
     if (!r.ok) console.error("[reembed] failed for vendor", id, "-", r.error);
   }
