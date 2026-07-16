@@ -66,6 +66,13 @@
   color: var(--color-text-muted);
 }
 
+.emptyLead {
+  font-size: var(--type-body-lg-size);
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  max-width: 640px;
+}
+
 .errorBox {
   padding: var(--space-5);
   border-radius: var(--radius-lg, 16px);

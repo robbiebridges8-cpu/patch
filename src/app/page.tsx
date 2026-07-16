@@ -1,5 +1,6 @@
 import Header from "@/components/layout/Header";
 import HeroSearch from "@/components/search/HeroSearch";
+import QuickStarts from "@/components/search/QuickStarts";
 import styles from "./page.module.css";
 
 export default function Home() {
@@ -17,6 +18,7 @@ export default function Home() {
           Tell Patch what you&apos;re planning in plain words — Patch reads the detail and comes back with a short, reasoned set, not a directory.
         </p>
         <HeroSearch />
+        <QuickStarts />
       </main>
 
       {/* ─── HOW IT WORKS ─── */}

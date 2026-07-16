@@ -344,6 +344,18 @@ export default async function VendorPage({
           </span>
         </div>
       </footer>
+
+      {/* Mobile: keep the primary action reachable while scrolling */}
+      <div className={styles.stickyBar}>
+        {vendor.price_from && (
+          <span className={styles.stickyPrice}>from £{vendor.price_from as number}</span>
+        )}
+        <EnquiryButton
+          vendorId={vendor.id as string}
+          vendorName={vendor.name as string}
+          className={styles.stickyCta}
+        />
+      </div>
     </>
   );
 }

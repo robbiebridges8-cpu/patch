@@ -18,6 +18,7 @@ import AINote from "@/components/search/AINote";
 import VendorRow from "@/components/search/VendorRow";
 import FilterSidebarLive from "@/components/search/FilterSidebarLive";
 import SearchToolbar from "@/components/search/SearchToolbar";
+import QuickStarts from "@/components/search/QuickStarts";
 import FollowupsCard from "@/components/search/FollowupsCard";
 import { ResultsSkeleton, AINoteSkeleton } from "@/components/search/SearchSkeleton";
 import type { VendorMatch } from "@/types/vendor";
@@ -355,10 +356,10 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           <div className={styles.searchWrap}>
             <SearchBar query={query} />
           </div>
-          <div className={styles.empty}>
-            Describe your occasion above — the vibe, guest count, budget, and area —
-            and Patch will put together a shortlist.
-          </div>
+          <p className={styles.emptyLead}>
+            Describe your occasion above — the vibe, guest count, budget, and area — or start here:
+          </p>
+          <QuickStarts />
         </main>
       </>
     );

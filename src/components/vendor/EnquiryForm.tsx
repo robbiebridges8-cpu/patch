@@ -93,7 +93,8 @@ export default function EnquiryButton({ vendorId, vendorName, className, label =
                 </div>
                 <h3 className={styles.successTitle}>Enquiry sent</h3>
                 <p className={styles.successBody}>
-                  {vendorName} has your details and will be in touch shortly. We&apos;ve noted your request.
+                  {vendorName} has your brief and will reply directly — usually within a day.
+                  Comparing options? Shortlist a few more and enquire them all at once.
                 </p>
                 <button type="button" className={styles.primaryBtn} onClick={close}>Done</button>
               </div>
