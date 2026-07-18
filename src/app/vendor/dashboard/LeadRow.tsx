@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { setEnquiryStatus } from "./actions";
 import MessageThread, { type ThreadMessage } from "./MessageThread";
+import UpgradePrompt from "./UpgradePrompt";
 import styles from "../vendor.module.css";
 
 export interface Lead {
@@ -14,6 +15,8 @@ export interface Lead {
   postcode: string | null;
   details: Record<string, unknown> | null;
   message: string | null;
+  /** Set only on redacted (locked) leads — the real message never leaves the server. */
+  messageWords?: number;
   status: string;
   created_at: string;
 }
@@ -29,11 +32,20 @@ function statusLabel(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-export default function LeadRow({ lead, thread = [] }: { lead: Lead; thread?: ThreadMessage[] }) {
+export default function LeadRow({
+  lead,
+  thread = [],
+  locked = false,
+}: {
+  lead: Lead;
+  thread?: ThreadMessage[];
+  /** Free tier: the lead is real and stored, but the details are withheld. */
+  locked?: boolean;
+}) {
   const [status, setStatus] = useState(lead.status);
   const [pending, startTransition] = useTransition();
   const unread = thread.filter((m) => m.sender === "buyer" && !m.read_by_vendor).length;
-  const [open, setOpen] = useState(unread > 0);
+  const [open, setOpen] = useState(unread > 0 && !locked);
 
   const isNew = status === "sent" || status === "viewed";
   const subject = encodeURIComponent(`Re: your Patch enquiry`);
@@ -46,6 +58,39 @@ export default function LeadRow({ lead, thread = [] }: { lead: Lead; thread?: Th
     startTransition(async () => {
       await setEnquiryStatus(lead.id, value);
     });
+  }
+
+  if (locked) {
+    // Deliberately specific — date, area and length of message prove this is a
+    // real job, not a placeholder. Everything actionable stays behind the gate.
+    const words = lead.messageWords ?? 0;
+    return (
+      <div className={`${styles.lead} ${styles.leadLocked}`}>
+        <div className={styles.leadHead}>
+          <span className={styles.leadName}>New enquiry</span>
+          <span className={`${styles.leadStatus} ${styles.status_new}`}>Locked</span>
+        </div>
+        <div className={styles.leadMeta}>
+          {[
+            lead.event_date ? `Event: ${new Date(lead.event_date).toLocaleDateString("en-GB")}` : null,
+            ...Object.entries(lead.details ?? {})
+              .filter(([, v]) => v != null && v !== "")
+              .map(([k, v]) => `${k.replace(/_/g, " ")}: ${String(v)}`),
+            lead.postcode,
+            `Received ${new Date(lead.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`,
+          ].filter(Boolean).join(" · ")}
+        </div>
+        <div className={styles.leadBlur} aria-hidden="true">
+          {"•".repeat(9)} · {"•".repeat(14)}@{"•".repeat(8)}
+          <div className={styles.leadBlurMsg}>{"•".repeat(Math.min(words * 6, 220))}</div>
+        </div>
+        <p className={styles.leadLockedNote}>
+          Their name, contact details and {words > 0 ? `${words}-word ` : ""}message are ready.
+          Upgrade to open this enquiry — it stays here either way.
+        </p>
+        <UpgradePrompt compact />
+      </div>
+    );
   }
 
   return (

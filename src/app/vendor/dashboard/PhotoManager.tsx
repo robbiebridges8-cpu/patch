@@ -7,15 +7,30 @@ import styles from "../vendor.module.css";
 
 interface Photo { id: string; url: string; }
 
-export default function PhotoManager({ vendorId, initial }: { vendorId: string; initial: Photo[] }) {
+export default function PhotoManager({
+  vendorId,
+  initial,
+  limit,
+}: {
+  vendorId: string;
+  initial: Photo[];
+  /** Free listings get one photo — an empty card helps nobody, a gallery is paid. */
+  limit?: number;
+}) {
   const [photos, setPhotos] = useState<Photo[]>(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
 
+  const atLimit = limit != null && photos.length >= limit;
+
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
+    if (atLimit) {
+      setError(`Free listings can show ${limit} photo${limit === 1 ? "" : "s"}. Upgrade to add a gallery.`);
+      return;
+    }
     setBusy(true);
     setError(null);
     for (const file of Array.from(files)) {

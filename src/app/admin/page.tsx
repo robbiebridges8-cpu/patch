@@ -18,7 +18,9 @@ interface Stats {
   vendors_draft: number;
   vendors_paused: number;
   vendors_rejected: number;
-  vendors_featured: number;
+  vendors_free: number;
+  vendors_standard: number;
+  vendors_pro: number;
   vendors_claimed: number;
   enquiries_total: number;
   enquiries_30d: number;
@@ -58,15 +60,15 @@ export default async function AdminPage() {
   // Anything not live needs a decision, newest first.
   const { data: pendingRaw } = await supabase
     .from("vendors")
-    .select("id, name, slug, status, featured, primary_category, owner_id, rating_avg, review_count, created_at")
+    .select("id, name, slug, status, tier, primary_category, owner_id, rating_avg, review_count, created_at")
     .neq("status", "live")
     .order("created_at", { ascending: false })
     .limit(50);
 
   const { data: featuredRaw } = await supabase
     .from("vendors")
-    .select("id, name, slug, status, featured, primary_category, owner_id, rating_avg, review_count, created_at")
-    .eq("featured", true)
+    .select("id, name, slug, status, tier, primary_category, owner_id, rating_avg, review_count, created_at")
+    .gt("tier", 0)
     .order("name")
     .limit(50);
 
@@ -108,7 +110,7 @@ export default async function AdminPage() {
                   value={stats.vendors_draft}
                   hint={`${stats.vendors_paused} paused · ${stats.vendors_rejected} rejected`}
                 />
-                <Stat label="Featured" value={stats.vendors_featured} />
+                <Stat label="Paid listings" value={stats.vendors_standard + stats.vendors_pro} hint={`${stats.vendors_pro} pro · ${stats.vendors_free} free`} />
                 <Stat
                   label="Enquiries (30d)"
                   value={stats.enquiries_30d}
@@ -139,10 +141,10 @@ export default async function AdminPage() {
         </section>
 
         <section className={styles.card}>
-          <h2 className={styles.cardTitle}>Featured ({featured.length})</h2>
+          <h2 className={styles.cardTitle}>Paid listings ({featured.length})</h2>
           {featured.length === 0 ? (
             <p className={styles.empty}>
-              No featured vendors yet. Feature one from the list above once it&apos;s live.
+              No paid listings yet. Billing sets this automatically; you can override a tier from any row.
             </p>
           ) : (
             featured.map((v) => <VendorAdminRow key={v.id} vendor={v} />)

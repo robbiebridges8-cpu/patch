@@ -1,6 +1,7 @@
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/service";
+import { TIER } from "@/lib/tiers";
 
 // Stripe needs the raw body + Node crypto for signature verification.
 export const runtime = "nodejs";
@@ -53,19 +54,29 @@ export async function POST(request: Request) {
   async function syncSubscription(sub: Stripe.Subscription, vendorIdHint?: string) {
     const vendorId = vendorIdHint || (sub.metadata?.vendor_id ?? undefined);
     const status = mapStatus(sub.status);
+    const paying = status === "active" || status === "trialing";
+    const boughtTier = Number(sub.metadata?.tier) === TIER.PRO ? TIER.PRO : TIER.STANDARD;
+    const interval = sub.metadata?.interval === "year" ? "year" : "month";
+
     const row: Record<string, unknown> = {
       status,
       stripe_subscription_id: sub.id,
       stripe_customer_id: typeof sub.customer === "string" ? sub.customer : sub.customer.id,
       current_period_end: periodEnd(sub),
       cancelled_at: sub.canceled_at ? new Date(sub.canceled_at * 1000).toISOString() : null,
+      plan_tier: boughtTier,
+      billing_interval: interval,
     };
 
     if (vendorId) {
       await svc!.from("subscriptions").upsert({ vendor_id: vendorId, ...row }, { onConflict: "vendor_id" });
-      // Gate public visibility on an active/trialing subscription.
-      const listingStatus = status === "active" || status === "trialing" ? "live" : "paused";
-      await svc!.from("vendors").update({ status: listingStatus }).eq("id", vendorId);
+      // A lapsed subscription drops the vendor to free — it does NOT hide the
+      // listing. Their profile, reviews and SEO presence are supply density we
+      // want to keep, and a live free listing is a standing upgrade prompt.
+      // The tier comes from the completed payment, never from the client.
+      await svc!.from("vendors")
+        .update({ tier: paying ? boughtTier : TIER.FREE, status: "live" })
+        .eq("id", vendorId);
     } else {
       // Fall back to matching by customer id.
       await svc!.from("subscriptions")

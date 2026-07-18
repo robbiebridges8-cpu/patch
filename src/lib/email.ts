@@ -129,3 +129,66 @@ export async function sendVendorEnquiryEmail(
     return { sent: false, reason: "exception" };
   }
 }
+
+export interface LockedEnquiryEmailData {
+  to: string | null;
+  vendorName: string;
+  vendorSlug: string;
+  eventDate?: string | null;
+  postcode?: string | null;
+}
+
+/**
+ * A free listing has an enquiry waiting. Deliberately shows enough to prove the
+ * lead is real — and specific — without giving away the contact details that
+ * are the thing being paid for. The enquiry is stored either way, so upgrading
+ * opens it rather than recovering it.
+ */
+export async function sendLockedEnquiryEmail(
+  d: LockedEnquiryEmailData,
+): Promise<{ sent: boolean; reason?: string }> {
+  const key = process.env.RESEND_API_KEY;
+  const from = process.env.ENQUIRY_FROM_EMAIL || "Patch <enquiries@patch.london>";
+
+  if (!key) {
+    console.warn("[email] RESEND_API_KEY not set — locked-enquiry notice skipped");
+    return { sent: false, reason: "no_api_key" };
+  }
+  if (!d.to) return { sent: false, reason: "no_recipient" };
+
+  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+  const detail = [
+    d.eventDate ? `Date: ${d.eventDate}` : null,
+    d.postcode ? `Area: ${d.postcode}` : null,
+  ].filter(Boolean).join(" · ");
+
+  const html = `
+    <div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;color:#2b2620">
+      <h2 style="font-size:20px;margin:0 0 4px">You have a new enquiry</h2>
+      <p style="color:#7a736a;margin:0 0 20px">Someone wants to hire <strong>${esc(d.vendorName)}</strong>.</p>
+      ${detail ? `<p style="font-size:15px;margin:0 0 16px">${esc(detail)}</p>` : ""}
+      <div style="background:#faf7f2;border:1px solid #e7e0d6;border-radius:12px;padding:16px;font-size:15px;line-height:1.6;color:#9a9186">
+        Their name, contact details and message are waiting on your dashboard.
+      </div>
+      <p style="margin:24px 0 0">
+        <a href="${esc(site)}/vendor/dashboard" style="display:inline-block;background:#c0392b;color:#fff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:8px">Open this enquiry</a>
+      </p>
+      <p style="color:#9a9186;font-size:13px;margin-top:20px">Free listings can see that an enquiry arrived. Upgrade to read and reply to it.</p>
+    </div>`;
+
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to: [d.to], subject: `New enquiry for ${d.vendorName}`, html }),
+    });
+    if (!res.ok) {
+      console.error("[email] Resend failed", res.status, await res.text());
+      return { sent: false, reason: `resend_${res.status}` };
+    }
+    return { sent: true };
+  } catch (err) {
+    console.error("[email] Resend threw", err);
+    return { sent: false, reason: "exception" };
+  }
+}

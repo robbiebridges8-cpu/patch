@@ -19,10 +19,11 @@ import BillingCard from "./BillingCard";
 import AnalyticsCard, { type Analytics } from "./AnalyticsCard";
 import CompletenessCard from "./CompletenessCard";
 import { assessListing } from "@/lib/completeness";
+import { canAccess, TIER, FREE_PHOTO_LIMIT } from "@/lib/tiers";
 import { signOut } from "./actions";
 import styles from "../vendor.module.css";
 
-async function LeadsCard({ vendorId }: { vendorId: string }) {
+async function LeadsCard({ vendorId, tier }: { vendorId: string; tier: number }) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("enquiries")
@@ -30,11 +31,33 @@ async function LeadsCard({ vendorId }: { vendorId: string }) {
     .eq("vendor_id", vendorId)
     .order("created_at", { ascending: false });
 
-  const leads = (data as Lead[]) || [];
-  const newCount = leads.filter((l) => l.status === "sent" || l.status === "viewed").length;
+  const rawLeads = (data as Lead[]) || [];
+  const newCount = rawLeads.filter((l) => l.status === "sent" || l.status === "viewed").length;
+  const locked = !canAccess(tier, "unlock_leads");
+
+  // Redact server-side. Rendering a locked lead without its details is not
+  // enough: props passed to a client component are serialised into the RSC
+  // payload, so anything fetched here ships to the browser whether it is
+  // painted or not. A paywall you can defeat with view-source is not a paywall.
+  const leads: Lead[] = locked
+    ? rawLeads.map((l) => ({
+        id: l.id,
+        parent_name: null,
+        parent_email: null,
+        parent_phone: null,
+        event_date: l.event_date,
+        postcode: l.postcode,
+        details: l.details,
+        // A word count proves the message is substantial without disclosing it.
+        message: null,
+        messageWords: l.message ? l.message.trim().split(/\s+/).length : 0,
+        status: l.status,
+        created_at: l.created_at,
+      }))
+    : rawLeads;
 
   // One query for every thread on this vendor's leads (RLS scopes it to us).
-  const { data: msgs } = leads.length
+  const { data: msgs } = leads.length && !locked
     ? await supabase
         .from("messages")
         .select("id, enquiry_id, sender, body, created_at, read_by_vendor")
@@ -66,7 +89,14 @@ async function LeadsCard({ vendorId }: { vendorId: string }) {
       {leads.length === 0 ? (
         <div className={styles.empty}>No enquiries yet. They&apos;ll appear here the moment a client gets in touch.</div>
       ) : (
-        leads.map((l) => <LeadRow key={l.id} lead={l} thread={threads.get(l.id) ?? []} />)
+        leads.map((l) => (
+          <LeadRow
+            key={l.id}
+            lead={l}
+            thread={threads.get(l.id) ?? []}
+            locked={locked}
+          />
+        ))
       )}
     </div>
   );
@@ -84,7 +114,7 @@ export default async function VendorDashboard({
 
   const { data: vendor } = await supabase
     .from("vendors")
-    .select("id, name, slug, description, bio, contact_email, contact_phone, website, instagram, price_from, price_notes, coverage_radius_miles, typical_event_size_min, typical_event_size_max, attributes, vibe_tags, signature_items, faq, status, primary_category")
+    .select("id, name, slug, description, bio, contact_email, contact_phone, website, instagram, price_from, price_notes, coverage_radius_miles, typical_event_size_min, typical_event_size_max, attributes, vibe_tags, signature_items, faq, status, primary_category, tier")
     .eq("owner_id", user.id)
     .maybeSingle();
 
@@ -176,7 +206,9 @@ export default async function VendorDashboard({
               previewHref={`/vendors/${vendor.slug as string}?preview=1`}
             />
 
-            <AnalyticsCard data={(analytics as Analytics) ?? null} />
+            {canAccess(vendor.tier as number, "analytics") && (
+              <AnalyticsCard data={(analytics as Analytics) ?? null} />
+            )}
 
             <div className={styles.card}>
               <div className={styles.cardHead}>
@@ -218,9 +250,11 @@ export default async function VendorDashboard({
               <PhotoManager
                 vendorId={vendor.id as string}
                 initial={(photos as { id: string; url: string }[]) || []}
+                limit={canAccess(vendor.tier as number, "photo_gallery") ? undefined : FREE_PHOTO_LIMIT}
               />
             </div>
 
+            {canAccess(vendor.tier as number, "availability") && (
             <div className={styles.card}>
               <div className={styles.cardHead}>
                 <span className={styles.cardTitle}>Availability</span>
@@ -230,13 +264,15 @@ export default async function VendorDashboard({
                 initial={((blocked as { blocked_date: string }[]) || []).map((b) => b.blocked_date)}
               />
             </div>
+            )}
 
             <BillingCard
               status={(sub?.status as string) ?? null}
               hasCustomer={!!sub?.stripe_customer_id}
+              tier={(vendor.tier as number) ?? TIER.FREE}
             />
 
-            <LeadsCard vendorId={vendor.id as string} />
+            <LeadsCard vendorId={vendor.id as string} tier={(vendor.tier as number) ?? TIER.FREE} />
           </>
         )}
       </main>

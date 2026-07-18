@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
-import { sendVendorEnquiryEmail } from "@/lib/email";
+import { sendVendorEnquiryEmail, sendLockedEnquiryEmail } from "@/lib/email";
 import { rateLimit, clientIp } from "@/lib/rateLimit";
+import { canAccess } from "@/lib/tiers";
 import { captureException } from "@/lib/monitoring";
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
   // Confirm the vendors are real + live.
   const { data: vendors, error: vendorErr } = await supabase
     .from("vendors")
-    .select("id, name, slug, contact_email")
+    .select("id, name, slug, contact_email, tier")
     .in("id", ids)
     .eq("status", "live");
 
@@ -106,19 +107,32 @@ export async function POST(request: Request) {
   if (eventErr) console.error("[enquiry] contact_event insert failed:", eventErr.message);
 
   // Best-effort email to each vendor (no-ops without RESEND_API_KEY).
+  //
+  // Free listings get a teaser, not the lead. The enquiry is still stored and
+  // still answerable the moment they upgrade — nothing is thrown away, and the
+  // buyer never hits a dead end. For an unclaimed listing this doubles as the
+  // acquisition hook: "someone wants to hire you, claim your listing to reply."
   const results = await Promise.all(
     vendors.map((v) =>
-      sendVendorEnquiryEmail({
-        to: v.contact_email,
-        vendorName: v.name,
-        buyerName: name,
-        buyerEmail: email,
-        buyerPhone: phone,
-        eventDate,
-        guests: guestCount,
-        postcode,
-        message,
-      }),
+      canAccess(v.tier as number, "unlock_leads")
+        ? sendVendorEnquiryEmail({
+            to: v.contact_email,
+            vendorName: v.name,
+            buyerName: name,
+            buyerEmail: email,
+            buyerPhone: phone,
+            eventDate,
+            guests: guestCount,
+            postcode,
+            message,
+          })
+        : sendLockedEnquiryEmail({
+            to: v.contact_email,
+            vendorName: v.name,
+            vendorSlug: v.slug as string,
+            eventDate,
+            postcode,
+          }),
     ),
   );
 

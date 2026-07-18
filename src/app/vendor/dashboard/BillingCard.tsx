@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import UpgradePrompt from "./UpgradePrompt";
+import { TIER, TIER_NAMES, type Tier } from "@/lib/tiers";
 import styles from "../vendor.module.css";
 
-export default function BillingCard({ status, hasCustomer }: { status: string | null; hasCustomer: boolean }) {
+export default function BillingCard({ status, hasCustomer, tier }: { status: string | null; hasCustomer: boolean; tier: number }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const active = status === "active" || status === "trialing";
@@ -34,9 +36,9 @@ export default function BillingCard({ status, hasCustomer }: { status: string | 
         {status && <span className={styles.badge}>{status}</span>}
       </div>
       <p className={styles.sub}>
-        {active
-          ? "Your listing is live on Patch — £20/month. No commission, no per-lead fees."
-          : "List on Patch for £20/month, flat. No commission, no per-lead fees, cancel anytime."}
+        {tier > TIER.FREE
+          ? `You're on ${TIER_NAMES[tier as Tier]} — no commission, no per-lead fees.`
+          : "Your listing is free and stays free. Upgrade to read your enquiries, rank alongside paid listings, and drop the competitors from your profile."}
       </p>
       {error && <div className={`${styles.notice} ${styles.noticeErr}`}>{error}</div>}
       {active || hasCustomer ? (
@@ -44,9 +46,7 @@ export default function BillingCard({ status, hasCustomer }: { status: string | 
           {loading ? "Opening…" : "Manage billing"}
         </button>
       ) : (
-        <button className={styles.btn} disabled={loading} onClick={() => go("checkout")}>
-          {loading ? "Starting…" : "Subscribe — £20/month"}
-        </button>
+        <UpgradePrompt />
       )}
     </div>
   );

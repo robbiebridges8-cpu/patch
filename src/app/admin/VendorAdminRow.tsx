@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { setVendorStatus, setVendorFeatured } from "./actions";
+import { setVendorStatus, setVendorTier } from "./actions";
+import { TIER, TIER_NAMES, type Tier } from "@/lib/tiers";
 import styles from "./admin.module.css";
 
 export interface AdminVendor {
@@ -10,7 +11,7 @@ export interface AdminVendor {
   name: string;
   slug: string;
   status: string;
-  featured: boolean;
+  tier: number;
   primary_category: string | null;
   owner_id: string | null;
   rating_avg: number | null;
@@ -26,7 +27,7 @@ const STATUS_ACTIONS: { value: string; label: string }[] = [
 
 export default function VendorAdminRow({ vendor }: { vendor: AdminVendor }) {
   const [status, setStatus] = useState(vendor.status);
-  const [featured, setFeatured] = useState(vendor.featured);
+  const [tier, setTier] = useState<number>(vendor.tier ?? TIER.FREE);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -43,14 +44,14 @@ export default function VendorAdminRow({ vendor }: { vendor: AdminVendor }) {
     });
   }
 
-  function toggleFeatured() {
-    const next = !featured;
-    setFeatured(next);
+  function changeTier(next: number) {
+    const prev = tier;
+    setTier(next);
     setError(null);
     startTransition(async () => {
-      const res = await setVendorFeatured(vendor.id, next);
+      const res = await setVendorTier(vendor.id, next);
       if (res?.error) {
-        setFeatured(!next);
+        setTier(prev);
         setError(res.error);
       }
     });
@@ -64,7 +65,7 @@ export default function VendorAdminRow({ vendor }: { vendor: AdminVendor }) {
             {vendor.name}
           </Link>
           <span className={`${styles.pill} ${styles["s_" + status] || ""}`}>{status}</span>
-          {featured && <span className={`${styles.pill} ${styles.s_featured}`}>featured</span>}
+          {tier > TIER.FREE && <span className={`${styles.pill} ${styles.s_featured}`}>{TIER_NAMES[tier as Tier].toLowerCase()}</span>}
         </div>
         <div className={styles.rowMeta}>
           {[
@@ -89,15 +90,18 @@ export default function VendorAdminRow({ vendor }: { vendor: AdminVendor }) {
             {a.label}
           </button>
         ))}
-        <button
-          type="button"
-          className={`${styles.actionBtn} ${featured ? styles.actionBtnActive : ""}`}
+        <label className={styles.srOnlyLabel} htmlFor={`tier-${vendor.id}`}>Tier</label>
+        <select
+          id={`tier-${vendor.id}`}
+          className={styles.tierSelect}
+          value={tier}
           disabled={pending}
-          aria-pressed={featured}
-          onClick={toggleFeatured}
+          onChange={(e) => changeTier(Number(e.target.value))}
         >
-          {featured ? "Unfeature" : "Feature"}
-        </button>
+          {([TIER.FREE, TIER.STANDARD, TIER.PRO] as Tier[]).map((t) => (
+            <option key={t} value={t}>{TIER_NAMES[t]}</option>
+          ))}
+        </select>
       </div>
     </div>
   );

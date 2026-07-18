@@ -654,3 +654,77 @@ select.input { appearance: none; background-image: none; cursor: pointer; }
   .meterRow { gap: 12px; }
   .meterPct { font-size: 30px; min-width: 56px; }
 }
+
+/* ---- Tiers, locked leads, upgrade ---- */
+
+.leadLocked { border-style: dashed; border-color: var(--color-border-control, #918162); }
+
+/* Redaction, not a blur filter: the characters genuinely aren't in the DOM,
+   so "inspect element" reveals nothing. */
+.leadBlur {
+  margin-top: 10px;
+  font-size: 14px;
+  letter-spacing: 1px;
+  color: var(--color-border-control, #918162);
+  user-select: none;
+  overflow: hidden;
+}
+.leadBlurMsg { margin-top: 6px; line-height: 1.5; word-break: break-all; }
+
+.leadLockedNote {
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-secondary, #6b6459);
+}
+
+.upgradeCompact { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+.upgradeHint { font-size: 13px; color: var(--color-text-muted, #9a9186); }
+
+.planRow { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+
+.planBtn {
+  flex: 1;
+  min-width: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 2px solid var(--color-border-control, #918162);
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+.planBtnActive {
+  border-color: var(--color-accent, #c0392b);
+  background: color-mix(in srgb, var(--color-accent, #c0392b) 8%, transparent);
+}
+.planName {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--color-text-secondary, #6b6459);
+}
+.planPrice {
+  font-family: var(--font-display, inherit);
+  font-size: 24px; font-weight: 700; color: var(--color-text-primary, #241f19);
+}
+.planPrice small { font-size: 13px; font-weight: 600; color: var(--color-text-muted, #9a9186); }
+
+.annualToggle {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; color: var(--color-text-secondary, #6b6459);
+  margin-bottom: 14px; cursor: pointer;
+}
+.annualToggle strong { color: var(--color-accent-on-light, #a62f22); }
+
+.planFeatures {
+  list-style: none; margin: 0 0 16px; padding: 0;
+  display: flex; flex-direction: column; gap: 7px;
+  font-size: 14px; color: var(--color-text-secondary, #6b6459);
+}
+.planFeatures li { padding-left: 20px; position: relative; }
+.planFeatures li::before {
+  content: "✓"; position: absolute; left: 0;
+  color: var(--color-accent-on-light, #a62f22); font-weight: 700;
+}

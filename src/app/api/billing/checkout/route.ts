@@ -1,14 +1,38 @@
 import { getStripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { TIER } from "@/lib/tiers";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
-export async function POST() {
+/**
+ * One Stripe price per (tier, interval). Falls back to the legacy single
+ * STRIPE_PRICE_ID so an existing setup keeps working while the new prices are
+ * created — a missing price is a 503, never a silent charge at the wrong rate.
+ */
+function priceIdFor(tier: number, interval: "month" | "year"): string | undefined {
+  const key = `STRIPE_PRICE_${tier === TIER.PRO ? "PRO" : "STANDARD"}_${interval === "year" ? "YEARLY" : "MONTHLY"}`;
+  return process.env[key] || process.env.STRIPE_PRICE_ID;
+}
+
+export async function POST(request: Request) {
   const stripe = getStripe();
-  const priceId = process.env.STRIPE_PRICE_ID;
-  if (!stripe || !priceId) {
+  if (!stripe) {
     return Response.json({ error: "Billing isn't configured yet." }, { status: 503 });
+  }
+
+  let body: { tier?: number; interval?: string } = {};
+  try {
+    body = await request.json();
+  } catch {
+    // Legacy callers send no body; default to standard monthly.
+  }
+  const tier = body.tier === TIER.PRO ? TIER.PRO : TIER.STANDARD;
+  const interval: "month" | "year" = body.interval === "year" ? "year" : "month";
+
+  const priceId = priceIdFor(tier, interval);
+  if (!priceId) {
+    return Response.json({ error: "That plan isn't available yet." }, { status: 503 });
   }
 
   const supabase = await createClient();
@@ -41,7 +65,7 @@ export async function POST() {
     const svc = createServiceClient();
     if (svc) {
       await svc.from("subscriptions").upsert(
-        { vendor_id: vendor.id, stripe_customer_id: customerId, status: "trialing" },
+        { vendor_id: vendor.id, stripe_customer_id: customerId, status: "trialing", plan_tier: tier, billing_interval: interval },
         { onConflict: "vendor_id" },
       );
     }
@@ -53,8 +77,10 @@ export async function POST() {
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${SITE}/vendor/dashboard?billing=success`,
     cancel_url: `${SITE}/vendor/dashboard?billing=cancelled`,
-    metadata: { vendor_id: vendor.id },
-    subscription_data: { metadata: { vendor_id: vendor.id } },
+    // The webhook reads these back to set vendors.tier — the tier a vendor
+    // actually gets is driven by the completed payment, never by the client.
+    metadata: { vendor_id: vendor.id, tier: String(tier), interval },
+    subscription_data: { metadata: { vendor_id: vendor.id, tier: String(tier), interval } },
   });
 
   return Response.json({ url: session.url });

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { TIER } from "@/lib/tiers";
 
 export type AdminActionState = { ok?: boolean; error?: string } | null;
 
@@ -35,11 +36,15 @@ export async function setVendorStatus(vendorId: string, status: string): Promise
   return { ok: true };
 }
 
-export async function setVendorFeatured(vendorId: string, featured: boolean): Promise<AdminActionState> {
+/** Manual tier override. Billing normally drives this via the Stripe webhook. */
+export async function setVendorTier(vendorId: string, tier: number): Promise<AdminActionState> {
+  if (![TIER.FREE, TIER.STANDARD, TIER.PRO].includes(tier as never)) {
+    return { error: "Unknown tier." };
+  }
   const { supabase, ok } = await requireAdmin();
   if (!ok) return { error: "Admins only." };
 
-  const { error } = await supabase.from("vendors").update({ featured }).eq("id", vendorId);
+  const { error } = await supabase.from("vendors").update({ tier }).eq("id", vendorId);
   if (error) return { error: error.message };
 
   revalidatePath("/admin");
