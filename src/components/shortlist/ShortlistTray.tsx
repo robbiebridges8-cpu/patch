@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useShortlist } from "@/lib/useShortlist";
 import styles from "./ShortlistTray.module.css";
@@ -19,8 +20,7 @@ export default function ShortlistTray() {
           <div className={styles.thumbs}>
             {items.slice(0, 6).map((i) => (
               <span key={i.slug} className={styles.thumb} title={i.name}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={i.photoUrl} alt="" />
+                <Image src={i.photoUrl} alt="" fill sizes="40px" />
                 <button
                   type="button"
                   className={styles.remove}

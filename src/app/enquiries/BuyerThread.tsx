@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import styles from "./page.module.css";
 
 interface Message {
@@ -33,23 +33,35 @@ export default function BuyerThread({
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/messages?enquiryId=${enquiryId}`);
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
-      setMessages(json.messages);
-      // Reading the thread clears the unread badge server-side.
-      onRead?.();
-    } catch {
-      setError("Couldn't load this conversation.");
-      setMessages([]);
-    }
-  }, [enquiryId, onRead]);
+  // Held in a ref so the callback's identity can't retrigger the fetch — an
+  // inline arrow from a caller would otherwise loop forever.
+  const onReadRef = useRef(onRead);
+  useEffect(() => {
+    onReadRef.current = onRead;
+  }, [onRead]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    const controller = new AbortController();
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/messages?enquiryId=${enquiryId}`, {
+          signal: controller.signal,
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error);
+        setMessages(json.messages);
+        // Reading the thread clears the unread badge server-side.
+        onReadRef.current?.();
+      } catch (err) {
+        if ((err as Error)?.name === "AbortError") return;
+        setError("Couldn't load this conversation.");
+        setMessages([]);
+      }
+    })();
+
+    return () => controller.abort();
+  }, [enquiryId]);
 
   async function send(e: React.FormEvent) {
     e.preventDefault();

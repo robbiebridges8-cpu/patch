@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import type { VendorMatch } from "@/types/vendor";
 import { useShortlist } from "@/lib/useShortlist";
@@ -25,11 +26,12 @@ export default function VendorRow({ match }: { match: VendorMatch }) {
       }}
     >
       <a href={`/vendors/${v.slug}`} className={styles.mediaBox}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           className={styles.photo}
           src={match.photoUrl}
           alt={v.name}
+          fill
+          sizes="(max-width: 760px) 100vw, 240px"
           style={{ transform: hover ? "scale(1.02)" : "scale(1)" }}
         />
       </a>

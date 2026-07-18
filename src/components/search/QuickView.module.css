@@ -42,7 +42,8 @@
   z-index: 2;
 }
 
-.photo { width: 100%; height: 220px; object-fit: cover; display: block; }
+.photoWrap { position: relative; width: 100%; height: 220px; }
+.photo { object-fit: cover; }
 
 .body { padding: 22px 24px 24px; }
 .category {

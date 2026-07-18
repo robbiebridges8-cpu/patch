@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { cache } from "react";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { supabase } from "@/lib/supabase";
 import { createClient as createServerClient } from "@/lib/supabase/server";
@@ -213,20 +214,42 @@ export default async function VendorPage({
           <div className={styles.gallery}>
             {sortedPhotos.length > 0 ? (
               <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className={styles.mainPhoto} src={sortedPhotos[0].url as string} alt={sortedPhotos[0].alt_text as string || vendor.name as string} />
+                <div className={styles.mainPhotoWrap}>
+                  <Image
+                    className={styles.mainPhoto}
+                    src={sortedPhotos[0].url as string}
+                    alt={(sortedPhotos[0].alt_text as string) || (vendor.name as string)}
+                    fill
+                    sizes="(max-width: 900px) 100vw, 800px"
+                    priority
+                  />
+                </div>
                 {sortedPhotos.length > 1 && (
                   <div className={styles.thumbs}>
                     {sortedPhotos.slice(1, 5).map((p) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img key={p.id as string} className={styles.thumb} src={p.url as string} alt={p.alt_text as string || ""} />
+                      <Image
+                        key={p.id as string}
+                        className={styles.thumb}
+                        src={p.url as string}
+                        alt={(p.alt_text as string) || ""}
+                        width={72}
+                        height={52}
+                      />
                     ))}
                   </div>
                 )}
               </>
             ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className={styles.mainPhoto} src={heroFallback} alt={vendor.name as string} />
+              <div className={styles.mainPhotoWrap}>
+                <Image
+                  className={styles.mainPhoto}
+                  src={heroFallback}
+                  alt={vendor.name as string}
+                  fill
+                  sizes="(max-width: 900px) 100vw, 800px"
+                  priority
+                />
+              </div>
             )}
           </div>
 

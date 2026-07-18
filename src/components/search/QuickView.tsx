@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect } from "react";
 import type { VendorMatch } from "@/types/vendor";
 import { useShortlist } from "@/lib/useShortlist";
@@ -25,8 +26,15 @@ export default function QuickView({ match, onClose }: { match: VendorMatch; onCl
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
         </button>
 
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className={styles.photo} src={match.photoUrl} alt={v.name} />
+        <div className={styles.photoWrap}>
+          <Image
+            className={styles.photo}
+            src={match.photoUrl}
+            alt={v.name}
+            fill
+            sizes="(max-width: 620px) 100vw, 560px"
+          />
+        </div>
 
         <div className={styles.body}>
           <span className={styles.category}>{match.category}</span>

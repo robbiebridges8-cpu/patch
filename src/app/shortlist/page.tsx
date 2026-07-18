@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import Link from "next/link";
 import Header from "@/components/layout/Header";
@@ -94,8 +95,12 @@ export default function ShortlistPage() {
           {items.map((i) => (
             <div key={i.slug} className={styles.card}>
               <Link href={`/vendors/${i.slug}`} className={styles.cardMedia}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={i.photoUrl} alt={i.name} />
+                <Image
+                  src={i.photoUrl}
+                  alt={i.name}
+                  fill
+                  sizes="(max-width: 700px) 50vw, 260px"
+                />
               </Link>
               <div className={styles.cardBody}>
                 <span className={styles.cardCat}>{i.category}</span>

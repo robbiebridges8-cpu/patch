@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import styles from "../vendor.module.css";
@@ -60,8 +61,7 @@ export default function PhotoManager({ vendorId, initial }: { vendorId: string; 
         <div className={styles.photoGrid}>
           {photos.map((p, i) => (
             <div key={p.id} className={styles.photoThumb}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.url} alt="" />
+              <Image src={p.url} alt="" fill sizes="(max-width: 640px) 45vw, 180px" />
               {i === 0 && <span className={styles.coverTag}>Cover</span>}
               <button type="button" className={styles.photoRemove} aria-label="Remove photo" onClick={() => remove(p)}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
