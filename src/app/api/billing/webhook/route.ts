@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     const vendorId = vendorIdHint || (sub.metadata?.vendor_id ?? undefined);
     const status = mapStatus(sub.status);
     const paying = status === "active" || status === "trialing";
-    const boughtTier = Number(sub.metadata?.tier) === TIER.PRO ? TIER.PRO : TIER.STANDARD;
+    const boughtTier = TIER.PAID;
     const interval = sub.metadata?.interval === "year" ? "year" : "month";
 
     const row: Record<string, unknown> = {

@@ -10,8 +10,8 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
  * STRIPE_PRICE_ID so an existing setup keeps working while the new prices are
  * created — a missing price is a 503, never a silent charge at the wrong rate.
  */
-function priceIdFor(tier: number, interval: "month" | "year"): string | undefined {
-  const key = `STRIPE_PRICE_${tier === TIER.PRO ? "PRO" : "STANDARD"}_${interval === "year" ? "YEARLY" : "MONTHLY"}`;
+function priceIdFor(interval: "month" | "year"): string | undefined {
+  const key = interval === "year" ? "STRIPE_PRICE_YEARLY" : "STRIPE_PRICE_MONTHLY";
   return process.env[key] || process.env.STRIPE_PRICE_ID;
 }
 
@@ -21,16 +21,16 @@ export async function POST(request: Request) {
     return Response.json({ error: "Billing isn't configured yet." }, { status: 503 });
   }
 
-  let body: { tier?: number; interval?: string } = {};
+  let body: { interval?: string } = {};
   try {
     body = await request.json();
   } catch {
-    // Legacy callers send no body; default to standard monthly.
+    // Callers may send no body; default to monthly.
   }
-  const tier = body.tier === TIER.PRO ? TIER.PRO : TIER.STANDARD;
   const interval: "month" | "year" = body.interval === "year" ? "year" : "month";
+  const tier = TIER.PAID;
 
-  const priceId = priceIdFor(tier, interval);
+  const priceId = priceIdFor(interval);
   if (!priceId) {
     return Response.json({ error: "That plan isn't available yet." }, { status: 503 });
   }

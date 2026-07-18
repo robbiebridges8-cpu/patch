@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { setVendorStatus, setVendorTier } from "./actions";
-import { TIER, TIER_NAMES, type Tier } from "@/lib/tiers";
+import { TIER, TIER_NAMES, SELLABLE_TIERS, type Tier } from "@/lib/tiers";
 import styles from "./admin.module.css";
 
 export interface AdminVendor {
@@ -98,7 +98,7 @@ export default function VendorAdminRow({ vendor }: { vendor: AdminVendor }) {
           disabled={pending}
           onChange={(e) => changeTier(Number(e.target.value))}
         >
-          {([TIER.FREE, TIER.STANDARD, TIER.PRO] as Tier[]).map((t) => (
+          {([TIER.FREE, ...SELLABLE_TIERS] as Tier[]).map((t) => (
             <option key={t} value={t}>{TIER_NAMES[t]}</option>
           ))}
         </select>

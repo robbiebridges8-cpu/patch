@@ -19,8 +19,7 @@ interface Stats {
   vendors_paused: number;
   vendors_rejected: number;
   vendors_free: number;
-  vendors_standard: number;
-  vendors_pro: number;
+  vendors_paid: number;
   vendors_claimed: number;
   enquiries_total: number;
   enquiries_30d: number;
@@ -110,7 +109,7 @@ export default async function AdminPage() {
                   value={stats.vendors_draft}
                   hint={`${stats.vendors_paused} paused · ${stats.vendors_rejected} rejected`}
                 />
-                <Stat label="Paid listings" value={stats.vendors_standard + stats.vendors_pro} hint={`${stats.vendors_pro} pro · ${stats.vendors_free} free`} />
+                <Stat label="Paid listings" value={stats.vendors_paid} hint={`${stats.vendors_free} free`} />
                 <Stat
                   label="Enquiries (30d)"
                   value={stats.enquiries_30d}

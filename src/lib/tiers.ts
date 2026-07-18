@@ -1,32 +1,38 @@
 /**
  * Vendor tiers and what each one unlocks.
  *
+ * Two tiers ship today: free and paid. `tier` is an integer rather than a
+ * boolean purely so a second paid tier can be added later without touching
+ * billing data — reserve 2 and it costs a price constant, a name, and a row in
+ * REQUIRED. Nothing sells tier 2 today and nothing should show it.
+ *
  * Single source of truth: every gate in the app reads `canAccess`, so changing
  * what free includes is a one-line edit here rather than a hunt through the
- * codebase. The commercial policy is deliberately a dial — the thresholds
- * should move as paid supply grows, and that should not require a refactor.
+ * codebase.
  */
 
-export const TIER = { FREE: 0, STANDARD: 1, PRO: 2 } as const;
-export type Tier = (typeof TIER)[keyof typeof TIER];
+export const TIER = { FREE: 0, PAID: 1 } as const;
+export type Tier = number;
 
-export const TIER_NAMES: Record<Tier, string> = {
+/** Tiers the product actually sells and displays. */
+export const SELLABLE_TIERS: Tier[] = [TIER.PAID];
+
+export const TIER_NAMES: Record<number, string> = {
   [TIER.FREE]: "Free",
-  [TIER.STANDARD]: "Standard",
-  [TIER.PRO]: "Pro",
+  [TIER.PAID]: "Paid",
 };
 
-/** Monthly price in GBP. Annual prepay bills 10 months for 12. */
-export const TIER_PRICE: Record<Tier, number> = {
+/** Monthly price in GBP. */
+export const TIER_PRICE: Record<number, number> = {
   [TIER.FREE]: 0,
-  [TIER.STANDARD]: 29,
-  [TIER.PRO]: 59,
+  [TIER.PAID]: 29,
 };
 
+/** Annual prepay bills 10 months for 12. */
 export const ANNUAL_MONTHS_CHARGED = 10;
 
 export function annualPrice(tier: Tier): number {
-  return TIER_PRICE[tier] * ANNUAL_MONTHS_CHARGED;
+  return (TIER_PRICE[tier] ?? 0) * ANNUAL_MONTHS_CHARGED;
 }
 
 export type Feature =
@@ -34,7 +40,7 @@ export type Feature =
   | "unlock_leads"
   /** Ranked normally in search rather than penalised below paid listings. */
   | "search_visibility"
-  /** Boosted to the top of results. */
+  /** Boosted above other paid listings. */
   | "featured_placement"
   /** Performance card on the dashboard. */
   | "analytics"
@@ -42,7 +48,7 @@ export type Feature =
   | "photo_gallery"
   /** Availability calendar and the "free on your date" match signal. */
   | "availability"
-  /** Bio, FAQs, signature items rendered on the public profile. */
+  /** Bio, FAQs and signature items on the public profile. */
   | "rich_profile"
   /** Email the moment a lead lands, rather than a daily digest. */
   | "instant_alerts"
@@ -53,16 +59,16 @@ export type Feature =
 
 /** Minimum tier required for each feature. */
 const REQUIRED: Record<Feature, Tier> = {
-  unlock_leads: TIER.STANDARD,
-  search_visibility: TIER.STANDARD,
-  analytics: TIER.STANDARD,
-  photo_gallery: TIER.STANDARD,
-  availability: TIER.STANDARD,
-  rich_profile: TIER.STANDARD,
-  instant_alerts: TIER.STANDARD,
-  no_competitor_panel: TIER.STANDARD,
-  featured_placement: TIER.PRO,
-  multiple_services: TIER.PRO,
+  unlock_leads: TIER.PAID,
+  search_visibility: TIER.PAID,
+  analytics: TIER.PAID,
+  photo_gallery: TIER.PAID,
+  availability: TIER.PAID,
+  rich_profile: TIER.PAID,
+  instant_alerts: TIER.PAID,
+  no_competitor_panel: TIER.PAID,
+  featured_placement: TIER.PAID,
+  multiple_services: TIER.PAID,
 };
 
 export function canAccess(tier: number | null | undefined, feature: Feature): boolean {
@@ -85,5 +91,4 @@ export const UPGRADE_REASONS: { feature: Feature; label: string }[] = [
   { feature: "photo_gallery", label: "Show a full photo gallery" },
   { feature: "availability", label: "Publish your availability" },
   { feature: "analytics", label: "See views, enquiries and conversion" },
-  { feature: "featured_placement", label: "Featured at the top of results" },
 ];

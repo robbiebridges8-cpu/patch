@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TIER, TIER_PRICE, TIER_NAMES, annualPrice, UPGRADE_REASONS, type Tier } from "@/lib/tiers";
+import { TIER, TIER_PRICE, annualPrice, UPGRADE_REASONS } from "@/lib/tiers";
 import styles from "../vendor.module.css";
 
 /**
@@ -9,10 +9,11 @@ import styles from "../vendor.module.css";
  * a specific job in front of them) and in full on the billing card.
  */
 export default function UpgradePrompt({ compact = false }: { compact?: boolean }) {
-  const [tier, setTier] = useState<Tier>(TIER.STANDARD);
   const [annual, setAnnual] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const monthly = TIER_PRICE[TIER.PAID];
 
   async function checkout() {
     setLoading(true);
@@ -21,7 +22,7 @@ export default function UpgradePrompt({ compact = false }: { compact?: boolean }
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier, interval: annual ? "year" : "month" }),
+        body: JSON.stringify({ interval: annual ? "year" : "month" }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -41,7 +42,7 @@ export default function UpgradePrompt({ compact = false }: { compact?: boolean }
     return (
       <div className={styles.upgradeCompact}>
         <button type="button" className={styles.btn} disabled={loading} onClick={checkout}>
-          {loading ? "Opening…" : `Unlock — £${TIER_PRICE[TIER.STANDARD]}/mo`}
+          {loading ? "Opening…" : `Unlock — £${monthly}/mo`}
         </button>
         <span className={styles.upgradeHint}>Cancel any time</span>
         {error && <p className={styles.threadError}>{error}</p>}
@@ -49,41 +50,29 @@ export default function UpgradePrompt({ compact = false }: { compact?: boolean }
     );
   }
 
-  const price = annual ? annualPrice(tier) : TIER_PRICE[tier];
-
   return (
     <div>
-      <div className={styles.planRow}>
-        {([TIER.STANDARD, TIER.PRO] as Tier[]).map((t) => (
-          <button
-            key={t}
-            type="button"
-            className={`${styles.planBtn} ${tier === t ? styles.planBtnActive : ""}`}
-            aria-pressed={tier === t}
-            onClick={() => setTier(t)}
-          >
-            <span className={styles.planName}>{TIER_NAMES[t]}</span>
-            <span className={styles.planPrice}>£{TIER_PRICE[t]}<small>/mo</small></span>
-          </button>
-        ))}
+      <div className={styles.priceLine}>
+        <span className={styles.priceBig}>£{annual ? annualPrice(TIER.PAID) : monthly}</span>
+        <span className={styles.priceUnit}>{annual ? "per year" : "per month"}</span>
       </div>
 
       <label className={styles.annualToggle}>
         <input type="checkbox" checked={annual} onChange={(e) => setAnnual(e.target.checked)} />
         <span>
-          Pay annually — <strong>2 months free</strong> (£{annualPrice(tier)}/year)
+          Pay annually — <strong>2 months free</strong> (£{annualPrice(TIER.PAID)}/year)
         </span>
       </label>
 
       <ul className={styles.planFeatures}>
-        {UPGRADE_REASONS.filter((r) => r.feature !== "featured_placement" || tier === TIER.PRO).map((r) => (
+        {UPGRADE_REASONS.map((r) => (
           <li key={r.feature}>{r.label}</li>
         ))}
       </ul>
 
       {error && <div className={`${styles.notice} ${styles.noticeErr}`}>{error}</div>}
       <button type="button" className={styles.btn} disabled={loading} onClick={checkout}>
-        {loading ? "Starting…" : `Upgrade — £${price}${annual ? "/year" : "/month"}`}
+        {loading ? "Starting…" : `Upgrade — £${annual ? annualPrice(TIER.PAID) : monthly}${annual ? "/year" : "/month"}`}
       </button>
     </div>
   );
