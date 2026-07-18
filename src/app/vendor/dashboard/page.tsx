@@ -17,6 +17,8 @@ import LeadRow, { type Lead } from "./LeadRow";
 import { type ThreadMessage } from "./MessageThread";
 import BillingCard from "./BillingCard";
 import AnalyticsCard, { type Analytics } from "./AnalyticsCard";
+import CompletenessCard from "./CompletenessCard";
+import { assessListing } from "@/lib/completeness";
 import { signOut } from "./actions";
 import styles from "../vendor.module.css";
 
@@ -152,6 +154,27 @@ export default async function VendorDashboard({
                 <PublishButton vendorId={vendor.id as string} />
               </div>
             )}
+
+            <CompletenessCard
+              completeness={assessListing({
+                name: vendor.name as string,
+                primary_category: vendor.primary_category as string | null,
+                description: vendor.description as string | null,
+                bio: vendor.bio as string | null,
+                price_from: vendor.price_from as number | null,
+                contact_email: vendor.contact_email as string | null,
+                typical_event_size_min: vendor.typical_event_size_min as number | null,
+                typical_event_size_max: vendor.typical_event_size_max as number | null,
+                dietary_options: vendor.dietary_options as string[] | null,
+                signature_items: vendor.signature_items as string[] | null,
+                vibe_tags: vendor.vibe_tags as string[] | null,
+                faq: vendor.faq as unknown[] | null,
+                coverage_radius_miles: vendor.coverage_radius_miles as number | null,
+                photoCount: ((photos as { id: string }[]) || []).length,
+                hasAvailability: ((blocked as unknown[]) || []).length > 0,
+              })}
+              previewHref={`/vendors/${vendor.slug as string}?preview=1`}
+            />
 
             <AnalyticsCard data={(analytics as Analytics) ?? null} />
 

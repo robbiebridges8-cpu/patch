@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { cache } from "react";
 import type { Metadata } from "next";
 import { supabase } from "@/lib/supabase";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 import { categoryPhoto } from "@/lib/categoryPhoto";
 import Header from "@/components/layout/Header";
 import EnquiryButton from "@/components/vendor/EnquiryForm";
@@ -39,6 +40,34 @@ const getVendor = cache(async function getVendor(slug: string) {
   return data;
 });
 
+/**
+ * Preview mode. A draft listing is invisible to the public (RLS only exposes
+ * status='live'), so an owner checking their work would otherwise get a 404.
+ * This reads through the *authenticated* client, so RLS still decides: it
+ * returns a row only if the caller actually owns it.
+ */
+async function getOwnPreview(slug: string) {
+  const authed = await createServerClient();
+  const { data: { user } } = await authed.auth.getUser();
+  if (!user) return null;
+
+  const { data } = await authed
+    .from("vendors")
+    .select(`
+      *,
+      vendor_services ( id, service_type, category, dietary_options, title, description, price_from, price_to, age_min, age_max, capacity_min, capacity_max, setting, duration_minutes, position ),
+      vendor_photos ( id, url, alt_text, position ),
+      vendor_tag_assignments ( tag_id, tags ( slug, name, category ) ),
+      reviews ( id, rating, title, body, party_date, child_age, guest_count, verified, created_at ),
+      vendor_coverage_areas ( postcode_district )
+    `)
+    .eq("slug", slug)
+    .eq("owner_id", user.id)
+    .maybeSingle();
+
+  return data;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -70,13 +99,23 @@ export async function generateMetadata({
 
 export default async function VendorPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ preview?: string }>;
 }) {
   const { slug } = await params;
-  const vendor = await getVendor(slug);
+  const { preview } = await searchParams;
+  const isPreview = preview === "1";
+
+  let vendor = await getVendor(slug);
+  // Only reach for the owner view if the public one found nothing — a live
+  // listing previews through exactly the same path a buyer sees.
+  if (!vendor && isPreview) vendor = await getOwnPreview(slug);
 
   if (!vendor) return notFound();
+
+  const previewing = isPreview && vendor.status !== "live";
 
   const photos = (vendor.vendor_photos as Record<string, unknown>[]) || [];
   const sortedPhotos = [...photos].sort((a, b) => (a.position as number) - (b.position as number));
@@ -158,8 +197,16 @@ export default async function VendorPage({
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <TrackProfileView vendorId={vendor.id as string} />
+      {!isPreview && <TrackProfileView vendorId={vendor.id as string} />}
       <Header />
+
+      {previewing && (
+        <div className={styles.previewBanner} role="status">
+          <strong>Preview.</strong> This is how your listing will look to buyers. It&apos;s still a
+          draft — publish it from your dashboard to make it findable.
+          <a href="/vendor/dashboard" className={styles.previewBannerLink}>Back to dashboard</a>
+        </div>
+      )}
 
       <section className={styles.hero}>
         <div className={styles.heroInner}>

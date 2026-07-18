@@ -503,3 +503,30 @@
   .glance { gap: 28px; padding: 18px var(--gutter-mobile, 24px); }
   .glanceValue { font-size: 20px; }
 }
+
+/* Owner previewing an unpublished listing. */
+.previewBanner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 1200px;
+  margin: 16px auto 0;
+  padding: 12px 18px;
+  border: 1px solid var(--color-border-strong, #d9d1c5);
+  border-left: 4px solid var(--color-accent, #c0392b);
+  border-radius: 10px;
+  background: var(--color-surface-sunken, #f7f3ed);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-secondary, #6b6459);
+}
+.previewBanner strong { color: var(--color-text-primary, #241f19); }
+
+.previewBannerLink {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--color-accent-on-light, #a62f22);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

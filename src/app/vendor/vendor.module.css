@@ -563,3 +563,94 @@ select.input { appearance: none; background-image: none; cursor: pointer; }
   background: color-mix(in srgb, var(--color-accent, #c0392b) 55%, transparent);
 }
 .sparkBar:hover { background: var(--color-accent, #c0392b); }
+
+/* ---- Listing strength ---- */
+
+.previewLink {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-accent-on-light, #a62f22);
+  text-decoration: none;
+}
+.previewLink:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.meterRow { display: flex; align-items: flex-start; gap: 18px; }
+
+.meterPct {
+  font-family: var(--font-display, inherit);
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text-primary, #241f19);
+  min-width: 72px;
+}
+
+.meterBody { flex: 1; min-width: 0; }
+
+.meterTrack {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-surface-sunken, #f0ebe4);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.meterFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-accent, #c0392b);
+  transition: width 0.3s ease;
+}
+.meterFull { background: #2f6d4f; }
+
+.meterTitle { font-size: 15px; font-weight: 600; color: var(--color-text-primary, #241f19); }
+.meterSub { margin-top: 2px; font-size: 13px; line-height: 1.55; color: var(--color-text-secondary, #6b6459); }
+
+.todoList {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--color-border, #e7e0d6);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.todo { display: flex; align-items: flex-start; gap: 10px; }
+
+.todoBox {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+  border: 2px solid var(--color-border-strong, #d9d1c5);
+  border-radius: 4px;
+}
+
+.todoLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary, #241f19);
+}
+
+.todoEssential {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-accent, #c0392b) 14%, transparent);
+  color: var(--color-accent-on-light, #a62f22);
+}
+
+.todoWhy { margin-top: 2px; font-size: 13px; line-height: 1.5; color: var(--color-text-muted, #9a9186); }
+.todoMore { font-size: 13px; color: var(--color-text-muted, #9a9186); padding-left: 25px; }
+
+@media (max-width: 560px) {
+  .meterRow { gap: 12px; }
+  .meterPct { font-size: 30px; min-width: 56px; }
+}
