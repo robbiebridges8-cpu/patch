@@ -27,7 +27,7 @@ const getVendor = cache(async function getVendor(slug: string) {
       vendor_services ( id, service_type, category, dietary_options, title, description, price_from, price_to, age_min, age_max, capacity_min, capacity_max, setting, duration_minutes, position ),
       vendor_photos ( id, url, alt_text, position ),
       vendor_tag_assignments ( tag_id, tags ( slug, name, category ) ),
-      reviews ( id, rating, title, body, party_date, child_age, guest_count, created_at ),
+      reviews ( id, rating, title, body, party_date, child_age, guest_count, verified, created_at ),
       vendor_coverage_areas ( postcode_district )
     `)
     .eq("slug", slug)
@@ -296,6 +296,7 @@ export default async function VendorPage({
                       ))}
                     </div>
                     <div className={styles.reviewDate}>
+                      {r.verified ? <span className={styles.verifiedReview}><Check />Verified booking</span> : null}
                       {new Date(r.created_at as string).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}
                     </div>
                   </div>
