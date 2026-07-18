@@ -22,7 +22,20 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+      testIgnore: /mobile\.spec\.ts/,
+    },
+    {
+      // Mobile Safari specifically: the input-zoom and safe-area behaviours
+      // this product cares about are WebKit's, not Chromium's.
+      name: "mobile-safari",
+      use: { ...devices["iPhone 13"] },
+      testMatch: /mobile\.spec\.ts/,
+    },
+  ],
   // Runs against a production build, not `next dev`. Partly because that's the
   // artifact users get, and partly because the dev server's HMR websocket can
   // fail to hand off in headless Chromium, leaving the page server-rendered but

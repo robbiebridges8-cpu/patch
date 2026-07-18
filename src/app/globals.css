@@ -60,9 +60,10 @@
   /* Borders */
   --color-border:        var(--greige-200);
   --color-border-strong: var(--greige-300);
-  /* 3:1 against white/page — WCAG 1.4.11 for control boundaries. Not yet
-     applied site-wide: swapping every control border is a visual change. */
-  --color-border-control: #9E8D6F;
+  /* WCAG 1.4.11 (non-text contrast): >=3:1 against every surface a control can
+     sit on — white, page, sunken and band. Applied to interactive boundaries
+     only; decorative card and notice borders keep the softer --color-border-strong. */
+  --color-border-control: #918162;
   --color-border-faint:  var(--greige-100);
   --color-border-on-ink: var(--ink-border);
 
@@ -260,4 +261,105 @@ img { display: block; max-width: 100%; }
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+}
+
+/* ══ Touch & mobile ══════════════════════════════════════════════════════════
+   Scoped to coarse pointers so the desktop design is untouched. The goal is
+   WCAG 2.5.8 (24px minimum) comfortably exceeded — 44px is the Apple HIG and
+   Material figure, and it's what an eventual native app will be judged against. */
+
+@media (pointer: coarse) {
+  /* Grey flash on tap reads as a bug on a considered UI; :active states and
+     the focus ring already communicate the press. */
+  a, button, [role="button"], input, select, textarea, label {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Standalone controls grow to a comfortable target. Only height is forced —
+     padding and type stay put, so nothing reflows unexpectedly. */
+  button:not([data-compact]),
+  [role="button"]:not([data-compact]),
+  input[type="submit"],
+  input[type="button"] {
+    min-height: 44px;
+  }
+
+  /* Text inputs get the same treatment so the whole field is tappable. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    min-height: 44px;
+  }
+
+  /* Small icon buttons (close, remove, calendar cells) must stay visually
+     small — expanding the hit area with a pseudo-element gives them a 44px
+     target without redrawing the design. */
+  [data-touch-target] {
+    position: relative;
+  }
+  [data-touch-target]::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+    /* Purely a hit area — never paints, never blocks siblings visually. */
+    pointer-events: auto;
+  }
+
+  /* Momentum scrolling inside a scrollable panel shouldn't drag the page. */
+  [role="dialog"],
+  [data-scroll-lock] {
+    overscroll-behavior: contain;
+  }
+}
+
+/* The three fixed bottom bars (vendor sticky CTA, shortlist tray, filter sheet)
+   already pad themselves with env(safe-area-inset-bottom); viewportFit:"cover"
+   in the root layout is what makes that inset non-zero. */
+
+/* Nothing should ever scroll the page sideways on a phone. */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Long unbroken strings (URLs, vendor names) must wrap rather than widen the
+   page — the usual cause of a stray horizontal scrollbar. */
+h1, h2, h3, p, li, td, dd {
+  overflow-wrap: break-word;
+}
+
+/* ── Touch targets on links ──────────────────────────────────────────────────
+   The min-height rule above catches buttons and fields, but most navigation is
+   anchors, which can't be blanket-sized without wrecking inline prose links.
+   These are the standalone link groups: nav, footer, logo, and the in-card
+   actions. Padding (not height) so the text position is unchanged. */
+
+@media (pointer: coarse) {
+  /* Header: logo, nav links, account button. */
+  header a,
+  header button,
+  /* Footer link rows. */
+  footer a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  /* Native selects render short on iOS unless given room. */
+  select {
+    min-height: 44px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  /* Anything explicitly marked as a standalone tappable row. */
+  [data-tap-row] {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
 }

@@ -146,26 +146,113 @@ async function geocodeLocation(location: string): Promise<{ lat: number; lng: nu
 
 // ── Step 3: Embed query string via Voyage ──
 
-async function embedQuery(text: string): Promise<number[]> {
+/**
+ * Recently embedded queries, keyed by the semantic string. Repeated and popular
+ * briefs are common ("pizza for 50"), and every cache hit is one fewer call
+ * against the per-minute limit as well as one fewer thing to pay for.
+ */
+const embedCache = new Map<string, number[]>();
+const EMBED_CACHE_MAX = 500;
+
+function cacheEmbedding(key: string, value: number[]) {
+  // Cheap LRU: re-inserting moves a key to the end of Map iteration order.
+  if (embedCache.has(key)) embedCache.delete(key);
+  embedCache.set(key, value);
+  if (embedCache.size > EMBED_CACHE_MAX) {
+    embedCache.delete(embedCache.keys().next().value as string);
+  }
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Embed the query, retrying transient failures.
+ *
+ * Voyage rate-limits per minute, and a single 429 used to drop the whole search
+ * to the non-AI keyword fallback — silently, so a traffic spike quietly made
+ * every result worse with nothing to show for it. Retry 429s and 5xx with
+ * backoff (honouring Retry-After), and let 4xx fail fast since retrying a bad
+ * key or malformed body just wastes the user's time.
+ */
+async function embedQuery(text: string, attempts = 3): Promise<number[]> {
   const voyageKey = process.env.VOYAGE_API_KEY;
   if (!voyageKey) throw new Error("Missing VOYAGE_API_KEY");
 
-  const res = await fetch("https://api.voyageai.com/v1/embeddings", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${voyageKey}`,
-    },
-    body: JSON.stringify({
-      model: "voyage-3",
-      input: [text],
-      input_type: "query",
-    }),
-  });
+  const cached = embedCache.get(text);
+  if (cached) {
+    console.log("[embedQuery] cache hit");
+    return cached;
+  }
 
-  if (!res.ok) throw new Error(`Voyage API error ${res.status}`);
-  const data = await res.json();
-  return data.data[0].embedding;
+  let lastError: Error | null = null;
+  const backoff = (attempt: number) =>
+    Math.min(2 ** (attempt - 1) * 400, 4_000) + Math.random() * 300;
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    let res: Response;
+
+    // Network-level failures are always worth another go. Kept in its own
+    // try/catch so it can't swallow the deliberate non-retryable throw below —
+    // that mistake silently turns "fail fast on a bad key" into three attempts.
+    try {
+      res = await fetch("https://api.voyageai.com/v1/embeddings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${voyageKey}`,
+        },
+        body: JSON.stringify({
+          model: "voyage-3",
+          input: [text],
+          input_type: "query",
+        }),
+      });
+    } catch (err) {
+      lastError = err as Error;
+      if (attempt === attempts) break;
+      await sleep(backoff(attempt));
+      continue;
+    }
+
+    if (res.ok) {
+      const data = await res.json();
+      const embedding = data.data[0].embedding as number[];
+      cacheEmbedding(text, embedding);
+      return embedding;
+    }
+
+    // 4xx other than 429 means the request itself is wrong — a bad key or a
+    // malformed body. Retrying just makes the user wait longer for the same
+    // failure, so surface it immediately.
+    const retryable = res.status === 429 || res.status >= 500;
+    if (!retryable) throw new Error(`Voyage API error ${res.status}`);
+
+    lastError = new Error(`Voyage API error ${res.status}`);
+    if (attempt === attempts) break;
+
+    // Prefer the server's own guidance; otherwise exponential backoff with
+    // jitter so concurrent searches don't retry in lockstep.
+    const retryAfter = Number(res.headers.get("retry-after"));
+    const wait =
+      Number.isFinite(retryAfter) && retryAfter > 0
+        ? Math.min(retryAfter * 1000, 5_000)
+        : backoff(attempt);
+
+    console.warn(
+      `[embedQuery] ${res.status}, retry ${attempt}/${attempts - 1} in ${Math.round(wait)}ms`,
+    );
+    await sleep(wait);
+  }
+
+  throw lastError ?? new Error("Voyage embedding failed");
+}
+
+/**
+ * Test seam for the embedding retry/backoff. Not used by the app — exported so
+ * the resilience can be tested without standing up the whole search pipeline.
+ */
+export function quickSearchEmbedForTest(text: string): Promise<number[]> {
+  return embedQuery(text);
 }
 
 // ── Step 4: Pre-filter + vector search via match_vendors RPC ──

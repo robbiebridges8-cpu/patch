@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Oswald, Geist_Mono } from "next/font/google";
 import ShortlistTray from "@/components/shortlist/ShortlistTray";
@@ -23,6 +23,23 @@ const geistMono = Geist_Mono({
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
 const DESCRIPTION =
   "Describe your occasion in plain words. Patch returns a short, reasoned shortlist of mobile food vendors and caterers in London who actually fit.";
+
+/**
+ * viewportFit: "cover" lets the page paint into the notch/home-indicator area;
+ * the sticky bars then pad themselves back out with env(safe-area-inset-*).
+ * userScalable stays true and maximumScale is left alone — capping zoom is a
+ * WCAG 1.4.4 failure, and it's the single most common mobile a11y mistake.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  userScalable: true,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FAF6EE" },
+    { media: "(prefers-color-scheme: dark)", color: "#1A1712" },
+  ],
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

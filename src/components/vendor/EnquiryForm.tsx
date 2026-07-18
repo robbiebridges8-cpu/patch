@@ -83,7 +83,7 @@ export default function EnquiryButton({ vendorId, vendorName, className, label =
       {open && (
         <div className={styles.overlay} onMouseDown={(e) => e.target === e.currentTarget && close()}>
           <div className={styles.dialog} ref={dialogRef} role="dialog" aria-modal="true" aria-label={`Enquire with ${vendorName}`}>
-            <button type="button" className={styles.closeBtn} onClick={close} aria-label="Close">
+            <button type="button" className={styles.closeBtn} data-touch-target onClick={close} aria-label="Close">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
             </button>
 

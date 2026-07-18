@@ -255,7 +255,7 @@ export default async function VendorPage({
           </div>
 
           <div className={styles.heroBody}>
-            <a href="/search" className={styles.backLink}>← Back to results</a>
+            <a href="/search" className={styles.backLink} data-tap-row>← Back to results</a>
             <div className={styles.category}>{category}</div>
             <h1 className={styles.name}>{vendor.name as string}</h1>
 
@@ -511,7 +511,7 @@ export default async function VendorPage({
                   vendorId={vendor.id as string}
                   event="visit_website"
                   href={vendor.website as string}
-                  className={styles.contactLink}
+                  className={styles.contactLink} data-tap-row
                 >
                   🌐 Website
                 </TrackedLink>
@@ -521,7 +521,7 @@ export default async function VendorPage({
                   vendorId={vendor.id as string}
                   event="click_contact"
                   href={`https://instagram.com/${(vendor.instagram as string).replace("@", "")}`}
-                  className={styles.contactLink}
+                  className={styles.contactLink} data-tap-row
                 >
                   📸 {vendor.instagram as string}
                 </TrackedLink>

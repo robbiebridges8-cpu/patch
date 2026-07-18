@@ -65,10 +65,10 @@
 .textarea {
   width: 100%;
   font-family: var(--font-ui, inherit);
-  font-size: 15px;
+  font-size: 16px;
   color: var(--color-text-primary, #241f19);
   background: var(--color-surface-raised, #faf7f2);
-  border: 1px solid var(--color-border-strong, #d9d1c5);
+  border: 1px solid var(--color-border-control, #918162);
   border-radius: 10px;
   padding: 11px 13px;
   outline: none;
@@ -93,7 +93,7 @@ select.input { appearance: none; background-image: none; cursor: pointer; }
   align-items: center;
   gap: 7px;
   padding: 8px 14px;
-  border: 1px solid var(--color-border-strong, #d9d1c5);
+  border: 1px solid var(--color-border-control, #918162);
   border-radius: 999px;
   font-size: 14px;
   color: var(--color-text-secondary, #6b6459);
@@ -256,7 +256,7 @@ select.input { appearance: none; background-image: none; cursor: pointer; }
 .statusBtn {
   height: 34px;
   padding: 0 14px;
-  border: 1px solid var(--color-border-strong, #d9d1c5);
+  border: 1px solid var(--color-border-control, #918162);
   border-radius: 8px;
   background: transparent;
   color: var(--color-text-secondary, #6b6459);
@@ -345,7 +345,7 @@ select.input { appearance: none; background-image: none; cursor: pointer; }
 .calNav {
   width: 34px;
   height: 34px;
-  border: 1px solid var(--color-border-strong, #d9d1c5);
+  border: 1px solid var(--color-border-control, #918162);
   border-radius: 8px;
   background: transparent;
   font-size: 20px;
@@ -398,7 +398,7 @@ select.input { appearance: none; background-image: none; cursor: pointer; }
 }
 .calLegend span { display: inline-flex; align-items: center; gap: 7px; }
 .calDot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
-.calDotFree { border: 1px solid var(--color-border-strong, #d9d1c5); background: #fff; }
+.calDotFree { border: 1px solid var(--color-border-control, #918162); background: #fff; }
 .calDotBlocked { background: var(--color-accent, #c0392b); }
 
 @media (max-width: 560px) {
@@ -420,7 +420,7 @@ select.input { appearance: none; background-image: none; cursor: pointer; }
 .threadToggle {
   height: 34px;
   padding: 0 14px;
-  border: 1px solid var(--color-border-strong, #d9d1c5);
+  border: 1px solid var(--color-border-control, #918162);
   border-radius: 8px;
   background: transparent;
   color: var(--color-text-secondary, #6b6459);
@@ -495,7 +495,7 @@ select.input { appearance: none; background-image: none; cursor: pointer; }
   line-height: 1.5;
   color: var(--color-text-primary, #241f19);
   background: var(--color-surface-raised, #fff);
-  border: 1px solid var(--color-border-strong, #d9d1c5);
+  border: 1px solid var(--color-border-control, #918162);
   border-radius: 10px;
   resize: vertical;
 }

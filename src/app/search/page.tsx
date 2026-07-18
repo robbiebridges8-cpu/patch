@@ -260,6 +260,14 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
         </div>
       )}
 
+      {quick.usedFallback && (
+        <div className={styles.fallbackNote} role="status">
+          <strong>Showing basic results.</strong> Patch&apos;s AI matching is busy right now, so
+          these are keyword matches rather than a reasoned shortlist — the ranking and match
+          notes will be less sharp. Try again in a moment for the full thing.
+        </div>
+      )}
+
       {quick.relaxed.length > 0 && (
         <div className={styles.relaxedNote} role="status">
           <strong>Nothing matched that exactly.</strong> I widened the{" "}

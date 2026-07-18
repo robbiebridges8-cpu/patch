@@ -109,3 +109,17 @@
   color: var(--color-text-secondary, #6b6459);
 }
 .relaxedNote strong { color: var(--color-text-primary, #241f19); }
+
+/* Shown when the AI pipeline was unavailable and we fell back to keywords. */
+.fallbackNote {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border: 1px solid #e4c78a;
+  border-left: 4px solid var(--color-warning, #966817);
+  border-radius: 8px;
+  background: #fdf6e7;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-secondary, #6b6459);
+}
+.fallbackNote strong { color: var(--color-text-primary, #241f19); }

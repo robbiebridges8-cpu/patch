@@ -23,7 +23,7 @@ export default function ShortlistTray() {
                 <Image src={i.photoUrl} alt="" fill sizes="40px" />
                 <button
                   type="button"
-                  className={styles.remove}
+                  className={styles.remove} data-touch-target
                   aria-label={`Remove ${i.name}`}
                   onClick={() => remove(i.slug)}
                 >

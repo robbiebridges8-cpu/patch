@@ -69,7 +69,7 @@
 .threadToggle {
   height: 32px;
   padding: 0 12px;
-  border: 1px solid var(--color-border-strong, #d9d1c5);
+  border: 1px solid var(--color-border-control, #918162);
   border-radius: 8px;
   background: transparent;
   color: var(--color-text-secondary, #6b6459);
@@ -136,7 +136,7 @@
   line-height: 1.5;
   color: var(--color-text-primary);
   background: var(--color-surface-raised, #fff);
-  border: 1px solid var(--color-border-strong, #d9d1c5);
+  border: 1px solid var(--color-border-control, #918162);
   border-radius: 10px;
   resize: vertical;
 }

@@ -19,7 +19,7 @@ export default function QuickView({ match, onClose }: { match: VendorMatch; onCl
   return (
     <div className={styles.overlay} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className={styles.dialog} ref={dialogRef} role="dialog" aria-modal="true" aria-label={v.name}>
-        <button type="button" className={styles.close} onClick={onClose} aria-label="Close">
+        <button type="button" className={styles.close} data-touch-target onClick={onClose} aria-label="Close">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
         </button>
 

@@ -37,10 +37,10 @@
 .input, .textarea {
   width: 100%;
   font-family: var(--font-ui);
-  font-size: 15px;
+  font-size: 16px;
   color: var(--color-text-primary);
   background: var(--color-surface-page, #faf6ee);
-  border: 1px solid var(--color-border-strong, #cfc7b8);
+  border: 1px solid var(--color-border-control, #918162);
   border-radius: 8px;
   padding: 11px 13px;
   outline: none;

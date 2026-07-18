@@ -6,7 +6,7 @@ export default function ParsedChips({ chips }: { chips: string[] }) {
       {chips.map((chip) => (
         <span key={chip} className={styles.chip}>
           {chip}
-          <button type="button" className={styles.dismiss} aria-label={`Remove ${chip}`}>
+          <button type="button" className={styles.dismiss} data-touch-target aria-label={`Remove ${chip}`}>
             ×
           </button>
         </span>

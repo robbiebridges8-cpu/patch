@@ -12,13 +12,16 @@ export default function TrackedLink({
   href,
   className,
   children,
+  ...rest
 }: {
   vendorId: string;
   event: TrackEvent;
   href: string;
   className?: string;
   children: React.ReactNode;
-}) {
+  /** Remaining anchor attributes are forwarded — without this, callers pass
+   *  things like data-* or aria-* and they vanish with no error. */
+} & Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href" | "className" | "children">) {
   return (
     <a
       href={href}
@@ -26,6 +29,7 @@ export default function TrackedLink({
       rel="noopener noreferrer"
       className={className}
       onClick={() => track(vendorId, event)}
+      {...rest}
     >
       {children}
     </a>

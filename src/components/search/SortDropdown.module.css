@@ -1,9 +1,14 @@
 .sort {
+  /* WebKit ignores padding and height on a select with native appearance, so
+     it renders ~21px tall on iOS — far under a usable touch target. Opting out
+     of the native control is the only way to size it. */
+  appearance: none;
+  -webkit-appearance: none;
   font-size: 13px;
   color: var(--color-text-primary);
   font-weight: 500;
   padding: 6px 10px;
-  border: 1px solid var(--color-border-strong);
+  border: 1px solid var(--color-border-control);
   border-radius: var(--radius-input);
   background: var(--color-surface-raised);
   font-family: inherit;
@@ -13,3 +18,12 @@
 }
 .sort:hover { border-color: var(--color-text-muted); }
 .sort:focus { border-color: var(--color-accent); }
+
+@media (pointer: coarse) {
+  .sort {
+    min-height: 44px;
+    /* 16px stops iOS zooming the page when the picker opens. */
+    font-size: 16px;
+    padding-right: 30px;
+  }
+}

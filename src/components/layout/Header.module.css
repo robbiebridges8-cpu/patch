@@ -41,7 +41,7 @@
   gap: 8px;
   height: 38px;
   padding: 0 14px;
-  border: 1px solid var(--color-border-strong);
+  border: 1px solid var(--color-border-control);
   border-radius: var(--radius-pill);
   font-family: var(--font-ui);
   font-size: 14px;
@@ -82,7 +82,7 @@
   gap: 8px;
   height: 40px;
   padding: 0 6px 0 14px;
-  border: 1px solid var(--color-border-strong);
+  border: 1px solid var(--color-border-control);
   border-radius: var(--radius-pill);
   background: var(--color-surface-raised);
   cursor: pointer;

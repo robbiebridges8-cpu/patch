@@ -81,10 +81,10 @@
 .textarea {
   width: 100%;
   font-family: var(--font-ui, inherit);
-  font-size: 15px;
+  font-size: 16px;
   color: var(--color-text-primary, #241f19);
   background: var(--color-surface-raised, #faf7f2);
-  border: 1px solid var(--color-border-strong, #d9d1c5);
+  border: 1px solid var(--color-border-control, #918162);
   border-radius: 10px;
   padding: 11px 13px;
   outline: none;
