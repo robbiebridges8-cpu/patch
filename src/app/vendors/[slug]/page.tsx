@@ -98,6 +98,23 @@ export default async function VendorPage({
   const category = categories.slice(0, 2).join(" · ") || "Mobile catering";
   const heroFallback = categoryPhoto(categories[0], 1200);
 
+  const dietary = (vendor.dietary_options as string[]) || (services[0]?.dietary_options as string[]) || [];
+  const signatureItems = ((Array.isArray(vendor.signature_items) ? vendor.signature_items : []) as unknown[])
+    .map((s) => (typeof s === "string" ? s : (s as { name?: string })?.name))
+    .filter(Boolean) as string[];
+  const faq = (Array.isArray(vendor.faq) ? vendor.faq : []) as { q?: string; a?: string }[];
+  const capMin = vendor.typical_event_size_min as number | null;
+  const capMax = vendor.typical_event_size_max as number | null;
+  const years = vendor.years_active as number | null;
+  const rating = (vendor.rating_avg as number) || 0;
+  const reviewCount = (vendor.review_count as number) || 0;
+
+  const glance: { label: string; value: string; sub?: string }[] = [];
+  if (capMax) glance.push({ label: "Serves", value: capMin ? `${capMin}–${capMax}` : `up to ${capMax}`, sub: "guests" });
+  if (vendor.coverage_radius_miles) glance.push({ label: "Covers", value: `${vendor.coverage_radius_miles} mi`, sub: vendor.base_postcode as string });
+  if (years) glance.push({ label: "Trading", value: `${years} yr${years > 1 ? "s" : ""}` });
+  if (rating > 0) glance.push({ label: "Rated", value: rating.toFixed(1), sub: `${reviewCount} review${reviewCount !== 1 ? "s" : ""}` });
+
   return (
     <>
       <Header />
@@ -196,8 +213,44 @@ export default async function VendorPage({
         </div>
       </section>
 
+      {glance.length > 0 && (
+        <div className={styles.glanceWrap}>
+          <div className={styles.glance}>
+            {glance.map((g) => (
+              <div key={g.label} className={styles.glanceStat}>
+                <span className={styles.glanceLabel}>{g.label}</span>
+                <span className={styles.glanceValue}>{g.value}</span>
+                {g.sub && <span className={styles.glanceSub}>{g.sub}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className={styles.body}>
         <div>
+          {/* Dietary */}
+          {dietary.length > 0 && (
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>Dietary options</h2>
+              <div className={styles.dietRow}>
+                {dietary.map((d) => (
+                  <span key={d} className={styles.dietChip}><Check />{d.charAt(0).toUpperCase() + d.slice(1)}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Signature dishes */}
+          {signatureItems.length > 0 && (
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>Signature dishes</h2>
+              <div className={styles.dishList}>
+                {signatureItems.map((s) => <span key={s} className={styles.dish}>{s}</span>)}
+              </div>
+            </div>
+          )}
+
           {/* Services */}
           {services.length > 0 && (
             <div className={styles.section}>
@@ -265,6 +318,19 @@ export default async function VendorPage({
             <div className={styles.section}>
               <h2 className={styles.sectionTitle}>About {vendor.name as string}</h2>
               <p className={styles.desc}>{vendor.bio as string}</p>
+            </div>
+          )}
+
+          {/* FAQ */}
+          {faq.filter((f) => f.q && f.a).length > 0 && (
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>Frequently asked</h2>
+              {faq.filter((f) => f.q && f.a).map((f, i) => (
+                <div key={i} className={styles.faqItem}>
+                  <div className={styles.faqQ}>{f.q}</div>
+                  <div className={styles.faqA}>{f.a}</div>
+                </div>
+              ))}
             </div>
           )}
         </div>

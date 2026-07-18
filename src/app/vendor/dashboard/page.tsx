@@ -57,7 +57,7 @@ export default async function VendorDashboard({
 
   const { data: vendor } = await supabase
     .from("vendors")
-    .select("id, name, slug, description, bio, contact_email, contact_phone, website, instagram, price_from, price_notes, coverage_radius_miles, typical_event_size_min, typical_event_size_max, dietary_options, vibe_tags, status, primary_category")
+    .select("id, name, slug, description, bio, contact_email, contact_phone, website, instagram, price_from, price_notes, coverage_radius_miles, typical_event_size_min, typical_event_size_max, dietary_options, vibe_tags, signature_items, faq, status, primary_category")
     .eq("owner_id", user.id)
     .maybeSingle();
 
@@ -151,6 +151,8 @@ export default async function VendorDashboard({
                   typical_event_size_max: vendor.typical_event_size_max as number | null,
                   dietary_options: vendor.dietary_options as string[] | null,
                   vibe_tags: vendor.vibe_tags as string[] | null,
+                  signature_items: (vendor.signature_items as string[] | null) ?? null,
+                  faq: (vendor.faq as { q?: string; a?: string }[] | null) ?? null,
                 }}
               />
             </div>

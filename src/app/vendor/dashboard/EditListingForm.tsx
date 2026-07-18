@@ -31,6 +31,8 @@ export interface EditableVendor {
   typical_event_size_max: number | null;
   dietary_options: string[] | null;
   vibe_tags: string[] | null;
+  signature_items: string[] | null;
+  faq: { q?: string; a?: string }[] | null;
 }
 
 export default function EditListingForm({ vendor }: { vendor: EditableVendor }) {
@@ -80,6 +82,16 @@ export default function EditListingForm({ vendor }: { vendor: EditableVendor }) 
       <div className={styles.field}>
         <label className={styles.labelText} htmlFor="vibe">Vibe tags <span className={styles.hint}>(comma-separated — helps AI matching)</span></label>
         <input id="vibe" name="vibe" maxLength={500} className={styles.input} defaultValue={(vendor.vibe_tags ?? []).join(", ")} placeholder="e.g. wedding-ready, casual, interactive, instagrammable" />
+      </div>
+
+      <div className={styles.field}>
+        <label className={styles.labelText} htmlFor="signature_items">Signature dishes <span className={styles.hint}>(comma-separated)</span></label>
+        <input id="signature_items" name="signature_items" maxLength={1000} className={styles.input} defaultValue={(vendor.signature_items ?? []).join(", ")} placeholder="e.g. 12-hour brisket, Pulled pork, Burnt-end mac" />
+      </div>
+
+      <div className={styles.field}>
+        <label className={styles.labelText} htmlFor="faq">FAQ <span className={styles.hint}>(one per line, as: Question | Answer)</span></label>
+        <textarea id="faq" name="faq" rows={4} maxLength={4000} className={styles.textarea} defaultValue={(vendor.faq ?? []).filter((f) => f.q && f.a).map((f) => `${f.q} | ${f.a}`).join("\n")} placeholder={"Do you need power on site? | We bring our own generator.\nHow far in advance should I book? | 2–3 weeks for weekends."} />
       </div>
 
       <div className={styles.row2}>

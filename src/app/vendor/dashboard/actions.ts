@@ -38,12 +38,24 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
   const capMin = num(formData.get("capacity_min"));
   const capMax = num(formData.get("capacity_max"));
   const coverage = num(formData.get("coverage_radius_miles"));
+  const sigRaw = str(formData.get("signature_items"), 1000);
+  const signature = sigRaw ? sigRaw.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 10) : [];
+  const faqRaw = str(formData.get("faq"), 4000);
+  const faq = faqRaw
+    ? faqRaw.split("\n").map((line) => {
+        const idx = line.indexOf("|");
+        if (idx < 0) return null;
+        const q = line.slice(0, idx).trim();
+        const a = line.slice(idx + 1).trim();
+        return q && a ? { q, a } : null;
+      }).filter(Boolean).slice(0, 15)
+    : [];
 
   if (!name) return { error: "Your business needs a name." };
 
   const { data: before } = await supabase
     .from("vendors")
-    .select("name, primary_category, description, bio, dietary_options, vibe_tags")
+    .select("name, primary_category, description, bio, dietary_options, vibe_tags, signature_items")
     .eq("id", id)
     .eq("owner_id", user.id)
     .maybeSingle();
@@ -67,6 +79,8 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
       typical_event_size_max: capMax,
       dietary_options: dietary,
       vibe_tags: vibe,
+      signature_items: signature,
+      faq: faq.length ? faq : null,
     })
     .eq("id", id)
     .eq("owner_id", user.id);
@@ -93,7 +107,11 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
     before.description !== description ||
     before.bio !== bio ||
     !sameArr(before.dietary_options, dietary) ||
-    !sameArr(before.vibe_tags, vibe);
+    !sameArr(before.vibe_tags, vibe) ||
+    !sameArr(
+      (Array.isArray(before.signature_items) ? before.signature_items : []).map(String),
+      signature,
+    );
   if (changed) {
     const r = await reembedVendor(supabase, id);
     if (!r.ok) console.error("[reembed] failed for vendor", id, "-", r.error);
