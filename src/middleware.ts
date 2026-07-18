@@ -30,7 +30,10 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isProtected = path.startsWith("/vendor") && !path.startsWith("/vendor/login");
+  // /admin additionally checks the admin role in the page itself — this only
+  // keeps signed-out visitors from reaching it.
+  const isProtected =
+    (path.startsWith("/vendor") && !path.startsWith("/vendor/login")) || path.startsWith("/admin");
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone();
@@ -43,5 +46,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/vendor/:path*", "/auth/:path*"],
+  matcher: ["/vendor/:path*", "/admin/:path*", "/auth/:path*"],
 };
