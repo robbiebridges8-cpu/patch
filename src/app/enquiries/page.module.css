@@ -22,6 +22,12 @@
 
 .list { display: flex; flex-direction: column; gap: 12px; }
 
+.card {
+  border: 2px solid var(--color-text-primary);
+  border-radius: var(--radius-card, 6px);
+  background: var(--color-surface-raised, #fff);
+}
+
 .row {
   display: flex;
   align-items: center;
@@ -29,9 +35,6 @@
   gap: 16px;
   flex-wrap: wrap;
   padding: 16px 20px;
-  border: 2px solid var(--color-text-primary);
-  border-radius: var(--radius-card, 6px);
-  background: var(--color-surface-raised, #fff);
 }
 .rowMain { display: flex; flex-direction: column; gap: 3px; }
 .vendor { font-family: var(--font-ui); font-weight: 600; font-size: 17px; color: var(--color-text-primary); text-decoration: none; }
@@ -50,3 +53,107 @@
   font-size: 14px; font-weight: 600; color: var(--color-accent-on-light);
   text-decoration: underline; text-underline-offset: 3px;
 }
+
+/* ---- In-platform messaging ---- */
+
+.srOnly {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.threadToggle {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-strong, #d9d1c5);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary, #6b6459);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.threadToggle:hover { border-color: var(--color-accent); color: var(--color-accent-on-light); }
+
+.threadDot {
+  display: inline-block;
+  min-width: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--color-accent, #c0392b);
+  color: var(--color-on-accent, #fff);
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.thread {
+  padding: 16px 20px;
+  border-top: 1px solid var(--color-border, #e7e0d6);
+  background: var(--color-surface, #fdfbf8);
+}
+
+.threadEmpty { font-size: 14px; line-height: 1.6; color: var(--color-text-muted, #9a9186); margin: 0 0 12px; }
+
+.threadList {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.bubble { max-width: 82%; padding: 10px 13px; border-radius: 14px; font-size: 14px; }
+.bubbleTheirs {
+  align-self: flex-start;
+  background: var(--color-surface-sunken, #f0ebe4);
+  border-bottom-left-radius: 4px;
+}
+.bubbleMine {
+  align-self: flex-end;
+  background: color-mix(in srgb, var(--color-accent, #c0392b) 12%, transparent);
+  border-bottom-right-radius: 4px;
+}
+.bubbleBody { line-height: 1.55; color: var(--color-text-primary); white-space: pre-wrap; overflow-wrap: anywhere; }
+.bubbleMeta { margin-top: 4px; font-size: 11px; color: var(--color-text-muted, #9a9186); }
+
+.threadForm { display: flex; gap: 8px; align-items: flex-end; }
+
+.threadInput {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background: var(--color-surface-raised, #fff);
+  border: 1px solid var(--color-border-strong, #d9d1c5);
+  border-radius: 10px;
+  resize: vertical;
+}
+.threadInput:focus { outline: 2px solid var(--color-accent, #c0392b); outline-offset: 1px; }
+
+.threadSend {
+  height: 42px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 10px;
+  background: var(--color-accent, #c0392b);
+  color: var(--color-on-accent, #fff);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.threadSend:disabled { opacity: 0.6; cursor: default; }
+
+.threadError { margin: 8px 0 0; font-size: 13px; color: #b4482c; }

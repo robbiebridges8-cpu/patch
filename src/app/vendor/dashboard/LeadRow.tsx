@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { setEnquiryStatus } from "./actions";
+import MessageThread, { type ThreadMessage } from "./MessageThread";
 import styles from "../vendor.module.css";
 
 export interface Lead {
@@ -28,9 +29,11 @@ function statusLabel(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-export default function LeadRow({ lead }: { lead: Lead }) {
+export default function LeadRow({ lead, thread = [] }: { lead: Lead; thread?: ThreadMessage[] }) {
   const [status, setStatus] = useState(lead.status);
   const [pending, startTransition] = useTransition();
+  const unread = thread.filter((m) => m.sender === "buyer" && !m.read_by_vendor).length;
+  const [open, setOpen] = useState(unread > 0);
 
   const isNew = status === "sent" || status === "viewed";
   const subject = encodeURIComponent(`Re: your Patch enquiry`);
@@ -66,6 +69,15 @@ export default function LeadRow({ lead }: { lead: Lead }) {
       {lead.message && <div className={styles.leadMsg}>{lead.message}</div>}
 
       <div className={styles.leadActions}>
+        <button
+          type="button"
+          className={styles.threadToggle}
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+        >
+          {open ? "Hide messages" : thread.length ? `Messages (${thread.length})` : "Message"}
+          {!open && unread > 0 && <span className={styles.threadDot}>{unread}</span>}
+        </button>
         {mailto && (
           <a href={mailto} className={styles.btnGhost} onClick={() => isNew && set("replied")}>
             Reply by email
@@ -83,6 +95,14 @@ export default function LeadRow({ lead }: { lead: Lead }) {
           </button>
         ))}
       </div>
+
+      {open && (
+        <MessageThread
+          enquiryId={lead.id}
+          initial={thread}
+          buyerName={lead.parent_name || "the client"}
+        />
+      )}
     </div>
   );
 }

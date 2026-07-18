@@ -14,6 +14,7 @@ import PublishButton from "./PublishButton";
 import PhotoManager from "./PhotoManager";
 import AvailabilityManager from "./AvailabilityManager";
 import LeadRow, { type Lead } from "./LeadRow";
+import { type ThreadMessage } from "./MessageThread";
 import BillingCard from "./BillingCard";
 import { signOut } from "./actions";
 import styles from "../vendor.module.css";
@@ -29,17 +30,40 @@ async function LeadsCard({ vendorId }: { vendorId: string }) {
   const leads = (data as Lead[]) || [];
   const newCount = leads.filter((l) => l.status === "sent" || l.status === "viewed").length;
 
+  // One query for every thread on this vendor's leads (RLS scopes it to us).
+  const { data: msgs } = leads.length
+    ? await supabase
+        .from("messages")
+        .select("id, enquiry_id, sender, body, created_at, read_by_vendor")
+        .in("enquiry_id", leads.map((l) => l.id))
+        .order("created_at", { ascending: true })
+    : { data: [] };
+
+  const threads = new Map<string, ThreadMessage[]>();
+  for (const m of (msgs as (ThreadMessage & { enquiry_id: string })[]) || []) {
+    const list = threads.get(m.enquiry_id) || [];
+    list.push(m);
+    threads.set(m.enquiry_id, list);
+  }
+  const unreadCount = ((msgs as { sender: string; read_by_vendor: boolean }[]) || [])
+    .filter((m) => m.sender === "buyer" && !m.read_by_vendor).length;
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHead}>
         <span className={styles.cardTitle}>Enquiries ({leads.length})</span>
         {newCount > 0 && <span className={styles.badge}>{newCount} new</span>}
+        {unreadCount > 0 && (
+          <span className={styles.badge}>
+            {unreadCount} unread {unreadCount === 1 ? "message" : "messages"}
+          </span>
+        )}
       </div>
 
       {leads.length === 0 ? (
         <div className={styles.empty}>No enquiries yet. They&apos;ll appear here the moment a client gets in touch.</div>
       ) : (
-        leads.map((l) => <LeadRow key={l.id} lead={l} />)
+        leads.map((l) => <LeadRow key={l.id} lead={l} thread={threads.get(l.id) ?? []} />)
       )}
     </div>
   );

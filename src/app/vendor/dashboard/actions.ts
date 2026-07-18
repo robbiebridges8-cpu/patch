@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { reembedVendor } from "@/lib/embedding";
+import { sendThreadMessageEmail } from "@/lib/email";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -163,6 +164,67 @@ export async function setEnquiryStatus(enquiryId: string, status: string): Promi
     })
     .eq("id", enquiryId);
 
+  if (error) return { error: error.message };
+  revalidatePath("/vendor/dashboard");
+  return { ok: true };
+}
+
+/**
+ * Vendor replies in-platform. RLS ("owner_send_messages") is what actually
+ * authorises this — it pins sender to 'vendor' and the thread to a listing the
+ * caller owns, so a forged enquiryId just fails the insert.
+ */
+export async function sendVendorMessage(enquiryId: string, body: string): Promise<ActionState> {
+  const text = body.trim().slice(0, 4000);
+  if (!text) return { error: "Write a message first." };
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Your session expired. Please sign in again." };
+
+  const { error } = await supabase
+    .from("messages")
+    .insert({ enquiry_id: enquiryId, sender: "vendor", body: text, read_by_vendor: true });
+  if (error) return { error: "Couldn't send that message. Please try again." };
+
+  // Replying counts as responding to the lead.
+  await supabase
+    .from("enquiries")
+    .update({ status: "replied", responded_at: new Date().toISOString() })
+    .eq("id", enquiryId)
+    .in("status", ["sent", "viewed"]);
+
+  // Best-effort buyer notification.
+  const { data: enq } = await supabase
+    .from("enquiries")
+    .select("parent_email, vendor_id")
+    .eq("id", enquiryId)
+    .maybeSingle();
+  if (enq?.parent_email) {
+    const { data: vendor } = await supabase
+      .from("vendors")
+      .select("name")
+      .eq("id", enq.vendor_id as string)
+      .maybeSingle();
+    const site = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+    await sendThreadMessageEmail({
+      to: enq.parent_email as string,
+      fromName: (vendor?.name as string) || "Your vendor",
+      threadUrl: `${site}/enquiries`,
+      body: text,
+    });
+  }
+
+  revalidatePath("/vendor/dashboard");
+  return { ok: true };
+}
+
+export async function markThreadRead(enquiryId: string): Promise<ActionState> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Your session expired. Please sign in again." };
+
+  const { error } = await supabase.rpc("mark_thread_read", { p_enquiry_id: enquiryId });
   if (error) return { error: error.message };
   revalidatePath("/vendor/dashboard");
   return { ok: true };
