@@ -7,6 +7,8 @@ export const metadata = {
 };
 
 import { Suspense } from "react";
+import { headers } from "next/headers";
+import { rateLimit, clientIp } from "@/lib/rateLimit";
 import { quickSearch, narrateSummary, type VendorResult, type ParsedQuery } from "@/lib/ai";
 import { categoryPhoto } from "@/lib/categoryPhoto";
 import { supabase } from "@/lib/supabase";
@@ -170,6 +172,15 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
     dietary: params.diet ? params.diet.split(",") : undefined,
     budgetMax: params.budget ? parseInt(params.budget, 10) : undefined,
   };
+  const rl = rateLimit(`search:${clientIp(await headers())}`, 25, 60_000);
+  if (!rl.ok) {
+    return (
+      <div className={styles.errorBox} role="alert">
+        <strong>Slow down a moment.</strong> That&apos;s a lot of searches very quickly — give it {rl.retryAfter}s and try again.
+      </div>
+    );
+  }
+
   let quick: Awaited<ReturnType<typeof quickSearch>>;
   try {
     quick = await quickSearch(query, overrides);

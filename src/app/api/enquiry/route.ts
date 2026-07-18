@@ -1,9 +1,18 @@
 import { supabase } from "@/lib/supabase";
 import { sendVendorEnquiryEmail } from "@/lib/email";
+import { rateLimit, clientIp } from "@/lib/rateLimit";
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 export async function POST(request: Request) {
+  const rl = rateLimit(`enq:${clientIp(request.headers)}`, 8, 60_000);
+  if (!rl.ok) {
+    return Response.json(
+      { error: `Too many enquiries in a short time — please wait ${rl.retryAfter}s and try again.` },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+    );
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
