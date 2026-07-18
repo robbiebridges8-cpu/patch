@@ -3,15 +3,18 @@
 import { useState } from "react";
 import type { VendorMatch } from "@/types/vendor";
 import { useShortlist } from "@/lib/useShortlist";
+import QuickView from "./QuickView";
 import styles from "./VendorRow.module.css";
 
 export default function VendorRow({ match }: { match: VendorMatch }) {
   const v = match.vendor;
   const [hover, setHover] = useState(false);
+  const [qv, setQv] = useState(false);
   const { has, toggle } = useShortlist();
   const saved = has(v.slug);
 
   return (
+    <>
     <article
       className={styles.row}
       onMouseEnter={() => setHover(true)}
@@ -74,6 +77,9 @@ export default function VendorRow({ match }: { match: VendorMatch }) {
             {v.ratingAvg && v.ratingAvg > 0 ? ` · ${v.ratingAvg.toFixed(1)}★` : ""}
             {match.bookingCount > 0 ? ` · ${match.bookingCount} reviews` : ""}
           </span>
+          <button type="button" className={styles.quickBtn} onClick={() => setQv(true)}>
+            Quick view
+          </button>
           <button
             type="button"
             className={styles.saveBtn}
@@ -97,5 +103,7 @@ export default function VendorRow({ match }: { match: VendorMatch }) {
         </div>
       </div>
     </article>
+    {qv && <QuickView match={match} onClose={() => setQv(false)} />}
+    </>
   );
 }
