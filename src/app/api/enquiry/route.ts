@@ -84,6 +84,18 @@ export async function POST(request: Request) {
     return Response.json({ error: "Something went wrong sending your enquiry. Please try again." }, { status: 500 });
   }
 
+  // Log the conversion for vendor analytics. Best-effort: a failure here must
+  // not fail an enquiry that's already been persisted.
+  const { error: eventErr } = await supabase.from("contact_events").insert(
+    vendors.map((v, i) => ({
+      vendor_id: v.id,
+      enquiry_id: records[i].enquiryId,
+      event_type: "enquiry_sent" as const,
+      session_id: typeof body.sessionId === "string" ? body.sessionId.slice(0, 64) : null,
+    })),
+  );
+  if (eventErr) console.error("[enquiry] contact_event insert failed:", eventErr.message);
+
   // Best-effort email to each vendor (no-ops without RESEND_API_KEY).
   const results = await Promise.all(
     vendors.map((v) =>

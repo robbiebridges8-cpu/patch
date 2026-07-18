@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { categoryPhoto } from "@/lib/categoryPhoto";
 import Header from "@/components/layout/Header";
 import EnquiryButton from "@/components/vendor/EnquiryForm";
+import TrackProfileView from "@/components/vendor/TrackProfileView";
+import TrackedLink from "@/components/vendor/TrackedLink";
 import { notFound } from "next/navigation";
 import styles from "./page.module.css";
 
@@ -156,6 +158,7 @@ export default async function VendorPage({
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <TrackProfileView vendorId={vendor.id as string} />
       <Header />
 
       <section className={styles.hero}>
@@ -243,9 +246,14 @@ export default async function VendorPage({
                 className={styles.ctaPrimary}
               />
               {vendor.website && (
-                <a href={vendor.website as string} target="_blank" rel="noopener noreferrer" className={styles.ctaSecondary}>
+                <TrackedLink
+                  vendorId={vendor.id as string}
+                  event="visit_website"
+                  href={vendor.website as string}
+                  className={styles.ctaSecondary}
+                >
                   Visit website
-                </a>
+                </TrackedLink>
               )}
             </div>
           </div>
@@ -428,14 +436,24 @@ export default async function VendorPage({
           {(vendor.website || vendor.instagram) && (
             <div className={styles.contactLinks}>
               {vendor.website && (
-                <a href={vendor.website as string} target="_blank" rel="noopener noreferrer" className={styles.contactLink}>
+                <TrackedLink
+                  vendorId={vendor.id as string}
+                  event="visit_website"
+                  href={vendor.website as string}
+                  className={styles.contactLink}
+                >
                   🌐 Website
-                </a>
+                </TrackedLink>
               )}
               {vendor.instagram && (
-                <a href={`https://instagram.com/${(vendor.instagram as string).replace("@", "")}`} target="_blank" rel="noopener noreferrer" className={styles.contactLink}>
+                <TrackedLink
+                  vendorId={vendor.id as string}
+                  event="click_contact"
+                  href={`https://instagram.com/${(vendor.instagram as string).replace("@", "")}`}
+                  className={styles.contactLink}
+                >
                   📸 {vendor.instagram as string}
-                </a>
+                </TrackedLink>
               )}
             </div>
           )}

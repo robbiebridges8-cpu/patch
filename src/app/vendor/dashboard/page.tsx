@@ -16,6 +16,7 @@ import AvailabilityManager from "./AvailabilityManager";
 import LeadRow, { type Lead } from "./LeadRow";
 import { type ThreadMessage } from "./MessageThread";
 import BillingCard from "./BillingCard";
+import AnalyticsCard, { type Analytics } from "./AnalyticsCard";
 import { signOut } from "./actions";
 import styles from "../vendor.module.css";
 
@@ -101,6 +102,10 @@ export default async function VendorDashboard({
         .order("position", { ascending: true })
     : { data: [] };
 
+  const { data: analytics } = vendor
+    ? await supabase.rpc("vendor_analytics", { p_vendor_id: vendor.id as string, p_days: 30 })
+    : { data: null };
+
   const todayIso = new Date().toISOString().slice(0, 10);
   const { data: blocked } = vendor
     ? await supabase
@@ -147,6 +152,8 @@ export default async function VendorDashboard({
                 <PublishButton vendorId={vendor.id as string} />
               </div>
             )}
+
+            <AnalyticsCard data={(analytics as Analytics) ?? null} />
 
             <div className={styles.card}>
               <div className={styles.cardHead}>
