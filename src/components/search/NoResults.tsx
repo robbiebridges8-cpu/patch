@@ -41,8 +41,7 @@ export default function NoResults({
   const implied: string[] = [];
   if (!params.budget && parsed?.budget_max) implied.push("raising or removing the budget");
   if (parsed?.location) implied.push(`widening the area beyond ${parsed.location}`);
-  if (parsed?.guest_count) implied.push(`being flexible on ${parsed.guest_count} guests`);
-  if (!params.type && parsed?.categories?.length) implied.push(`trying a cuisine other than ${parsed.categories.join(" or ")}`);
+  if (!params.type && parsed?.categories?.length) implied.push(`trying something other than ${parsed.categories.join(" or ")}`);
 
   const STARTERS = [
     "Street food for a summer party in east London",

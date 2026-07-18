@@ -12,7 +12,7 @@ const FULL: CompletenessInput = {
   contact_email: "hi@tacoloco.example",
   typical_event_size_min: 20,
   typical_event_size_max: 200,
-  dietary_options: ["vegan"],
+  attributes: { dietary: ["vegan"], gas_safe: "123456" },
   signature_items: ["Baja fish taco"],
   vibe_tags: ["street"],
   faq: [{ q: "Do you travel?", a: "Yes" }],
@@ -55,10 +55,10 @@ describe("assessListing", () => {
     expect(assessListing({ ...FULL, price_from: 0 }).missing.map((m) => m.key)).toContain("price");
   });
 
-  it("ignores empty arrays", () => {
-    const c = assessListing({ ...FULL, dietary_options: [], signature_items: [] });
+  it("ignores empty attributes and arrays", () => {
+    const c = assessListing({ ...FULL, attributes: {}, signature_items: [] });
     const keys = c.missing.map((m) => m.key);
-    expect(keys).toContain("dietary");
+    expect(keys).toContain("attributes");
     expect(keys).toContain("signature");
   });
 

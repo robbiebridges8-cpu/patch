@@ -11,13 +11,13 @@ interface VendorText {
   bio?: string | null;
   vibe_tags?: string[] | null;
   occasion_fit?: string[] | null;
-  dietary_options?: string[] | null;
   signature_items?: unknown;
+  attributes?: Record<string, unknown> | null;
 }
 interface ServiceText {
   title?: string | null;
   description?: string | null;
-  dietary_options?: string[] | null;
+  attributes?: Record<string, unknown> | null;
 }
 
 /** Compose the rich "document" that gets embedded (not what's shown to users). */
@@ -26,7 +26,13 @@ export function composeEmbeddingText(vendor: VendorText, service: ServiceText): 
   const sig = Array.isArray(vendor.signature_items)
     ? (vendor.signature_items as unknown[]).map((s) => (typeof s === "string" ? s : (s as { name?: string })?.name)).filter(Boolean)
     : [];
-  const dietary = arr(service.dietary_options).length ? arr(service.dietary_options) : arr(vendor.dietary_options);
+  // Free-form attributes are the whole point of the vertical-agnostic model:
+  // whatever a vendor put in there — dietary, certifications, licences, kit —
+  // becomes searchable text without the schema needing to know what it means.
+  const attrs = { ...(vendor.attributes ?? {}), ...(service.attributes ?? {}) };
+  const attrLines = Object.entries(attrs)
+    .filter(([, v]) => v != null && v !== "")
+    .map(([k, v]) => `${k.replace(/_/g, " ")}: ${Array.isArray(v) ? v.join(", ") : String(v)}`);
 
   const parts = [
     vendor.primary_category,
@@ -37,7 +43,7 @@ export function composeEmbeddingText(vendor: VendorText, service: ServiceText): 
     sig.length ? "Signature items: " + sig.join(", ") : null,
     arr(vendor.vibe_tags).length ? "Vibe: " + arr(vendor.vibe_tags).join(", ") : null,
     arr(vendor.occasion_fit).length ? "Good for: " + arr(vendor.occasion_fit).join(", ") : null,
-    dietary.length ? "Dietary: " + dietary.join(", ") : null,
+    attrLines.length ? attrLines.join("\n") : null,
   ];
   return parts.filter(Boolean).join("\n\n");
 }
@@ -68,14 +74,14 @@ export async function reembedVendor(
 ): Promise<{ ok: boolean; error?: string }> {
   const { data: vendor, error: ve } = await client
     .from("vendors")
-    .select("primary_category, description, bio, vibe_tags, occasion_fit, dietary_options, signature_items")
+    .select("primary_category, description, bio, vibe_tags, occasion_fit, attributes, signature_items")
     .eq("id", vendorId)
     .maybeSingle();
   if (ve || !vendor) return { ok: false, error: ve?.message || "vendor not found" };
 
   const { data: service, error: se } = await client
     .from("vendor_services")
-    .select("id, title, description, dietary_options")
+    .select("id, title, description, attributes")
     .eq("vendor_id", vendorId)
     .order("position", { ascending: true })
     .limit(1)

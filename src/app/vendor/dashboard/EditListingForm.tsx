@@ -29,7 +29,7 @@ export interface EditableVendor {
   coverage_radius_miles: number | null;
   typical_event_size_min: number | null;
   typical_event_size_max: number | null;
-  dietary_options: string[] | null;
+  attributes: Record<string, unknown> | null;
   vibe_tags: string[] | null;
   signature_items: string[] | null;
   faq: { q?: string; a?: string }[] | null;
@@ -37,7 +37,15 @@ export interface EditableVendor {
 
 export default function EditListingForm({ vendor }: { vendor: EditableVendor }) {
   const [state, action, pending] = useActionState<ActionState, FormData>(updateListing, null);
-  const diet = new Set(vendor.dietary_options ?? []);
+  const attrs = vendor.attributes ?? {};
+  const diet = new Set(Array.isArray(attrs.dietary) ? (attrs.dietary as string[]) : []);
+  // Everything except the keys with dedicated inputs is edited free-form, so a
+  // plumber can add "gas safe: 123456" without anyone shipping a schema for it.
+  const RESERVED = new Set(["dietary", "capacity_min", "capacity_max"]);
+  const extraAttrs = Object.entries(attrs)
+    .filter(([k, v]) => !RESERVED.has(k) && v != null && v !== "")
+    .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`)
+    .join("\n");
 
   return (
     <form action={action}>
@@ -77,6 +85,22 @@ export default function EditListingForm({ vendor }: { vendor: EditableVendor }) 
             </label>
           ))}
         </div>
+      </div>
+
+      <div className={styles.field}>
+        <label className={styles.labelText} htmlFor="attributes">
+          Anything else clients search for{" "}
+          <span className={styles.hint}>(one per line, as: Label | Value)</span>
+        </label>
+        <textarea
+          id="attributes"
+          name="attributes"
+          rows={4}
+          maxLength={2000}
+          className={styles.textarea}
+          defaultValue={extraAttrs.replace(/: /g, " | ")}
+          placeholder={"Gas Safe | 123456\nDBS checked | yes\nEquipment | own generator, gazebo"}
+        />
       </div>
 
       <div className={styles.field}>

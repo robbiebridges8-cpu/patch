@@ -10,9 +10,9 @@ export interface Lead {
   parent_name: string | null;
   parent_email: string | null;
   parent_phone: string | null;
-  party_date: string | null;
-  guest_count: number | null;
-  party_postcode: string | null;
+  event_date: string | null;
+  postcode: string | null;
+  details: Record<string, unknown> | null;
   message: string | null;
   status: string;
   created_at: string;
@@ -60,9 +60,12 @@ export default function LeadRow({ lead, thread = [] }: { lead: Lead; thread?: Th
         {[
           lead.parent_email,
           lead.parent_phone,
-          lead.party_date ? `Event: ${new Date(lead.party_date).toLocaleDateString("en-GB")}` : null,
-          lead.guest_count ? `${lead.guest_count} guests` : null,
-          lead.party_postcode,
+          lead.event_date ? `Event: ${new Date(lead.event_date).toLocaleDateString("en-GB")}` : null,
+          // Whatever the enquiry form captured for this vertical.
+          ...Object.entries(lead.details ?? {})
+            .filter(([, v]) => v != null && v !== "")
+            .map(([k, v]) => `${k.replace(/_/g, " ")}: ${String(v)}`),
+          lead.postcode,
           `Received ${new Date(lead.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`,
         ].filter(Boolean).join(" · ")}
       </div>

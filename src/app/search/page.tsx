@@ -42,38 +42,50 @@ interface SearchParams {
 
 // ── "Why it fits" — deterministic, query-specific signals (no AI, instant) ──
 
+/** Human label for a free-form attribute value we know nothing about. */
+function attrLabel(key: string, value: unknown): string {
+  if (Array.isArray(value)) return value.join(", ");
+  if (typeof value === "boolean") return key.replace(/_/g, " ");
+  if (key.endsWith("_max")) return `up to ${value}`;
+  if (key.endsWith("_min")) return `from ${value}`;
+  return String(value);
+}
+
 function matchSignals(parsed: ParsedQuery | null, r: VendorResult): MatchedTag[] {
   const sig: MatchedTag[] = [];
 
-  // Capacity vs guest count
-  if (r.service_capacity_max) {
-    if (parsed?.guest_count) {
-      const fits = r.service_capacity_max >= parsed.guest_count &&
-        (!r.service_capacity_min || r.service_capacity_min <= parsed.guest_count);
-      sig.push({ label: `Serves ${parsed.guest_count}`, good: fits });
-    } else {
-      sig.push({ label: `Up to ${r.service_capacity_max}`, good: false });
-    }
-  }
-  // Distance (only present when the search had a location)
+  // Distance (only present when the search had a location).
   if (r.distance_miles != null) {
     const d = r.distance_miles;
     sig.push({ label: `${d < 10 ? d.toFixed(1) : Math.round(d)} mi away`, good: d <= r.vendor_coverage_radius_miles });
   }
-  // Budget
+  // Budget.
   if (parsed?.budget_max && r.vendor_price_from != null) {
     sig.push({ label: `from £${r.vendor_price_from}`, good: r.vendor_price_from <= parsed.budget_max });
   }
-  // Dietary the buyer asked for
-  const dietary = r.service_dietary_options || [];
-  for (const d of parsed?.dietary || []) {
-    if (dietary.includes(d)) sig.push({ label: d, good: true });
+
+  const attrs = r.service_attributes ?? {};
+  const asked = (parsed?.attributes ?? {}) as Record<string, unknown>;
+
+  // Anything the buyer explicitly filtered on and this vendor has: confirm it.
+  // Generic by construction — works for dietary, certifications, whatever the
+  // vendor happened to put in their attributes.
+  for (const [k, wanted] of Object.entries(asked)) {
+    const have = attrs[k];
+    const values = Array.isArray(wanted) ? wanted : [wanted];
+    for (const v of values) {
+      const matched = Array.isArray(have) ? have.includes(v) : have === v;
+      if (matched) sig.push({ label: String(v), good: true });
+    }
   }
-  // Fill with the vendor's own dietary badges if we have room
+
+  // Fill remaining room with the vendor's own attributes as neutral badges.
   if (sig.length < 3) {
-    for (const d of dietary) {
+    for (const [k, v] of Object.entries(attrs)) {
       if (sig.length >= 3) break;
-      if (!sig.some((s) => s.label === d)) sig.push({ label: d, good: false });
+      if (v == null || v === "" || k in asked) continue;
+      const label = attrLabel(k, v);
+      if (label && !sig.some((s) => s.label === label)) sig.push({ label, good: false });
     }
   }
   return sig.slice(0, 4);
@@ -112,7 +124,8 @@ function resultToMatch(r: VendorResult, rank: number, parsed: ParsedQuery | null
 function rowToMatch(v: Record<string, unknown>, rank: number, note: string): VendorMatch {
   const services = (v.vendor_services as Record<string, unknown>[]) || [];
   const svc = services[0] || {};
-  const dietary = (svc.dietary_options as string[]) || [];
+  const attrs = (svc.attributes as Record<string, unknown>) ?? {};
+  const dietary = Array.isArray(attrs.dietary) ? (attrs.dietary as string[]) : [];
   return {
     vendor: {
       id: v.id as string, slug: v.slug as string, name: v.name as string,
@@ -175,7 +188,7 @@ async function StreamedNote({ promise }: { promise: Promise<{ summary: string }>
 async function AIResults({ query, params }: { query: string; params: SearchParams }) {
   const overrides = {
     categories: params.type ? params.type.split(",") : undefined,
-    dietary: params.diet ? params.diet.split(",") : undefined,
+    attributes: params.diet ? { dietary: params.diet.split(",") } : undefined,
     budgetMax: params.budget ? parseInt(params.budget, 10) : undefined,
   };
   const rl = rateLimit(`search:${clientIp(await headers())}`, 25, 60_000);
@@ -330,7 +343,7 @@ async function KeywordResults({
 }) {
   const { data } = await supabase
     .from("vendors")
-    .select("*, vendor_services ( category, dietary_options )")
+    .select("*, vendor_services ( category, attributes )")
     .eq("status", "live");
 
   let rows = (data as Record<string, unknown>[]) || [];

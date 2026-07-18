@@ -72,9 +72,11 @@ export async function POST(request: Request) {
     parent_name: name.slice(0, 200),
     parent_email: email.slice(0, 320),
     parent_phone: phone ? phone.slice(0, 30) : null,
-    party_date: eventDate,
-    guest_count: guestCount,
-    party_postcode: postcode ? postcode.slice(0, 10) : null,
+    event_date: eventDate,
+    postcode: postcode ? postcode.slice(0, 10) : null,
+    // Vertical-specific extras live here, not as columns. A plumber enquiry
+    // has no guest count; a caterer's does.
+    details: guestCount ? { guest_count: guestCount } : {},
     message: message.slice(0, 2000),
     status: "sent" as const,
   }));

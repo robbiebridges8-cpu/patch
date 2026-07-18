@@ -38,6 +38,25 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
   const vibe = vibeRaw ? vibeRaw.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 12) : [];
   const capMin = num(formData.get("capacity_min"));
   const capMax = num(formData.get("capacity_max"));
+
+  // Free-form "Label | Value" lines become attribute keys. Normalised to
+  // lowercase snake_case so a hand-typed label matches a UI-set filter.
+  const attrRaw = str(formData.get("attributes"), 2000);
+  const extraAttrs: Record<string, unknown> = {};
+  if (attrRaw) {
+    for (const line of attrRaw.split("\n").slice(0, 30)) {
+      const idx = line.indexOf("|");
+      if (idx < 0) continue;
+      const key = line.slice(0, idx).trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+      const value = line.slice(idx + 1).trim();
+      if (key && value) extraAttrs[key] = value;
+    }
+  }
+
+  const attributes: Record<string, unknown> = { ...extraAttrs };
+  if (dietary.length) attributes.dietary = dietary;
+  if (capMin != null) attributes.capacity_min = capMin;
+  if (capMax != null) attributes.capacity_max = capMax;
   const coverage = num(formData.get("coverage_radius_miles"));
   const sigRaw = str(formData.get("signature_items"), 1000);
   const signature = sigRaw ? sigRaw.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 10) : [];
@@ -56,7 +75,7 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
 
   const { data: before } = await supabase
     .from("vendors")
-    .select("name, primary_category, description, bio, dietary_options, vibe_tags, signature_items")
+    .select("name, primary_category, description, bio, attributes, vibe_tags, signature_items")
     .eq("id", id)
     .eq("owner_id", user.id)
     .maybeSingle();
@@ -78,7 +97,7 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
       coverage_radius_miles: coverage ?? 5,
       typical_event_size_min: capMin,
       typical_event_size_max: capMax,
-      dietary_options: dietary,
+      attributes,
       vibe_tags: vibe,
       signature_items: signature,
       faq: faq.length ? faq : null,
@@ -95,9 +114,7 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
       title: name,
       description,
       category,
-      dietary_options: dietary,
-      capacity_min: capMin,
-      capacity_max: capMax,
+      attributes,
     })
     .eq("vendor_id", id);
 
@@ -107,7 +124,7 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
     before.primary_category !== category ||
     before.description !== description ||
     before.bio !== bio ||
-    !sameArr(before.dietary_options, dietary) ||
+    JSON.stringify(before.attributes ?? {}) !== JSON.stringify(attributes) ||
     !sameArr(before.vibe_tags, vibe) ||
     !sameArr(
       (Array.isArray(before.signature_items) ? before.signature_items : []).map(String),

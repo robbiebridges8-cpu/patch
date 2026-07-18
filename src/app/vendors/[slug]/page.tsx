@@ -28,10 +28,10 @@ const getVendor = cache(async function getVendor(slug: string) {
     .from("vendors")
     .select(`
       *,
-      vendor_services ( id, service_type, category, dietary_options, title, description, price_from, price_to, age_min, age_max, capacity_min, capacity_max, setting, duration_minutes, position ),
+      vendor_services ( id, category, attributes, title, description, price_from, price_to, position ),
       vendor_photos ( id, url, alt_text, position ),
       vendor_tag_assignments ( tag_id, tags ( slug, name, category ) ),
-      reviews ( id, rating, title, body, party_date, child_age, guest_count, verified, created_at ),
+      reviews ( id, rating, title, body, event_date, details, verified, created_at ),
       vendor_coverage_areas ( postcode_district )
     `)
     .eq("slug", slug)
@@ -56,10 +56,10 @@ async function getOwnPreview(slug: string) {
     .from("vendors")
     .select(`
       *,
-      vendor_services ( id, service_type, category, dietary_options, title, description, price_from, price_to, age_min, age_max, capacity_min, capacity_max, setting, duration_minutes, position ),
+      vendor_services ( id, category, attributes, title, description, price_from, price_to, position ),
       vendor_photos ( id, url, alt_text, position ),
       vendor_tag_assignments ( tag_id, tags ( slug, name, category ) ),
-      reviews ( id, rating, title, body, party_date, child_age, guest_count, verified, created_at ),
+      reviews ( id, rating, title, body, event_date, details, verified, created_at ),
       vendor_coverage_areas ( postcode_district )
     `)
     .eq("slug", slug)
@@ -140,7 +140,15 @@ export default async function VendorPage({
   const category = categories.slice(0, 2).join(" · ") || "Mobile catering";
   const heroFallback = categoryPhoto(categories[0], 1200);
 
-  const dietary = (vendor.dietary_options as string[]) || (services[0]?.dietary_options as string[]) || [];
+  // Attributes are free-form and vertical-specific — merge vendor- and
+  // service-level, and render whatever is there without knowing what it means.
+  const attributes: Record<string, unknown> = {
+    ...((vendor.attributes as Record<string, unknown>) ?? {}),
+    ...((services[0]?.attributes as Record<string, unknown>) ?? {}),
+  };
+  // Free-form data: filter to strings rather than trusting the shape.
+  const dietary = (Array.isArray(attributes.dietary) ? attributes.dietary : [])
+    .filter((d): d is string => typeof d === "string" && d.length > 0);
   const signatureItems = ((Array.isArray(vendor.signature_items) ? vendor.signature_items : []) as unknown[])
     .map((s) => (typeof s === "string" ? s : (s as { name?: string })?.name))
     .filter(Boolean) as string[];
@@ -387,14 +395,12 @@ export default async function VendorPage({
                     <div className={styles.serviceDesc}>{s.description as string}</div>
                   )}
                   <div className={styles.serviceMeta}>
-                    {(s.age_min as number | null) != null && (s.age_max as number | null) != null && (
-                      <span>Ages {s.age_min as number}–{s.age_max as number}</span>
-                    )}
-                    {(s.capacity_max as number | null) != null && <span>Up to {s.capacity_max as number} guests</span>}
-                    {(s.duration_minutes as number | null) != null && <span>{s.duration_minutes as number} min</span>}
-                    {(s.setting as string) !== "either" && (
-                      <span>{(s.setting as string).charAt(0).toUpperCase() + (s.setting as string).slice(1)} only</span>
-                    )}
+                    {Object.entries((s.attributes as Record<string, unknown>) ?? {})
+                      .filter(([, v]) => v != null && v !== "" && !Array.isArray(v))
+                      .slice(0, 3)
+                      .map(([k, v]) => (
+                        <span key={k}>{k.replace(/_/g, " ")}: {String(v)}</span>
+                      ))}
                   </div>
                 </div>
               ))}
@@ -422,9 +428,8 @@ export default async function VendorPage({
                   {(r.body as string | null) && <div className={styles.reviewBody}>{r.body as string}</div>}
                   <div className={styles.reviewMeta}>
                     {[
-                      r.child_age != null ? `Child age: ${r.child_age}` : null,
-                      r.guest_count ? `${r.guest_count} guests` : null,
-                      r.party_date ? `Party: ${new Date(r.party_date as string).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}` : null,
+
+                      r.event_date ? `Event: ${new Date(r.event_date as string).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}` : null,
                     ].filter(Boolean).join(" · ")}
                   </div>
                 </div>

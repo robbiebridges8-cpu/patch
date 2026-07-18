@@ -16,17 +16,30 @@ function extractJSON(text: string): string {
 
 // ── Interfaces ──
 
+/**
+ * What the AI extracts from a plain-language brief.
+ *
+ * Deliberately contains no vertical-specific fields. Anything that varies by
+ * trade — dietary needs, capacity, certifications, licences — is matched
+ * semantically via `semantic_query` against the vendor's own words, not
+ * extracted into typed filters. The only structured outputs are constraints
+ * that are universal to every service: where, when, how much.
+ *
+ * `categories` and `attributes` are NOT produced by the AI. They're set only
+ * from UI with known-good values (filter sidebar, quick-start chips, SEO
+ * landing pages) — an LLM emitting "nut free" against a stored "nut-free"
+ * would silently return nothing, which for a dietary filter is unsafe.
+ */
 export interface ParsedQuery {
-  categories: string[];
-  dietary: string[];
   budget_max: number | null;
-  guest_count: number | null;
   location: string | null;
-  setting: string | null;
-  season: string | null;
   event_date: string | null;
   semantic_query: string;
   chips: string[];
+  /** UI-supplied only. */
+  categories: string[];
+  /** UI-supplied only; jsonb containment against vendor_services.attributes. */
+  attributes: Record<string, unknown> | null;
 }
 
 interface AIVendorMatch {
@@ -58,9 +71,8 @@ export interface VendorResult {
   service_id: string;
   service_title: string;
   service_category: string | null;
-  service_dietary_options: string[];
-  service_capacity_min: number | null;
-  service_capacity_max: number | null;
+  /** Free-form, vertical-specific. Displayed and embedded, never schema-checked. */
+  service_attributes: Record<string, unknown>;
   similarity: number;
   distance_miles: number | null;
 }
@@ -73,32 +85,35 @@ async function parseQuery(query: string): Promise<ParsedQuery> {
     // Haiku: this is structured extraction, not reasoning — much faster time-to-cards.
     model: "claude-haiku-4-5-20251001",
     max_tokens: 1024,
-    system: `You parse event catering search queries into structured filters. Extract what you can; leave null for anything not mentioned. Today's date is ${today}.
+    system: `You turn a plain-language request for a local service into structured search filters. Today's date is ${today}.
 
-Categories (use ONLY these exact values, and only when the cuisine is clearly implied; leave empty if unsure): African, Asian street food, BBQ, British comfort, Burgers, Canapés, Caribbean, Chinese, Cocktail bar, Coffee, Crêpes & waffles, Desserts, Doughnuts, Fish & chips, Fried chicken, Grazing & cheese, Greek, Ice cream, Indian, Japanese, Korean, Middle Eastern, Pizza, Seafood, Spanish, Tacos & Mexican, Thai, Vegan
-Dietary (use ONLY these): vegan, vegetarian, gluten-free, halal, dairy-free, nut-free
-Setting: indoor, outdoor, or null
+The platform covers every kind of casual service and trade — caterers, plumbers, photographers, cleaners, tutors, DJs, gardeners, mobile bars, lifeguards, anything. Do NOT try to classify the request into a category, and do NOT invent filters for trade-specific requirements. Those are matched semantically.
 
-For semantic_query: rewrite the user's intent as a rich, descriptive sentence suitable for semantic search against vendor descriptions. Include the vibe, occasion type, food preferences, and any qualitative aspects. Drop the structured parts (budget numbers, guest counts, locations) since those are filtered in SQL.
+Extract ONLY these, and only when clearly stated:
+- budget_max: a maximum spend in GBP, as a number. null if not mentioned.
+- location: a UK place name or postcode. null if not mentioned.
+- event_date: if a specific calendar date is implied ("August 15", "next Saturday", "the 3rd"), resolve it to "YYYY-MM-DD" using today's date above. A vague month or season with no day stays null.
 
-For chips: short, machine-terse labels shown to the user as parsed-intent readback. Examples: "Hackney", "~50 guests", "July", "garden", "≤ £600", "pizza". Lowercase/abbreviated, 2-6 chips.
+For semantic_query: rewrite the whole request as a rich, descriptive sentence describing the service needed, including every qualitative requirement — the kind of work, the occasion, the vibe, and any specific needs (dietary, accessibility, certifications, equipment, experience). This string is matched against how vendors describe themselves, so keep the requirement words in it. Drop only the structured parts you extracted above (budget figures, locations, dates).
 
-For event_date: if the query implies a specific calendar date (e.g. "August 15", "next Saturday", "on the 3rd", "12th July"), resolve it to an ISO date "YYYY-MM-DD" using today's date above; otherwise null. A vague season/month with no day stays null.
+For chips: short machine-terse labels shown back to the user as a readback of what you understood. Examples: "hackney", "14 aug", "≤ £600", "wedding", "vegan", "gas safe". Lowercase, 2-6 chips.
 
 Respond with ONLY valid JSON:
-{"categories": [], "dietary": [], "budget_max": null, "guest_count": null, "location": null, "setting": null, "season": null, "event_date": null, "semantic_query": "...", "chips": []}`,
+{"budget_max": null, "location": null, "event_date": null, "semantic_query": "...", "chips": []}`,
     messages: [{ role: "user", content: query }],
   });
 
   try {
     const text = response.content[0].type === "text" ? response.content[0].text : "{}";
-    return JSON.parse(extractJSON(text));
+    const raw = JSON.parse(extractJSON(text));
+    // The model never supplies these; the caller layers them on from the UI.
+    return { ...raw, categories: [], attributes: null };
   } catch {
     return {
-      categories: [], dietary: [], budget_max: null, guest_count: null,
-      location: null, setting: null, season: null, event_date: null,
+      budget_max: null, location: null, event_date: null,
       semantic_query: query,
       chips: query.split(/,\s*/).map((s) => s.trim()).filter(Boolean),
+      categories: [], attributes: null,
     };
   }
 }
@@ -271,8 +286,7 @@ async function vectorSearch(
   const rpcParams = {
     query_embedding: vecStr,
     filter_categories: parsed.categories.length > 0 ? parsed.categories : null,
-    filter_dietary: parsed.dietary.length > 0 ? parsed.dietary : null,
-    filter_guest_count: parsed.guest_count,
+    filter_attributes: parsed.attributes,
     filter_budget_max: parsed.budget_max,
     search_lat: geo?.lat ?? null,
     search_lng: geo?.lng ?? null,
@@ -311,9 +325,11 @@ const RELAXATIONS: {
   dropsGeo?: boolean;
 }[] = [
   { label: "budget", constraining: (p) => p.budget_max != null, relax: (p) => { p.budget_max = null; } },
-  { label: "guest count", constraining: (p) => p.guest_count != null, relax: (p) => { p.guest_count = null; } },
   { label: "area", constraining: (_p, geo) => geo != null, relax: () => {}, dropsGeo: true },
-  { label: "cuisine", constraining: (p) => p.categories.length > 0, relax: (p) => { p.categories = []; } },
+  { label: "service type", constraining: (p) => p.categories.length > 0, relax: (p) => { p.categories = []; } },
+  // Attributes are never relaxed. They only ever come from an explicit UI
+  // filter, so the buyer asked for them deliberately — and "nut-free" or
+  // "DBS checked" is a requirement, not a preference.
 ];
 
 async function searchWithRecovery(
@@ -350,7 +366,7 @@ async function fallbackSearch(parsed: ParsedQuery, limit: number = SEARCH_LIMIT)
   let query = supabase
     .from("vendor_services")
     .select(`
-      id, title, category, dietary_options, capacity_min, capacity_max,
+      id, title, category, attributes,
       vendors!inner ( id, slug, name, description, bio, base_postcode,
         price_from, price_notes, rating_avg, review_count,
         coverage_radius_miles, status )
@@ -360,12 +376,14 @@ async function fallbackSearch(parsed: ParsedQuery, limit: number = SEARCH_LIMIT)
   if (parsed.categories.length > 0) {
     query = query.in("category", parsed.categories);
   }
+  if (parsed.attributes) {
+    query = query.contains("attributes", parsed.attributes);
+  }
   if (parsed.budget_max) {
     query = query.or(`price_from.is.null,price_from.lte.${parsed.budget_max}`, { referencedTable: "vendors" });
   }
 
   const { data, error } = await query.order("rating_avg", { referencedTable: "vendors", ascending: false }).limit(limit * 2);
-
   if (error || !data) return [];
 
   const seen = new Set<string>();
@@ -384,13 +402,26 @@ async function fallbackSearch(parsed: ParsedQuery, limit: number = SEARCH_LIMIT)
       vendor_coverage_radius_miles: v.coverage_radius_miles as number,
       service_id: row.id as string, service_title: row.title as string,
       service_category: row.category as string | null,
-      service_dietary_options: row.dietary_options as string[],
-      service_capacity_min: row.capacity_min as number | null,
-      service_capacity_max: row.capacity_max as number | null,
+      service_attributes: (row.attributes as Record<string, unknown>) ?? {},
       similarity: 0, distance_miles: null,
     });
   }
   return results.slice(0, limit);
+}
+
+/**
+ * Render free-form attributes as a readable line. Vertical-agnostic by
+ * construction — it doesn't know what the keys mean, only how to print them.
+ */
+export function describeAttributes(attrs: Record<string, unknown> | null | undefined): string | null {
+  if (!attrs) return null;
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === "") continue;
+    const label = k.replace(/_/g, " ");
+    parts.push(Array.isArray(v) ? `${label}: ${v.join(", ")}` : `${label}: ${String(v)}`);
+  }
+  return parts.length ? parts.join(" · ") : null;
 }
 
 // ── Step 5: Generate AINote narration ──
@@ -410,8 +441,7 @@ async function narrateResults(
         r.vendor_price_from ? `From £${r.vendor_price_from}` : null,
         r.vendor_price_notes || null,
         r.vendor_rating_avg ? `${r.vendor_rating_avg}★ (${r.vendor_review_count} reviews)` : "New vendor",
-        r.service_dietary_options?.length ? `Dietary: ${r.service_dietary_options.join(", ")}` : null,
-        r.service_capacity_min && r.service_capacity_max ? `Serves ${r.service_capacity_min}–${r.service_capacity_max}` : null,
+        describeAttributes(r.service_attributes),
         r.vendor_description || null,
       ];
       return parts.filter(Boolean).join(" | ");
@@ -476,14 +506,18 @@ export interface QuickSearchResult {
 
 export async function quickSearch(
   query: string,
-  overrides?: { categories?: string[]; dietary?: string[]; budgetMax?: number },
+  overrides?: { categories?: string[]; attributes?: Record<string, unknown>; budgetMax?: number },
   limit: number = SEARCH_LIMIT,
 ): Promise<QuickSearchResult> {
   const parsed = await parseQuery(query);
   // Explicit sidebar filters take precedence and become RPC pre-filters, so the
   // vector search only considers eligible vendors (not a post-filter of the top-N).
+  // UI-supplied filters. These are the only source of categories/attributes —
+  // see the note on ParsedQuery for why the model never produces them.
   if (overrides?.categories?.length) parsed.categories = overrides.categories;
-  if (overrides?.dietary?.length) parsed.dietary = overrides.dietary;
+  if (overrides?.attributes && Object.keys(overrides.attributes).length) {
+    parsed.attributes = overrides.attributes;
+  }
   if (overrides?.budgetMax != null) parsed.budget_max = overrides.budgetMax;
   console.log("[quickSearch] parsed:", JSON.stringify(parsed));
 
@@ -534,7 +568,7 @@ export async function narrateSummary(
       r.vendor_base_postcode || null,
       r.distance_miles != null ? `${r.distance_miles.toFixed(1)} mi` : null,
       r.vendor_price_from ? `from £${r.vendor_price_from}` : null,
-      r.service_dietary_options?.length ? `dietary: ${r.service_dietary_options.join(", ")}` : null,
+      describeAttributes(r.service_attributes),
     ];
     return parts.filter(Boolean).join(" · ");
   }).join("\n");

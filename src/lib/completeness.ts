@@ -11,7 +11,7 @@ export interface CompletenessInput {
   contact_email?: string | null;
   typical_event_size_min?: number | null;
   typical_event_size_max?: number | null;
-  dietary_options?: string[] | null;
+  attributes?: Record<string, unknown> | null;
   signature_items?: string[] | null;
   vibe_tags?: string[] | null;
   faq?: unknown[] | null;
@@ -53,8 +53,8 @@ export function assessListing(v: CompletenessInput): Completeness {
     },
     {
       key: "category",
-      label: "Cuisine",
-      why: "Drives which searches you're eligible for.",
+      label: "Service type",
+      why: "Drives which searches and category pages you appear on.",
       done: nonEmpty(v.primary_category),
       weight: 12,
       essential: true,
@@ -93,8 +93,8 @@ export function assessListing(v: CompletenessInput): Completeness {
     },
     {
       key: "capacity",
-      label: "Guest numbers you cover",
-      why: "Lets Patch rule you in for the right size of event.",
+      label: "Typical job size",
+      why: "Lets Patch rule you in for the right scale of work.",
       done: v.typical_event_size_max != null && v.typical_event_size_max > 0,
       weight: 8,
       essential: false,
@@ -108,17 +108,17 @@ export function assessListing(v: CompletenessInput): Completeness {
       essential: false,
     },
     {
-      key: "dietary",
-      label: "Dietary options",
-      why: "Dietary filters are never relaxed, so this is the only way into those searches.",
-      done: hasSome(v.dietary_options),
+      key: "attributes",
+      label: "Service details",
+      why: "Specifics clients search for — dietary, certifications, equipment. These are matched word-for-word against what buyers ask for.",
+      done: !!v.attributes && Object.keys(v.attributes).length > 0,
       weight: 6,
       essential: false,
     },
     {
       key: "signature",
-      label: "Signature dishes",
-      why: "Concrete dishes match specific cravings.",
+      label: "What you're known for",
+      why: "Specifics match specific requests better than generalities do.",
       done: hasSome(v.signature_items),
       weight: 4,
       essential: false,

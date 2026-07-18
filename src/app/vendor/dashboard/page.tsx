@@ -26,7 +26,7 @@ async function LeadsCard({ vendorId }: { vendorId: string }) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("enquiries")
-    .select("id, parent_name, parent_email, parent_phone, party_date, guest_count, party_postcode, message, status, created_at")
+    .select("id, parent_name, parent_email, parent_phone, event_date, postcode, details, message, status, created_at")
     .eq("vendor_id", vendorId)
     .order("created_at", { ascending: false });
 
@@ -84,7 +84,7 @@ export default async function VendorDashboard({
 
   const { data: vendor } = await supabase
     .from("vendors")
-    .select("id, name, slug, description, bio, contact_email, contact_phone, website, instagram, price_from, price_notes, coverage_radius_miles, typical_event_size_min, typical_event_size_max, dietary_options, vibe_tags, signature_items, faq, status, primary_category")
+    .select("id, name, slug, description, bio, contact_email, contact_phone, website, instagram, price_from, price_notes, coverage_radius_miles, typical_event_size_min, typical_event_size_max, attributes, vibe_tags, signature_items, faq, status, primary_category")
     .eq("owner_id", user.id)
     .maybeSingle();
 
@@ -165,7 +165,7 @@ export default async function VendorDashboard({
                 contact_email: vendor.contact_email as string | null,
                 typical_event_size_min: vendor.typical_event_size_min as number | null,
                 typical_event_size_max: vendor.typical_event_size_max as number | null,
-                dietary_options: vendor.dietary_options as string[] | null,
+                attributes: (vendor.attributes as Record<string, unknown> | null) ?? null,
                 signature_items: vendor.signature_items as string[] | null,
                 vibe_tags: vendor.vibe_tags as string[] | null,
                 faq: vendor.faq as unknown[] | null,
@@ -203,7 +203,7 @@ export default async function VendorDashboard({
                   coverage_radius_miles: vendor.coverage_radius_miles as number | null,
                   typical_event_size_min: vendor.typical_event_size_min as number | null,
                   typical_event_size_max: vendor.typical_event_size_max as number | null,
-                  dietary_options: vendor.dietary_options as string[] | null,
+                  attributes: (vendor.attributes as Record<string, unknown> | null) ?? null,
                   vibe_tags: vendor.vibe_tags as string[] | null,
                   signature_items: (vendor.signature_items as string[] | null) ?? null,
                   faq: (vendor.faq as { q?: string; a?: string }[] | null) ?? null,
