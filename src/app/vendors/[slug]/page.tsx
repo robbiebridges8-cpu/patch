@@ -109,6 +109,44 @@ export default async function VendorPage({
   const rating = (vendor.rating_avg as number) || 0;
   const reviewCount = (vendor.review_count as number) || 0;
 
+  const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FoodEstablishment",
+    name: vendor.name as string,
+    description: (vendor.description as string) || undefined,
+    image: sortedPhotos.length ? sortedPhotos.map((p) => p.url as string) : [heroFallback],
+    servesCuisine: categories,
+    url: `${SITE}/vendors/${slug}`,
+    areaServed: "London",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "London",
+      postalCode: (vendor.base_postcode as string) || undefined,
+      addressCountry: "GB",
+    },
+    priceRange: (vendor.price_range as string) || "££",
+    ...(rating > 0 && reviewCount > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: rating.toFixed(2),
+            reviewCount: reviewCount,
+          },
+        }
+      : {}),
+    ...(reviews.length
+      ? {
+          review: reviews.slice(0, 5).map((r) => ({
+            "@type": "Review",
+            reviewRating: { "@type": "Rating", ratingValue: r.rating as number, bestRating: 5 },
+            reviewBody: (r.body as string) || (r.title as string) || undefined,
+            datePublished: (r.created_at as string)?.slice(0, 10),
+          })),
+        }
+      : {}),
+  };
+
   const glance: { label: string; value: string; sub?: string }[] = [];
   if (capMax) glance.push({ label: "Serves", value: capMin ? `${capMin}–${capMax}` : `up to ${capMax}`, sub: "guests" });
   if (vendor.coverage_radius_miles) glance.push({ label: "Covers", value: `${vendor.coverage_radius_miles} mi`, sub: vendor.base_postcode as string });
@@ -117,6 +155,7 @@ export default async function VendorPage({
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Header />
 
       <section className={styles.hero}>

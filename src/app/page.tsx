@@ -3,9 +3,20 @@ import HeroSearch from "@/components/search/HeroSearch";
 import QuickStarts from "@/components/search/QuickStarts";
 import styles from "./page.module.css";
 
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+const orgJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Patch",
+  url: SITE,
+  description: "AI-native marketplace matching London event organisers with mobile food vendors and caterers.",
+  areaServed: "London",
+};
+
 export default function Home() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
       <Header />
 
       {/* ─── FRONT DOOR ─── */}
