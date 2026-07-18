@@ -16,7 +16,7 @@
   /* Greige — warm neutrals */
   --greige-900: #1A1712;
   --greige-700: #524B40;
-  --greige-500: #857C6E;
+  --greige-500: #746C60; /* WCAG AA: 4.5:1 on paper-50/0/100 (was #857C6E, 3.59-4.11) */
   --greige-400: #A79E8F;
   --greige-300: #CFC7B8;
   --greige-200: #E0D9CB;
@@ -36,7 +36,7 @@
 
   /* Functional */
   --success: #3F7A57;
-  --warning: #C68A1E;
+  --warning: #966817; /* WCAG AA: 4.9:1 on white (was #C68A1E, 2.98) */
   --error:   #B23A2E;
 
   /* ── Semantic tokens ── */
@@ -60,6 +60,9 @@
   /* Borders */
   --color-border:        var(--greige-200);
   --color-border-strong: var(--greige-300);
+  /* 3:1 against white/page — WCAG 1.4.11 for control boundaries. Not yet
+     applied site-wide: swapping every control border is a visual change. */
+  --color-border-control: #9E8D6F;
   --color-border-faint:  var(--greige-100);
   --color-border-on-ink: var(--ink-border);
 
@@ -210,4 +213,51 @@ img { display: block; max-width: 100%; }
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ── Skip link ──
+   Off-screen until focused, then pinned top-left. Uses clip-path rather than
+   display:none so it stays in the tab order and reachable by screen readers. */
+.skipLink {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  padding: 12px 20px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom-right-radius: 8px;
+  transform: translateY(-110%);
+}
+
+.skipLink:focus-visible,
+.skipLink:focus {
+  transform: translateY(0);
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: -4px;
+}
+
+/* Anything given focus programmatically (the newly revealed search rows) must
+   not show a ring it didn't ask for, but must still be reachable. */
+[tabindex="-1"]:focus { outline: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .skipLink { transition: none; }
+}
+
+/* Available to screen readers, invisible on screen. */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }

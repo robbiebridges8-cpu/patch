@@ -89,7 +89,7 @@ export default async function AdminPage() {
   return (
     <>
       <Header />
-      <main className={styles.wrap}>
+      <main id="main-content" className={styles.wrap}>
         <h1 className={styles.h1}>Admin</h1>
         <p className={styles.sub}>Signed in as {user.email}</p>
 

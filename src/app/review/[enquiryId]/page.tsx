@@ -54,7 +54,7 @@ export default function ReviewPage() {
   return (
     <>
       <Header />
-      <main className={styles.wrap}>
+      <main id="main-content" className={styles.wrap}>
         {done ? (
           <div className={styles.center}>
             <div className={styles.tick}>

@@ -65,6 +65,11 @@ export default function RootLayout({
   return (
     <html lang="en-GB" className={`${inter.variable} ${oswald.variable} ${geistMono.variable}`}>
       <body>
+        {/* Visually hidden until focused — first tab stop on every page, so
+            keyboard users can jump the header and filters. */}
+        <a href="#main-content" className="skipLink">
+          Skip to main content
+        </a>
         {children}
         <ShortlistTray />
       </body>

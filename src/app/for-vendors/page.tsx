@@ -10,7 +10,7 @@ export default function ForVendorsPage() {
   return (
     <>
       <Header />
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "64px 32px" }}>
+      <main id="main-content" style={{ maxWidth: 720, margin: "0 auto", padding: "64px 32px" }}>
         <h1 style={{ fontSize: 32, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 24, letterSpacing: "-0.02em" }}>List your service on Patch</h1>
         <p style={{ fontSize: 16, lineHeight: 1.7, color: "var(--color-text-secondary)", marginBottom: 16 }}>
           Patch connects you with clients who are actively looking for what you cook. No commission, no per-lead fees — just £20/month to be listed, matched, and reviewed.

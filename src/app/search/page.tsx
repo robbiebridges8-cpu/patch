@@ -391,7 +391,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     return (
       <>
         <Header />
-        <main className={styles.main}>
+        <main id="main-content" className={styles.main}>
+          <h1 className="visuallyHidden">Search</h1>
           <div className={styles.searchWrap}>
             <SearchBar query={query} />
           </div>
@@ -411,7 +412,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     <>
       <Header />
 
-      <main className={styles.main}>
+      <main id="main-content" className={styles.main}>
+        {/* The visible page is led by the search field, but the document still
+            needs a top-level heading for screen-reader navigation. */}
+        <h1 className="visuallyHidden">Search results for “{query}”</h1>
+
         <div className={styles.searchWrap}>
           <SearchBar query={query} />
         </div>

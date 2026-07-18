@@ -8,7 +8,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
   }, [error]);
 
   return (
-    <main style={{ maxWidth: 560, margin: "0 auto", padding: "96px 32px", textAlign: "center" }}>
+    <main id="main-content" style={{ maxWidth: 560, margin: "0 auto", padding: "96px 32px", textAlign: "center" }}>
       <div style={{ fontSize: 40, marginBottom: 12 }}>🍽️</div>
       <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--color-text-primary)", marginBottom: 12 }}>
         Something went wrong

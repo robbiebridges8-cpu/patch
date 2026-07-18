@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
+import { useDialog } from "@/lib/useDialog";
 import { useEnquiries } from "@/lib/useEnquiries";
 import styles from "./EnquiryForm.module.css";
 
@@ -19,18 +20,7 @@ export default function EnquiryButton({ vendorId, vendorName, className, label =
   const dialogRef = useRef<HTMLDivElement>(null);
   const { add } = useEnquiries();
 
-  useEffect(() => {
-    if (!open) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [open]);
+  useDialog(dialogRef, open, () => setOpen(false));
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

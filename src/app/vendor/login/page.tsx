@@ -33,7 +33,7 @@ export default function VendorLogin() {
   return (
     <>
       <Header />
-      <main className={`${styles.wrap} ${styles.narrow}`}>
+      <main id="main-content" className={`${styles.wrap} ${styles.narrow}`}>
         <h1 className={styles.h1}>Vendor sign in</h1>
         <p className={styles.sub}>
           Manage your listing and see enquiries. Enter your email and we&apos;ll send you a secure sign-in link.

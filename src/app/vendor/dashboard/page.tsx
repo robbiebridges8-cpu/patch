@@ -120,7 +120,7 @@ export default async function VendorDashboard({
   return (
     <>
       <Header />
-      <main className={styles.wrap}>
+      <main id="main-content" className={styles.wrap}>
         <div className={styles.topBar}>
           <div>
             <h1 className={styles.h1}>{vendor ? (vendor.name as string) : "Your dashboard"}</h1>

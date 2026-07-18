@@ -54,7 +54,7 @@ export default function ShortlistPage() {
     return (
       <>
         <Header />
-        <main className={`${styles.wrap} ${styles.center}`}>
+        <main id="main-content" className={`${styles.wrap} ${styles.center}`}>
           <div className={styles.successIcon}>
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
           </div>
@@ -73,7 +73,7 @@ export default function ShortlistPage() {
     return (
       <>
         <Header />
-        <main className={`${styles.wrap} ${styles.center}`}>
+        <main id="main-content" className={`${styles.wrap} ${styles.center}`}>
           <h1 className={styles.h1}>Your shortlist is empty</h1>
           <p className={styles.sub}>Search for vendors and tap the heart to save them here — then enquire with everyone at once.</p>
           <Link href="/search" className={styles.cta}>Find vendors</Link>
@@ -85,7 +85,7 @@ export default function ShortlistPage() {
   return (
     <>
       <Header />
-      <main className={styles.wrap}>
+      <main id="main-content" className={styles.wrap}>
         <div className={styles.head}>
           <h1 className={styles.h1}>Your shortlist ({items.length})</h1>
           <button type="button" className={styles.clear} onClick={clear}>Clear all</button>

@@ -20,7 +20,7 @@ export default function Home() {
       <Header />
 
       {/* ─── FRONT DOOR ─── */}
-      <main className={styles.hero}>
+      <main id="main-content" className={styles.hero}>
         <span className={styles.eyebrow}>Mobile food &amp; catering</span>
         <h1 className={styles.heading}>
           Describe the occasion. Get a shortlist.

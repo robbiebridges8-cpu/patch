@@ -42,7 +42,7 @@ export default function FilterSidebarLive({
   return (
     <aside className={styles.sidebar}>
       <div className={styles.sidebarHead}>
-        <h3 className={styles.sidebarTitle}>Refine</h3>
+        <h2 className={styles.sidebarTitle}>Refine</h2>
       </div>
 
       {/* Dietary — a real constraint within any cuisine */}

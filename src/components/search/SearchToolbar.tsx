@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useDialog } from "@/lib/useDialog";
 import FilterSidebarLive from "./FilterSidebarLive";
 import SortDropdown from "./SortDropdown";
 import styles from "./SearchToolbar.module.css";
@@ -14,10 +15,12 @@ interface Props {
 
 export default function SearchToolbar(props: Props) {
   const [open, setOpen] = useState(false);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  useDialog(sheetRef, open, () => setOpen(false));
 
   return (
     <div className={styles.bar}>
-      <button type="button" className={styles.filterBtn} onClick={() => setOpen(true)}>
+      <button type="button" className={styles.filterBtn} onClick={() => setOpen(true)} aria-expanded={open} aria-haspopup="dialog">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
         Filters{props.activeCount ? ` (${props.activeCount})` : ""}
       </button>
@@ -29,7 +32,7 @@ export default function SearchToolbar(props: Props) {
 
       {open && (
         <div className={styles.overlay} onMouseDown={(e) => e.target === e.currentTarget && setOpen(false)}>
-          <div className={styles.sheet} role="dialog" aria-label="Filters">
+          <div className={styles.sheet} ref={sheetRef} role="dialog" aria-modal="true" aria-label="Filters">
             <div className={styles.sheetHead}>
               <span className={styles.sheetTitle}>Filters</span>
               <button type="button" className={styles.done} onClick={() => setOpen(false)}>Done</button>

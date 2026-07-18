@@ -209,6 +209,7 @@ export default async function VendorPage({
         </div>
       )}
 
+      <main id="main-content">
       <section className={styles.hero}>
         <div className={styles.heroInner}>
           <div className={styles.gallery}>
@@ -538,6 +539,7 @@ export default async function VendorPage({
           </span>
         </div>
       </footer>
+      </main>
 
       {/* Mobile: keep the primary action reachable while scrolling */}
       <div className={styles.stickyBar}>

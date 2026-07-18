@@ -18,7 +18,7 @@ export default function TermsPage() {
   return (
     <>
       <Header />
-      <main style={wrap}>
+      <main id="main-content" style={wrap}>
         <h1 style={h1}>Terms of Service</h1>
         <p style={meta}>Last updated: 14 July 2026</p>
 

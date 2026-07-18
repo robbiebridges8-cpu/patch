@@ -45,3 +45,9 @@ next-env.d.ts
 seed/sql/
 seed/locations.json
 seed/emb-cache.json
+
+# Test artifacts
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

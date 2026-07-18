@@ -48,7 +48,7 @@ export default function EnquiriesPage() {
   return (
     <>
       <Header />
-      <main className={styles.wrap}>
+      <main id="main-content" className={styles.wrap}>
         <h1 className={styles.h1}>Your enquiries</h1>
         {items.length === 0 ? (
           <div className={styles.empty}>

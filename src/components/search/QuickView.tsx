@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect } from "react";
+import { useRef } from "react";
+import { useDialog } from "@/lib/useDialog";
 import type { VendorMatch } from "@/types/vendor";
 import { useShortlist } from "@/lib/useShortlist";
 import EnquiryButton from "@/components/vendor/EnquiryForm";
@@ -12,16 +13,12 @@ export default function QuickView({ match, onClose }: { match: VendorMatch; onCl
   const { has, toggle } = useShortlist();
   const saved = has(v.slug);
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
-  }, [onClose]);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialog(dialogRef, true, onClose);
 
   return (
     <div className={styles.overlay} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={styles.dialog} role="dialog" aria-modal="true" aria-label={v.name}>
+      <div className={styles.dialog} ref={dialogRef} role="dialog" aria-modal="true" aria-label={v.name}>
         <button type="button" className={styles.close} onClick={onClose} aria-label="Close">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
         </button>
