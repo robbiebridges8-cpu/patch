@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const rl = rateLimit(`msg:${clientIp(request.headers)}`, 20, 60_000);
+  const rl = await rateLimit(`msg:${clientIp(request.headers)}`, 20, 60_000);
   if (!rl.ok) {
     return Response.json(
       { error: `Too many messages in a short time — please wait ${rl.retryAfter}s and try again.` },

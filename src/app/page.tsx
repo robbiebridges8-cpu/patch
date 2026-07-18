@@ -1,3 +1,4 @@
+import { safeJsonLd } from "@/lib/sanitize";
 import Header from "@/components/layout/Header";
 import HeroSearch from "@/components/search/HeroSearch";
 import QuickStarts from "@/components/search/QuickStarts";
@@ -16,7 +17,7 @@ const orgJsonLd = {
 export default function Home() {
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(orgJsonLd) }} />
       <Header />
 
       {/* ─── FRONT DOOR ─── */}

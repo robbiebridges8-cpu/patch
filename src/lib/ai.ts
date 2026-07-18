@@ -77,6 +77,22 @@ export interface VendorResult {
   distance_miles: number | null;
 }
 
+/** A ParsedQuery with no AI involved — used when the spend cap is reached. */
+function bareQuery(
+  query: string,
+  overrides?: { categories?: string[]; attributes?: Record<string, unknown>; budgetMax?: number },
+): ParsedQuery {
+  return {
+    budget_max: overrides?.budgetMax ?? null,
+    location: null,
+    event_date: null,
+    semantic_query: query,
+    chips: query.split(/\s+/).filter(Boolean).slice(0, 5),
+    categories: overrides?.categories ?? [],
+    attributes: overrides?.attributes ?? null,
+  };
+}
+
 // ── Step 1: Parse user query → structured filters + semantic string ──
 
 async function parseQuery(query: string): Promise<ParsedQuery> {
@@ -106,8 +122,24 @@ Respond with ONLY valid JSON:
   try {
     const text = response.content[0].type === "text" ? response.content[0].text : "{}";
     const raw = JSON.parse(extractJSON(text));
-    // The model never supplies these; the caller layers them on from the UI.
-    return { ...raw, categories: [], attributes: null };
+    // Model output is untrusted input. budget_max is interpolated into a
+    // PostgREST filter string downstream, so coerce it to a finite number
+    // rather than trusting the declared type.
+    const budget = Number(raw?.budget_max);
+    return {
+      ...raw,
+      budget_max: Number.isFinite(budget) && budget > 0 ? budget : null,
+      location: typeof raw?.location === "string" ? raw.location.slice(0, 120) : null,
+      event_date: typeof raw?.event_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.event_date)
+        ? raw.event_date : null,
+      semantic_query: typeof raw?.semantic_query === "string" && raw.semantic_query.trim()
+        ? raw.semantic_query.slice(0, 2000) : query,
+      chips: Array.isArray(raw?.chips)
+        ? raw.chips.filter((c: unknown): c is string => typeof c === "string").slice(0, 8)
+        : [],
+      categories: [],
+      attributes: null,
+    };
   } catch {
     return {
       budget_max: null, location: null, event_date: null,
@@ -508,8 +540,39 @@ export async function quickSearch(
   query: string,
   overrides?: { categories?: string[]; attributes?: Record<string, unknown>; budgetMax?: number },
   limit: number = SEARCH_LIMIT,
+  opts?: { useAi?: boolean },
 ): Promise<QuickSearchResult> {
-  const parsed = await parseQuery(query);
+  // The daily spend cap is enforced by the caller; when it's blown we skip the
+  // paid parse/embed entirely rather than calling and discarding.
+  if (opts?.useAi === false) {
+    const bare = bareQuery(query, overrides);
+    return { parsed: bare, chips: bare.chips, results: await fallbackSearch(bare, limit), usedFallback: true, relaxed: [] };
+  }
+
+  // Parsing is the only step with no graceful degradation of its own, and it
+  // is a paid third-party call: an outage, an expired key, or an exhausted
+  // credit balance would otherwise take search down completely. Fall back to
+  // the raw query — keyword results are far better than an error box.
+  let parsed: ParsedQuery;
+  let parseFailed = false;
+  try {
+    parsed = await parseQuery(query);
+  } catch (err) {
+    console.error("[quickSearch] parse failed, degrading to keyword search:", err);
+    parsed = bareQuery(query, overrides);
+    parseFailed = true;
+  }
+
+  if (parseFailed) {
+    return {
+      parsed,
+      chips: parsed.chips,
+      results: await fallbackSearch(parsed, limit),
+      usedFallback: true,
+      relaxed: [],
+    };
+  }
+
   // Explicit sidebar filters take precedence and become RPC pre-filters, so the
   // vector search only considers eligible vendors (not a post-filter of the top-N).
   // UI-supplied filters. These are the only source of categories/attributes —

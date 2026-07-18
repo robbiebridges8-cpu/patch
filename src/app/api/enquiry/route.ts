@@ -7,7 +7,7 @@ import { captureException } from "@/lib/monitoring";
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 export async function POST(request: Request) {
-  const rl = rateLimit(`enq:${clientIp(request.headers)}`, 8, 60_000);
+  const rl = await rateLimit(`enq:${clientIp(request.headers)}`, 8, 60_000);
   if (!rl.ok) {
     return Response.json(
       { error: `Too many enquiries in a short time — please wait ${rl.retryAfter}s and try again.` },

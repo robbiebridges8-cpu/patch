@@ -8,7 +8,7 @@ export const metadata = {
 
 import { Suspense } from "react";
 import { headers } from "next/headers";
-import { rateLimit, clientIp } from "@/lib/rateLimit";
+import { rateLimit, clientIp, consumeAiBudget } from "@/lib/rateLimit";
 import { captureException } from "@/lib/monitoring";
 import { quickSearch, narrateSummary, type VendorResult, type ParsedQuery } from "@/lib/ai";
 import { categoryPhoto } from "@/lib/categoryPhoto";
@@ -191,7 +191,7 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
     attributes: params.diet ? { dietary: params.diet.split(",") } : undefined,
     budgetMax: params.budget ? parseInt(params.budget, 10) : undefined,
   };
-  const rl = rateLimit(`search:${clientIp(await headers())}`, 25, 60_000);
+  const rl = await rateLimit(`search:${clientIp(await headers())}`, 25, 60_000);
   if (!rl.ok) {
     return (
       <div className={styles.errorBox} role="alert">
@@ -200,9 +200,13 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
     );
   }
 
+  // Platform-wide daily cap. Over it, we skip the paid AI pipeline and serve
+  // keyword results — degraded, disclosed, but never a blank page.
+  const aiBudgetOk = await consumeAiBudget(1);
+
   let quick: Awaited<ReturnType<typeof quickSearch>>;
   try {
-    quick = await quickSearch(query, overrides);
+    quick = await quickSearch(query, overrides, undefined, { useAi: aiBudgetOk });
   } catch (e) {
     captureException(e, { scope: "search", severity: "error", extra: { query } });
     return (
@@ -341,10 +345,16 @@ async function KeywordResults({
   hasAI: boolean;
   hasVoyage: boolean;
 }) {
+  // Bounded deliberately: this path filters in JS, so an unbounded select
+  // would pull the whole catalogue into memory. It runs whenever the AI spend
+  // cap trips, so it has to survive 100k vendors, not just 500.
   const { data } = await supabase
     .from("vendors")
     .select("*, vendor_services ( category, attributes )")
-    .eq("status", "live");
+    .eq("status", "live")
+    .order("tier", { ascending: false })
+    .order("rating_avg", { ascending: false, nullsFirst: false })
+    .limit(500);
 
   let rows = (data as Record<string, unknown>[]) || [];
 

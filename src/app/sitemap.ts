@@ -15,14 +15,40 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/terms`, changeFrequency: "yearly", priority: 0.3 },
   ];
 
-  const { data } = await supabase
-    .from("vendors")
-    .select("slug, updated_at")
-    .eq("status", "live");
+  // PostgREST caps a single response at ~1000 rows, so a bare select silently
+  // truncates once the catalogue outgrows one page — the sitemap would look
+  // fine and quietly omit most of the site. Page through explicitly.
+  //
+  // NOTE: a sitemap file is also capped at 50,000 URLs by the spec. Beyond
+  // that this needs splitting into a sitemap index; see SITEMAP_MAX_URLS.
+  const PAGE = 1000;
+  const SITEMAP_MAX_URLS = 45_000;
+  const vendors: { slug: string; updated_at: string | null }[] = [];
 
-  const vendorRoutes: MetadataRoute.Sitemap = (data || []).map((v) => ({
-    url: `${SITE_URL}/vendors/${(v as { slug: string }).slug}`,
-    lastModified: (v as { updated_at: string | null }).updated_at || undefined,
+  for (let from = 0; from < SITEMAP_MAX_URLS; from += PAGE) {
+    const { data, error } = await supabase
+      .from("vendors")
+      .select("slug, updated_at")
+      .eq("status", "live")
+      .order("updated_at", { ascending: false, nullsFirst: false })
+      .range(from, from + PAGE - 1);
+
+    if (error) {
+      console.error("[sitemap] page fetch failed:", error.message);
+      break;
+    }
+    const page = (data as { slug: string; updated_at: string | null }[]) || [];
+    vendors.push(...page);
+    if (page.length < PAGE) break;
+  }
+
+  if (vendors.length >= SITEMAP_MAX_URLS) {
+    console.warn(`[sitemap] hit ${SITEMAP_MAX_URLS} URLs — split into a sitemap index`);
+  }
+
+  const vendorRoutes: MetadataRoute.Sitemap = vendors.map((v) => ({
+    url: `${SITE_URL}/vendors/${v.slug}`,
+    lastModified: v.updated_at || undefined,
     changeFrequency: "weekly",
     priority: 0.8,
   }));

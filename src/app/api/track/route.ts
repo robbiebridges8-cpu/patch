@@ -18,7 +18,7 @@ const ALLOWED = new Set([
 
 export async function POST(request: Request) {
   // Generous: a browsing session legitimately fires several of these.
-  const rl = rateLimit(`track:${clientIp(request.headers)}`, 60, 60_000);
+  const rl = await rateLimit(`track:${clientIp(request.headers)}`, 60, 60_000);
   if (!rl.ok) return new Response(null, { status: 204 });
 
   let body: Record<string, unknown>;

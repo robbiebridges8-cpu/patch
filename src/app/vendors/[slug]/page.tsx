@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import { safeJsonLd } from "@/lib/sanitize";
 import { cache } from "react";
 import Image from "next/image";
 import type { Metadata } from "next";
@@ -162,11 +163,13 @@ export default async function VendorPage({
   const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "FoodEstablishment",
+    // LocalBusiness, not FoodEstablishment: the platform is horizontal, and a
+    // wrong schema type costs rich results for every non-food vertical.
+    "@type": "LocalBusiness",
     name: vendor.name as string,
     description: (vendor.description as string) || undefined,
     image: sortedPhotos.length ? sortedPhotos.map((p) => p.url as string) : [heroFallback],
-    servesCuisine: categories,
+    knowsAbout: categories,
     url: `${SITE}/vendors/${slug}`,
     areaServed: "London",
     address: {
@@ -205,7 +208,7 @@ export default async function VendorPage({
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       {!isPreview && <TrackProfileView vendorId={vendor.id as string} slug={slug} />}
       <Header />
 
