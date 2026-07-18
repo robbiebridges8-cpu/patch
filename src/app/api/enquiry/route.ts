@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { sendVendorEnquiryEmail } from "@/lib/email";
 import { rateLimit, clientIp } from "@/lib/rateLimit";
+import { captureException } from "@/lib/monitoring";
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -80,7 +81,13 @@ export async function POST(request: Request) {
 
   const { error: insertErr } = await supabase.from("enquiries").insert(rows);
   if (insertErr) {
-    console.error("[enquiry] insert failed:", insertErr);
+    // A dropped enquiry is lost revenue for a vendor and a dead end for a
+    // buyer — the single most important failure on the site to hear about.
+    captureException(insertErr, {
+      scope: "api/enquiry",
+      severity: "fatal",
+      extra: { vendorCount: vendors.length },
+    });
     return Response.json({ error: "Something went wrong sending your enquiry. Please try again." }, { status: 500 });
   }
 

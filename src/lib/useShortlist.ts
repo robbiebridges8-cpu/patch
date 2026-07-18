@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore, useCallback } from "react";
+import { track } from "@/lib/analytics";
 
 // A persistent, login-free shortlist backed by localStorage. Any component can
 // read/subscribe via useShortlist(); changes broadcast so the save button, the
@@ -68,9 +69,20 @@ export function useShortlist() {
   const has = useCallback((slug: string) => items.some((i) => i.slug === slug), [items]);
   const toggle = useCallback((item: ShortlistItem) => {
     const cur = read();
-    write(cur.some((i) => i.slug === item.slug) ? cur.filter((i) => i.slug !== item.slug) : [...cur, item]);
+    const removing = cur.some((i) => i.slug === item.slug);
+    const next = removing ? cur.filter((i) => i.slug !== item.slug) : [...cur, item];
+    write(next);
+    track(
+      removing
+        ? { name: "shortlist_removed", vendorId: item.slug, size: next.length }
+        : { name: "shortlist_added", vendorId: item.slug, size: next.length },
+    );
   }, []);
-  const remove = useCallback((slug: string) => write(read().filter((i) => i.slug !== slug)), []);
+  const remove = useCallback((slug: string) => {
+    const next = read().filter((i) => i.slug !== slug);
+    write(next);
+    track({ name: "shortlist_removed", vendorId: slug, size: next.length });
+  }, []);
   const clear = useCallback(() => write([]), []);
 
   return { items, has, toggle, remove, clear };

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useDialog } from "@/lib/useDialog";
 import { useEnquiries } from "@/lib/useEnquiries";
+import { track } from "@/lib/analytics";
 import styles from "./EnquiryForm.module.css";
 
 interface Props {
@@ -68,7 +69,14 @@ export default function EnquiryButton({ vendorId, vendorName, className, label =
 
   return (
     <>
-      <button type="button" className={className} onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        className={className}
+        onClick={() => {
+          track({ name: "enquiry_started", vendorId, batch: 1 });
+          setOpen(true);
+        }}
+      >
         {label}
       </button>
 

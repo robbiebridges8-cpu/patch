@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendThreadMessageEmail } from "@/lib/email";
 import { rateLimit, clientIp } from "@/lib/rateLimit";
+import { captureException } from "@/lib/monitoring";
 
 // Buyer side of in-platform messaging. Buyers have no account, so the enquiry
 // id they hold locally is their capability token — the same model the
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabase.rpc("enquiry_thread", { p_enquiry_id: enquiryId });
   if (error) {
-    console.error("[messages] thread read failed:", error);
+    captureException(error, { scope: "api/messages#read", severity: "error" });
     return Response.json({ error: "Couldn't load this conversation." }, { status: 500 });
   }
   return Response.json({ messages: data ?? [] });
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
     p_body: text.slice(0, 4000),
   });
   if (error) {
-    console.error("[messages] buyer send failed:", error);
+    captureException(error, { scope: "api/messages", severity: "error" });
     return Response.json({ error: "Couldn't send your message. Please try again." }, { status: 500 });
   }
 

@@ -9,6 +9,7 @@ export const metadata = {
 import { Suspense } from "react";
 import { headers } from "next/headers";
 import { rateLimit, clientIp } from "@/lib/rateLimit";
+import { captureException } from "@/lib/monitoring";
 import { quickSearch, narrateSummary, type VendorResult, type ParsedQuery } from "@/lib/ai";
 import { categoryPhoto } from "@/lib/categoryPhoto";
 import { supabase } from "@/lib/supabase";
@@ -190,7 +191,7 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
   try {
     quick = await quickSearch(query, overrides);
   } catch (e) {
-    console.error("[search] quickSearch failed:", e);
+    captureException(e, { scope: "search", severity: "error", extra: { query } });
     return (
       <div className={styles.errorBox} role="alert">
         <strong>Search hit a snag.</strong> We couldn&apos;t reach the matching engine just now —

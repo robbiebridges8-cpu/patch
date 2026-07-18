@@ -198,7 +198,7 @@ export default async function VendorPage({
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      {!isPreview && <TrackProfileView vendorId={vendor.id as string} />}
+      {!isPreview && <TrackProfileView vendorId={vendor.id as string} slug={slug} />}
       <Header />
 
       {previewing && (
