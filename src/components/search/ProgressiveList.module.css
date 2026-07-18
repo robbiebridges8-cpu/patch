@@ -1,0 +1,35 @@
+.moreWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 0 8px;
+}
+
+.moreBtn {
+  height: 46px;
+  padding: 0 28px;
+  border: 2px solid var(--color-text-primary, #241f19);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-primary, #241f19);
+  font-family: var(--font-ui, inherit);
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.moreBtn:hover {
+  background: var(--color-text-primary, #241f19);
+  color: var(--color-surface-raised, #fff);
+}
+
+.moreBtn:focus-visible {
+  outline: 2px solid var(--color-accent, #c0392b);
+  outline-offset: 3px;
+}
+
+.moreCount { font-size: 13px; color: var(--color-text-muted, #9a9186); }

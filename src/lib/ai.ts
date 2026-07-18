@@ -170,10 +170,14 @@ async function embedQuery(text: string): Promise<number[]> {
 
 // ── Step 4: Pre-filter + vector search via match_vendors RPC ──
 
+/** How many matches we pull in one go; the page reveals them a page at a time. */
+export const SEARCH_LIMIT = 60;
+
 async function vectorSearch(
   parsed: ParsedQuery,
   queryEmbedding: number[],
   geo: { lat: number; lng: number } | null,
+  limit: number = SEARCH_LIMIT,
 ): Promise<VendorResult[]> {
   const vecStr = `[${queryEmbedding.join(",")}]`;
 
@@ -185,7 +189,7 @@ async function vectorSearch(
     filter_budget_max: parsed.budget_max,
     search_lat: geo?.lat ?? null,
     search_lng: geo?.lng ?? null,
-    match_limit: 15,
+    match_limit: limit,
   };
   console.log("[vectorSearch] RPC params:", JSON.stringify({
     ...rpcParams,
@@ -196,17 +200,66 @@ async function vectorSearch(
 
   if (error) {
     console.error("[vectorSearch] RPC failed:", error.message, error.details, error.hint);
-    return fallbackSearch(parsed);
+    return fallbackSearch(parsed, limit);
   }
 
   const results = (data || []) as VendorResult[];
   console.log(`[vectorSearch] returned ${results.length} results`);
+  // The RPC already orders by similarity; sorting again is cheap insurance
+  // against the fallback path, which has no similarity to speak of.
   results.sort((a, b) => (b.similarity || 0) - (a.similarity || 0));
-  return results.slice(0, 15);
+  return results;
+}
+
+/**
+ * A brief that matches nothing is a dead end, so rather than shrug we widen it
+ * one constraint at a time and say what we let go. Order is deliberate: money
+ * and headcount are softest, area next, cuisine last. Dietary needs are never
+ * relaxed — "vegan" is a requirement, not a preference.
+ */
+const RELAXATIONS: {
+  label: string;
+  constraining: (p: ParsedQuery, geo: unknown) => boolean;
+  relax: (p: ParsedQuery) => void;
+  dropsGeo?: boolean;
+}[] = [
+  { label: "budget", constraining: (p) => p.budget_max != null, relax: (p) => { p.budget_max = null; } },
+  { label: "guest count", constraining: (p) => p.guest_count != null, relax: (p) => { p.guest_count = null; } },
+  { label: "area", constraining: (_p, geo) => geo != null, relax: () => {}, dropsGeo: true },
+  { label: "cuisine", constraining: (p) => p.categories.length > 0, relax: (p) => { p.categories = []; } },
+];
+
+async function searchWithRecovery(
+  parsed: ParsedQuery,
+  embedding: number[],
+  geo: { lat: number; lng: number } | null,
+  limit: number,
+): Promise<{ results: VendorResult[]; relaxed: string[] }> {
+  const results = await vectorSearch(parsed, embedding, geo, limit);
+  if (results.length > 0) return { results, relaxed: [] };
+
+  const working: ParsedQuery = { ...parsed, categories: [...parsed.categories] };
+  let workingGeo = geo;
+  const relaxed: string[] = [];
+
+  for (const step of RELAXATIONS) {
+    if (!step.constraining(working, workingGeo)) continue;
+    if (step.dropsGeo) workingGeo = null;
+    else step.relax(working);
+    relaxed.push(step.label);
+
+    const widened = await vectorSearch(working, embedding, workingGeo, limit);
+    if (widened.length > 0) {
+      console.log(`[searchWithRecovery] recovered after relaxing: ${relaxed.join(", ")}`);
+      return { results: widened, relaxed };
+    }
+  }
+
+  return { results: [], relaxed };
 }
 
 // Fallback: basic Supabase query (no vector search)
-async function fallbackSearch(parsed: ParsedQuery): Promise<VendorResult[]> {
+async function fallbackSearch(parsed: ParsedQuery, limit: number = SEARCH_LIMIT): Promise<VendorResult[]> {
   let query = supabase
     .from("vendor_services")
     .select(`
@@ -224,7 +277,7 @@ async function fallbackSearch(parsed: ParsedQuery): Promise<VendorResult[]> {
     query = query.or(`price_from.is.null,price_from.lte.${parsed.budget_max}`, { referencedTable: "vendors" });
   }
 
-  const { data, error } = await query.order("rating_avg", { referencedTable: "vendors", ascending: false }).limit(30);
+  const { data, error } = await query.order("rating_avg", { referencedTable: "vendors", ascending: false }).limit(limit * 2);
 
   if (error || !data) return [];
 
@@ -250,7 +303,7 @@ async function fallbackSearch(parsed: ParsedQuery): Promise<VendorResult[]> {
       similarity: 0, distance_miles: null,
     });
   }
-  return results.slice(0, 15);
+  return results.slice(0, limit);
 }
 
 // ── Step 5: Generate AINote narration ──
@@ -330,11 +383,14 @@ export interface QuickSearchResult {
   chips: string[];
   results: VendorResult[];
   usedFallback: boolean;
+  /** Constraints dropped to find anything at all — empty on an exact match. */
+  relaxed: string[];
 }
 
 export async function quickSearch(
   query: string,
   overrides?: { categories?: string[]; dietary?: string[]; budgetMax?: number },
+  limit: number = SEARCH_LIMIT,
 ): Promise<QuickSearchResult> {
   const parsed = await parseQuery(query);
   // Explicit sidebar filters take precedence and become RPC pre-filters, so the
@@ -354,15 +410,16 @@ export async function quickSearch(
   ]);
 
   let results: VendorResult[];
+  let relaxed: string[] = [];
   let usedFallback = false;
   if (!embedding) {
     results = await fallbackSearch(parsed);
     usedFallback = true;
   } else {
-    results = await vectorSearch(parsed, embedding, geo);
+    ({ results, relaxed } = await searchWithRecovery(parsed, embedding, geo, limit));
   }
 
-  return { parsed, chips: parsed.chips, results, usedFallback };
+  return { parsed, chips: parsed.chips, results, usedFallback, relaxed };
 }
 
 export async function narrate(
@@ -445,7 +502,7 @@ export async function aiSearch(query: string): Promise<AIResult> {
   }
 
   // 4. Pre-filter + vector search
-  const results = await vectorSearch(parsed, queryEmbedding, geo);
+  const results = await vectorSearch(parsed, queryEmbedding, geo, 15);
 
   if (results.length === 0) {
     return { chips: parsed.chips, summary: "No vendors match your search. Try broadening your criteria.", vendorMatches: [], vendorIds: [] };

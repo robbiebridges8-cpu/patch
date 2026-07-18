@@ -22,9 +22,14 @@ import FilterSidebarLive from "@/components/search/FilterSidebarLive";
 import SearchToolbar from "@/components/search/SearchToolbar";
 import QuickStarts from "@/components/search/QuickStarts";
 import FollowupsCard from "@/components/search/FollowupsCard";
+import ProgressiveList from "@/components/search/ProgressiveList";
+import NoResults from "@/components/search/NoResults";
 import { ResultsSkeleton, AINoteSkeleton } from "@/components/search/SearchSkeleton";
 import type { VendorMatch } from "@/types/vendor";
 import styles from "./page.module.css";
+
+/** Rows revealed per "show more" click, and the size of the first page. */
+const PAGE_SIZE = 15;
 
 interface SearchParams {
   q?: string;
@@ -195,11 +200,7 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
   }
 
   if (quick.results.length === 0) {
-    return (
-      <div className={styles.empty}>
-        No vendors match &ldquo;{query}&rdquo; yet. Try broadening the occasion, budget, or area.
-      </div>
-    );
+    return <NoResults query={query} parsed={quick.parsed} params={params} />;
   }
 
   // Real vendor photos where they exist (else category stock).
@@ -258,6 +259,16 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
         </div>
       )}
 
+      {quick.relaxed.length > 0 && (
+        <div className={styles.relaxedNote} role="status">
+          <strong>Nothing matched that exactly.</strong> I widened the{" "}
+          {quick.relaxed.length === 1
+            ? quick.relaxed[0]
+            : `${quick.relaxed.slice(0, -1).join(", ")} and ${quick.relaxed[quick.relaxed.length - 1]}`}{" "}
+          to find these — so check those details before you enquire.
+        </div>
+      )}
+
       {narratePromise && (
         <Suspense fallback={<AINoteSkeleton />}>
           <StreamedNote promise={narratePromise} />
@@ -275,20 +286,20 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
           {others.length > 0 && (
             <>
               <h2 className={styles.groupLabel}>More options</h2>
-              <div className={styles.vendorList}>
+              <ProgressiveList className={styles.vendorList} initial={PAGE_SIZE} step={PAGE_SIZE}>
                 {others.map((m) => (
                   <VendorRow key={m.vendor.id} match={m} />
                 ))}
-              </div>
+              </ProgressiveList>
             </>
           )}
         </>
       ) : (
-        <div className={styles.vendorList}>
+        <ProgressiveList className={styles.vendorList} initial={PAGE_SIZE} step={PAGE_SIZE}>
           {matches.map((m) => (
             <VendorRow key={m.vendor.id} match={m} />
           ))}
-        </div>
+        </ProgressiveList>
       )}
 
       <div className={styles.askPatch}>
@@ -347,13 +358,13 @@ async function KeywordResults({
         <AINote html={note} />
       </div>
       {matches.length > 0 ? (
-        <div className={styles.vendorList}>
+        <ProgressiveList className={styles.vendorList} initial={PAGE_SIZE} step={PAGE_SIZE}>
           {matches.map((m) => (
             <VendorRow key={m.vendor.id} match={m} />
           ))}
-        </div>
+        </ProgressiveList>
       ) : (
-        <div className={styles.empty}>No vendors match your filters. Try broadening your search.</div>
+        <NoResults query={query} parsed={null} params={params} />
       )}
     </>
   );
