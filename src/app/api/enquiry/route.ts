@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   // Confirm the vendors are real + live.
   const { data: vendors, error: vendorErr } = await supabase
     .from("vendors")
-    .select("id, name, contact_email")
+    .select("id, name, slug, contact_email")
     .in("id", ids)
     .eq("status", "live");
 
@@ -48,7 +48,16 @@ export async function POST(request: Request) {
 
   const guestCount = Number.isFinite(guests) && guests > 0 ? guests : null;
 
-  const rows = vendors.map((v) => ({
+  // Generate ids client-side of the DB so we can return them for buyer tracking
+  // (anon has no SELECT on enquiries, so we can't read them back).
+  const records = vendors.map((v) => ({
+    enquiryId: crypto.randomUUID(),
+    vendorName: v.name as string,
+    vendorSlug: v.slug as string,
+  }));
+
+  const rows = vendors.map((v, i) => ({
+    id: records[i].enquiryId,
     vendor_id: v.id,
     parent_name: name.slice(0, 200),
     parent_email: email.slice(0, 320),
@@ -87,5 +96,6 @@ export async function POST(request: Request) {
     ok: true,
     sent: vendors.length,
     emailed: results.filter((r) => r.sent).length,
+    records,
   });
 }

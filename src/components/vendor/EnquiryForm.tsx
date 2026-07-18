@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useEnquiries } from "@/lib/useEnquiries";
 import styles from "./EnquiryForm.module.css";
 
 interface Props {
@@ -16,6 +17,7 @@ export default function EnquiryButton({ vendorId, vendorName, className, label =
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const { add } = useEnquiries();
 
   useEffect(() => {
     if (!open) return;
@@ -56,6 +58,7 @@ export default function EnquiryButton({ vendorId, vendorName, className, label =
         setSending(false);
         return;
       }
+      if (data.records) add(data.records);
       setDone(true);
     } catch {
       setError("Couldn't reach the server. Please check your connection and try again.");

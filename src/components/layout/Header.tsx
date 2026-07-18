@@ -20,6 +20,7 @@ export default function Header() {
         <div className={styles.spacer} />
 
         <nav className={styles.nav}>
+          <Link href="/enquiries" className={styles.navLink}>My enquiries</Link>
           <Link href="/for-vendors" className={styles.navLink}>List your service</Link>
           <Link href="/vendor/dashboard" className={styles.accountBtn} aria-label="Vendor sign in">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

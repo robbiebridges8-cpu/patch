@@ -4,10 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import Header from "@/components/layout/Header";
 import { useShortlist } from "@/lib/useShortlist";
+import { useEnquiries } from "@/lib/useEnquiries";
 import styles from "./page.module.css";
 
 export default function ShortlistPage() {
   const { items, remove, clear } = useShortlist();
+  const { add } = useEnquiries();
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sentCount, setSentCount] = useState<number | null>(null);
@@ -38,6 +40,7 @@ export default function ShortlistPage() {
         setSending(false);
         return;
       }
+      if (data.records) add(data.records);
       setSentCount(data.sent);
       clear();
     } catch {
