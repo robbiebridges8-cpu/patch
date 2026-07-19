@@ -3,6 +3,62 @@ import { supabase } from "./supabase";
 
 const anthropic = new Anthropic();
 
+/**
+ * Test stub for the paid model calls.
+ *
+ * The e2e suite drives the real search page, which means every run used to fire
+ * live Claude calls — a full suite is dozens of paid requests, and running it
+ * repeatedly during development is a genuine and easily-missed bill. With this
+ * on, parse and narration are computed locally: search still hits Voyage and
+ * pgvector, so the results, ranking, relaxation and pagination under test are
+ * all real. Only the two Anthropic calls are faked.
+ *
+ * Fail-safe: the flag is ignored on any https deployment, so setting it in a
+ * production environment by accident cannot silently disable AI matching.
+ */
+const STUB_AI =
+  process.env.PATCH_STUB_AI === "1" &&
+  !(process.env.NEXT_PUBLIC_SITE_URL || "").startsWith("https://");
+
+if (STUB_AI) {
+  console.warn("[ai] PATCH_STUB_AI=1 — Anthropic calls are stubbed. Never set this in production.");
+}
+
+const LONDON_PLACES = [
+  "hackney", "shoreditch", "peckham", "brixton", "camden", "islington", "dalston",
+  "clapham", "greenwich", "stratford", "wimbledon", "soho", "chelsea", "fulham",
+  "walthamstow", "deptford", "bermondsey", "kensington", "london",
+];
+
+/**
+ * Deterministic stand-in for parseQuery. Extracts the same three universal
+ * filters the real prompt does, by rule rather than by model, so tests that
+ * depend on budget/location/date — including the no-results relaxation ladder —
+ * still exercise the real code paths.
+ */
+function stubParse(query: string): ParsedQuery {
+  const q = query.toLowerCase();
+
+  const budgetMatch = q.match(/(?:£|under |budget (?:of )?|max )\s*(\d[\d,]*)/);
+  const budget = budgetMatch ? Number(budgetMatch[1].replace(/,/g, "")) : NaN;
+
+  const postcode = query.match(/\b([A-Z]{1,2}\d{1,2}[A-Z]?)\s*\d[A-Z]{2}\b/i)?.[1];
+  const place = LONDON_PLACES.find((p) => q.includes(p));
+
+  const iso = q.match(/\b(\d{4}-\d{2}-\d{2})\b/)?.[1] ?? null;
+
+  return {
+    budget_max: Number.isFinite(budget) && budget > 0 ? budget : null,
+    location: postcode ?? place ?? null,
+    event_date: iso,
+    semantic_query: query,
+    chips: query.split(/\s+/).filter((w) => w.length > 3).slice(0, 5),
+    categories: [],
+    attributes: null,
+  };
+}
+
+
 /** Strip markdown code fences if Claude wraps JSON in ```json ... ``` */
 function extractJSON(text: string): string {
   // Handle closed fences
@@ -96,6 +152,8 @@ function bareQuery(
 // ── Step 1: Parse user query → structured filters + semantic string ──
 
 async function parseQuery(query: string): Promise<ParsedQuery> {
+  if (STUB_AI) return stubParse(query);
+
   const today = new Date().toISOString().slice(0, 10);
   const response = await anthropic.messages.create({
     // Haiku: this is structured extraction, not reasoning — much faster time-to-cards.
@@ -635,6 +693,15 @@ export async function narrateSummary(
     ];
     return parts.filter(Boolean).join(" · ");
   }).join("\n");
+
+  if (STUB_AI) {
+    const top = results[0]?.vendor_name;
+    return {
+      summary: top
+        ? `I'd lean <strong>${top}</strong> for this — it's the closest fit on what you described, and the rest of the shortlist covers nearby alternatives.`
+        : "",
+    };
+  }
 
   try {
     const response = await anthropic.messages.create({

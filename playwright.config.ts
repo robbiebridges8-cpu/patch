@@ -5,14 +5,15 @@ const BASE_URL = `http://127.0.0.1:${PORT}`;
 
 export default defineConfig({
   testDir: "./e2e",
-  // The suite hits the real Supabase project and the AI pipeline, so keep it
-  // serial-ish: parallel searches would trip the rate limiter and cost money.
+  // Serial: the suite hits the real Supabase project, and parallel searches
+  // would trip the rate limiter. Anthropic is stubbed (see webServer env), so
+  // a run no longer costs anything at the model provider.
   workers: 1,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  // Retry once everywhere, not just CI: the search tests drive Voyage and
-  // Anthropic, and a rate-limited embed makes search fall back to the non-AI
-  // path — a real flake with an external cause, not a code failure.
+  // Retry once everywhere, not just CI: the search tests still drive Voyage,
+  // and a rate-limited embed makes search fall back to the non-AI path — a real
+  // flake with an external cause, not a code failure.
   retries: 1,
   reporter: process.env.CI ? "github" : [["list"]],
   timeout: 60_000,
@@ -46,5 +47,15 @@ export default defineConfig({
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
+    env: {
+      // Never let the test suite spend money at Anthropic. Voyage and pgvector
+      // stay real, so ranking, relaxation and pagination are genuinely tested;
+      // only the two paid model calls are faked. The flag is ignored on any
+      // https deployment, so it cannot leak into production.
+      PATCH_STUB_AI: "1",
+      // Belt and braces: even if the stub were bypassed, the platform cap
+      // bounds a runaway loop during a test run.
+      AI_DAILY_SEARCH_CAP: process.env.AI_DAILY_SEARCH_CAP || "200",
+    },
   },
 });
