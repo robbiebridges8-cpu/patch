@@ -152,6 +152,8 @@ keeping, and a live free listing is a standing upgrade prompt.
 
 ## 4. Open questions
 
+*Deferred work and its rationale lives in [BACKLOG.md](./BACKLOG.md).*
+
 | Question | Notes |
 |---|---|
 | **Price point** | £29 is provisional within your £20–50 range. One line in `src/lib/tiers.ts`. Easier to discount later than to raise. |
