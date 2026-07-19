@@ -9,4 +9,7 @@ export function getStripe(): Stripe | null {
   return new Stripe(key);
 }
 
-export const MONTHLY_PLAN = { amountLabel: "£20/month", currency: "gbp" };
+// Price lives in src/lib/tiers.ts (TIER_PRICE), which is what the UI and
+// checkout both read. Duplicating it here is how the site ended up advertising
+// £20 while charging £29 — don't reintroduce a second source of truth.
+export const CURRENCY = "gbp";

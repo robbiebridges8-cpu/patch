@@ -1,35 +1,91 @@
 import Header from "@/components/layout/Header";
+import { TIER_PRICE, TIER, annualPrice } from "@/lib/tiers";
+
+// Prices come from the tier config rather than being written into the copy, so
+// the page and the checkout can never disagree — they did, at £20 vs £29.
+const PAID = TIER_PRICE[TIER.PAID];
 
 export const metadata = {
   title: "List your service",
-  description: "Get matched with clients actively looking for what you cook. No commission, no per-lead fees — £20/month to be listed, matched, and reviewed on Patch.",
+  description:
+    `Get matched with clients actively looking for what you do. Free to list. No commission and no per-lead charges — £${PAID}/month when you want to read every enquiry.`,
   alternates: { canonical: "/for-vendors" },
 };
+
+const sectionH2 = {
+  fontSize: 20,
+  fontWeight: 600,
+  color: "var(--color-text-primary)",
+  marginBottom: 12,
+  marginTop: 32,
+} as const;
+
+const body = {
+  fontSize: 16,
+  lineHeight: 1.7,
+  color: "var(--color-text-secondary)",
+  marginBottom: 16,
+} as const;
 
 export default function ForVendorsPage() {
   return (
     <>
       <Header />
       <main id="main-content" style={{ maxWidth: 720, margin: "0 auto", padding: "64px 32px" }}>
-        <h1 style={{ fontSize: 32, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 24, letterSpacing: "-0.02em" }}>List your service on Patch</h1>
-        <p style={{ fontSize: 16, lineHeight: 1.7, color: "var(--color-text-secondary)", marginBottom: 16 }}>
-          Patch connects you with clients who are actively looking for what you cook. No commission, no per-lead fees — just £20/month to be listed, matched, and reviewed.
+        <h1 style={{ fontSize: 32, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 24, letterSpacing: "-0.02em" }}>
+          List your service on Patch
+        </h1>
+        <p style={body}>
+          Patch connects you with clients who are actively looking for what you do. Listing is free,
+          and stays free. No commission and no per-lead charges — if you upgrade, it&apos;s one flat
+          subscription.
         </p>
-        <h2 id="pricing" style={{ fontSize: 20, fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 12, marginTop: 32 }}>What you get</h2>
+
+        <h2 style={sectionH2}>Free listing</h2>
         <ul style={{ fontSize: 16, lineHeight: 1.9, color: "var(--color-text-secondary)", paddingLeft: 20 }}>
-          <li>Your own profile page with descriptions, pricing, signature dishes, and reviews</li>
-          <li>AI-matched enquiries from clients whose event fits what you offer</li>
-          <li>Availability calendar — only get enquiries for dates you&apos;re free</li>
-          <li>Reviews that can only come from a real enquiry</li>
-          <li>Coverage area settings — choose which areas of London you serve</li>
+          <li>Your own profile page, findable on Google and by name on Patch</li>
+          <li>You appear in search results, ranked below paid listings</li>
+          <li>One photo, your description, your prices</li>
+          <li>Reviews — which can only be left by someone who sent you a real enquiry</li>
+          <li>You&apos;ll see when an enquiry arrives, but not who sent it</li>
         </ul>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 12, marginTop: 32 }}>Pricing</h2>
-        <p style={{ fontSize: 16, lineHeight: 1.7, color: "var(--color-text-secondary)", marginBottom: 16 }}>
-          £20/month, flat. List all your services for one price. No setup fees, cancel anytime.
+
+        <h2 style={sectionH2}>Paid — £{PAID}/month</h2>
+        <ul style={{ fontSize: 16, lineHeight: 1.9, color: "var(--color-text-secondary)", paddingLeft: 20 }}>
+          <li>Read and reply to every enquiry</li>
+          <li>Email the moment a lead lands, rather than a daily digest</li>
+          <li>Ranked alongside other paid listings instead of below them</li>
+          <li>Full photo gallery, longer profile, FAQs</li>
+          <li>Availability calendar — mark yourself unavailable and you rank lower for those dates</li>
+          <li>Coverage radius — set how far you&apos;ll travel</li>
+          <li>See your views, enquiries and how many became bookings</li>
+        </ul>
+
+        <h2 style={sectionH2}>Pricing</h2>
+        <p style={body}>
+          £{PAID}/month, flat, or £{annualPrice(TIER.PAID)}/year — two months free. No setup fees,
+          no commission, cancel any time. If you cancel, your listing stays up on the free tier
+          rather than disappearing.
         </p>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 12, marginTop: 32 }}>Get started</h2>
-        <p style={{ fontSize: 16, lineHeight: 1.7, color: "var(--color-text-secondary)" }}>
-          Email <a href="mailto:vendors@patch.london" style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>vendors@patch.london</a> with your business name, what you offer, and which areas of London you cover. We&apos;ll get you set up within 48 hours.
+
+        <h2 style={sectionH2}>What Patch doesn&apos;t do</h2>
+        <p style={body}>
+          Patch is discovery only. We don&apos;t take payment, hold deposits, or get involved in the
+          job itself — you agree terms directly with the client, and the contract is between you and
+          them. We also don&apos;t vet or verify listings, so clients may ask to see your licences,
+          insurance or certifications.
+        </p>
+
+        <h2 style={sectionH2}>Get started</h2>
+        <p style={{ ...body, marginBottom: 0 }}>
+          <a href="/vendor/login" style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>
+            Create your listing
+          </a>{" "}
+          — it takes a few minutes and you don&apos;t need a card. Questions:{" "}
+          <a href="mailto:vendors@patch.london" style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>
+            vendors@patch.london
+          </a>
+          .
         </p>
       </main>
     </>

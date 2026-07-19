@@ -51,7 +51,8 @@ export default function TermsPage() {
         <h2 style={h2}>For vendors</h2>
         <p style={p}>
           If you list a service, you are responsible for the accuracy of your listing, holding the necessary licences and insurance,
-          and complying with food safety law. Listing is offered on a subscription basis (currently £20 per month); subscription terms,
+          and complying with the law that applies to your trade. Listing is free; an optional paid subscription is available and its
+          current price is shown on the vendor dashboard and at checkout. Subscription terms,
           renewals, and cancellations are handled through your vendor dashboard. You may pause or cancel at any time; fees already
           paid are non-refundable except where required by law.
         </p>
