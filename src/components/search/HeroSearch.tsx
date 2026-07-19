@@ -4,12 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./HeroSearch.module.css";
 
-const EXAMPLES = [
-  "ceilidh band for a barn wedding near Bath, August, 80 guests",
-  "taco cart for an office summer party, 30 people, Shoreditch",
-  "grazing table for a christening, ~25, north London",
-];
-
 export default function HeroSearch() {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
@@ -22,10 +16,6 @@ export default function HeroSearch() {
     }
   }
 
-  function handleExample(ex: string) {
-    setQuery(ex);
-    router.push(`/search?q=${encodeURIComponent(ex)}`);
-  }
 
   return (
     <div>
@@ -44,21 +34,11 @@ export default function HeroSearch() {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          placeholder="pizza van for a 40th in Hackney, July, ~50 in the garden, ~£600"
+          placeholder="what do you need, where, and roughly when?"
         />
-        <button type="submit" className={styles.btn}>Find vendors</button>
+        <button type="submit" className={styles.btn}>Find someone</button>
       </form>
 
-      <div className={styles.examples}>
-        <span className={styles.exLabel}>Try</span>
-        <div className={styles.exList}>
-          {EXAMPLES.map((ex) => (
-            <button key={ex} type="button" className={styles.exLink} onClick={() => handleExample(ex)}>
-              {ex}
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

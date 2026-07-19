@@ -1,7 +1,6 @@
 import { safeJsonLd } from "@/lib/sanitize";
 import Header from "@/components/layout/Header";
 import HeroSearch from "@/components/search/HeroSearch";
-import QuickStarts from "@/components/search/QuickStarts";
 import styles from "./page.module.css";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
@@ -24,40 +23,48 @@ export default function Home() {
       <main id="main-content" className={styles.hero}>
         <span className={styles.eyebrow}>Mobile food &amp; catering</span>
         <h1 className={styles.heading}>
-          Describe the occasion. Get a shortlist.
+          Describe what you need in your own words. Get a shortlist, not a directory.
         </h1>
         <p className={styles.sub}>
-          Tell Patch what you&apos;re planning in plain words — Patch reads the detail and comes back with a short, reasoned set, not a directory.
+          Tell Patch what you&apos;re after in plain words. It reads the detail and comes back with
+          a short, reasoned set — and says why each one fits.
         </p>
         <HeroSearch />
-        <QuickStarts />
       </main>
+
+      {/* ─── TESTIMONIALS ───
+          Intentionally empty until there are real ones. A wall of invented
+          quotes is worse than no wall, and this is the first thing that should
+          go in once vendors and buyers have actually used it. */}
 
       {/* ─── HOW IT WORKS ─── */}
       <section className={styles.how}>
         <div className={styles.howInner}>
           <span className={styles.sectionEyebrow}>How it works</span>
-          <h2 className={styles.sectionH2}>Skip the spreadsheet. Just describe the event.</h2>
+          <h2 className={styles.sectionH2}>Skip the spreadsheet. Just say what you need.</h2>
           <div className={styles.steps}>
             <div className={styles.step}>
               <div className={styles.stepNum}>1</div>
-              <h3 className={styles.stepTitle}>Describe your event</h3>
+              <h3 className={styles.stepTitle}>Describe the job</h3>
               <p className={styles.stepDesc}>
-                Tell us the occasion, vibe, budget, guest count, and any dietary needs — in plain English. No filters to fiddle with.
+                Tell us what you need, when, where, and roughly what you want to spend — in plain
+                English. No filters to fiddle with.
               </p>
             </div>
             <div className={styles.step}>
               <div className={styles.stepNum}>2</div>
               <h3 className={styles.stepTitle}>Get a reasoned shortlist</h3>
               <p className={styles.stepDesc}>
-                Patch reads your brief, understands what you need, and returns a short set of vendors ranked by fit — with match notes explaining why.
+                Patch reads your brief, works out what actually matters in it, and returns a short
+                set ranked by fit — with notes explaining why each one made the list.
               </p>
             </div>
             <div className={styles.step}>
               <div className={styles.stepNum}>3</div>
               <h3 className={styles.stepTitle}>Book with confidence</h3>
               <p className={styles.stepDesc}>
-                Every vendor is reviewed by real clients. See prices, availability, and distance — then get in touch directly.
+                Every listing is reviewed by real clients. See prices, availability and distance —
+                then get in touch directly.
               </p>
             </div>
           </div>
@@ -74,9 +81,10 @@ export default function Home() {
               <svg className={styles.trustIcon} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M12 2 4 6v6c0 5 3.4 9.4 8 10 4.6-.6 8-5 8-10V6z"/>
               </svg>
-              <h3 className={styles.trustTitle}>Vetted vendors</h3>
+              <h3 className={styles.trustTitle}>Checked listings</h3>
               <p className={styles.trustDesc}>
-                Every vendor is checked — food hygiene, public liability, and real trading history.
+                Every listing is checked — the licences and insurance that matter for the work, and
+                a real trading history.
               </p>
             </div>
             <div className={styles.trustCard}>
@@ -85,7 +93,8 @@ export default function Home() {
               </svg>
               <h3 className={styles.trustTitle}>Transparent pricing</h3>
               <p className={styles.trustDesc}>
-                No hidden fees. Every listing shows starting prices, per-head costs, and minimum spends.
+                No hidden fees. Every listing shows what it starts at and what it&apos;s likely to
+                cost you.
               </p>
             </div>
             <div className={styles.trustCard}>
@@ -107,11 +116,12 @@ export default function Home() {
           <div className={styles.vendorCtaContent}>
             <span className={styles.vendorCtaEyebrow}>For vendors</span>
             <h2 className={styles.vendorCtaH2}>
-              You make the food. Let Patch fill your calendar.
+              You do the work. Let Patch fill your calendar.
             </h2>
             <p className={styles.vendorCtaDesc}>
-              No commission. No lead fees. Just £20/month to be listed, matched, and reviewed.
-              Clients come to you — pre-qualified, budget-ready, and looking for exactly what you cook.
+              No commission. No per-lead fees. List for free, and upgrade when you want to read
+              every enquiry and rank alongside paid listings. Clients come to you — already
+              describing the job, the date and the budget.
             </p>
             <a href="/for-vendors" className={styles.vendorCtaBtn}>
               List your service
