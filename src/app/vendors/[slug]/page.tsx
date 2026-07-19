@@ -282,6 +282,10 @@ export default async function VendorPage({
               {credentials.length > 0 && (
                 <>
                   <span className={styles.metaDot}>·</span>
+                  {/* A shield badge asserts something was checked. Nothing in the
+                      product verifies credentials, so vendor_tag_assignments must
+                      only ever be populated from an actual verification step —
+                      never from self-declared listing data or a seed import. */}
                   {credentials.map((ta) => {
                     const tag = ta.tags as Record<string, unknown>;
                     return (

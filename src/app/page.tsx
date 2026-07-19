@@ -74,17 +74,17 @@ export default function Home() {
       {/* ─── TRUST ─── */}
       <section className={styles.trust}>
         <div className={styles.trustInner}>
-          <span className={styles.sectionEyebrow}>Why people trust Patch</span>
-          <h2 className={styles.sectionH2}>We do the vetting so you don&apos;t have to.</h2>
+          <span className={styles.sectionEyebrow}>How Patch works with you</span>
+          <h2 className={styles.sectionH2}>You choose. We just make choosing easier.</h2>
           <div className={styles.trustGrid}>
             <div className={styles.trustCard}>
               <svg className={styles.trustIcon} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M12 2 4 6v6c0 5 3.4 9.4 8 10 4.6-.6 8-5 8-10V6z"/>
               </svg>
-              <h3 className={styles.trustTitle}>Checked listings</h3>
+              <h3 className={styles.trustTitle}>You deal direct</h3>
               <p className={styles.trustDesc}>
-                Every listing is checked — the licences and insurance that matter for the work, and
-                a real trading history.
+                No commission and no middleman. You contact whoever you like and agree terms
+                between you — Patch never takes a cut or sits in the transaction.
               </p>
             </div>
             <div className={styles.trustCard}>
@@ -93,17 +93,18 @@ export default function Home() {
               </svg>
               <h3 className={styles.trustTitle}>Transparent pricing</h3>
               <p className={styles.trustDesc}>
-                No hidden fees. Every listing shows what it starts at and what it&apos;s likely to
-                cost you.
+                Listings show what they start at, so you can rule things out before you spend an
+                hour on enquiries.
               </p>
             </div>
             <div className={styles.trustCard}>
               <svg className={styles.trustIcon} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
-              <h3 className={styles.trustTitle}>Real reviews</h3>
+              <h3 className={styles.trustTitle}>Reviews from real enquiries</h3>
               <p className={styles.trustDesc}>
-                Every review is from someone who actually booked. No anonymous ratings, no fake five-stars.
+                A review can only be left by someone who sent a real enquiry through Patch, so
+                there is a genuine job behind every one.
               </p>
             </div>
           </div>

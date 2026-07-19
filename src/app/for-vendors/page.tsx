@@ -20,7 +20,7 @@ export default function ForVendorsPage() {
           <li>Your own profile page with descriptions, pricing, signature dishes, and reviews</li>
           <li>AI-matched enquiries from clients whose event fits what you offer</li>
           <li>Availability calendar — only get enquiries for dates you&apos;re free</li>
-          <li>Verified reviews from confirmed bookings</li>
+          <li>Reviews that can only come from a real enquiry</li>
           <li>Coverage area settings — choose which areas of London you serve</li>
         </ul>
         <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 12, marginTop: 32 }}>Pricing</h2>

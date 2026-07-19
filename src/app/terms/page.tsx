@@ -40,12 +40,13 @@ export default function TermsPage() {
           directly with the vendor before paying anything.
         </p>
 
-        <h2 style={h2}>Vetting and reviews</h2>
+        <h2 style={h2}>No vetting — what you should check yourself</h2>
         <p style={p}>
-          We take reasonable steps to check vendors (such as food hygiene ratings, public liability insurance, and trading history),
-          but we cannot guarantee the quality, safety, or outcome of any individual booking. Reviews on Patch come from people who
-          booked through the platform; we do not publish anonymous or incentivised reviews.
-        </p>
+          Patch does not vet, verify, endorse or guarantee any business listed. Listing details are
+          supplied by the businesses themselves and are not independently checked. You are
+          responsible for satisfying yourself that anyone you engage holds the licences,
+          qualifications and insurance appropriate to the work, and any contract you enter is
+          between you and them.</p>
 
         <h2 style={h2}>For vendors</h2>
         <p style={p}>
