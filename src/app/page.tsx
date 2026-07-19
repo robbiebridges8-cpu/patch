@@ -23,7 +23,7 @@ export default function Home() {
       <main id="main-content" className={styles.hero}>
         <span className={styles.eyebrow}>Mobile food &amp; catering</span>
         <h1 className={styles.heading}>
-          Describe what you need in your own words. Get a shortlist, not a directory.
+          Describe what you need in your own words. Get a shortlist in seconds.
         </h1>
         <p className={styles.sub}>
           Tell Patch what you&apos;re after in plain words. It reads the detail and comes back with
