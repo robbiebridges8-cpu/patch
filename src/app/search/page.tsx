@@ -12,6 +12,7 @@ import { rateLimit, clientIp, consumeAiBudget } from "@/lib/rateLimit";
 import { captureException } from "@/lib/monitoring";
 import { quickSearch, narrateSummary, type VendorResult, type ParsedQuery } from "@/lib/ai";
 import { categoryPhoto } from "@/lib/categoryPhoto";
+import { formatLocation, formatLocationWithDistance } from "@/lib/location";
 import { supabase } from "@/lib/supabase";
 import type { MatchedTag } from "@/types/vendor";
 import Header from "@/components/layout/Header";
@@ -110,7 +111,7 @@ function resultToMatch(r: VendorResult, rank: number, parsed: ParsedQuery | null
     rank, featured: rank === 1, adjacent: false, matchReason: r.vendor_description || "",
     matchedTags: matchSignals(parsed, r),
     category: r.service_category || "Vendor",
-    distance: r.vendor_base_postcode || "",
+    distance: formatLocationWithDistance(r.vendor_area, r.vendor_base_postcode, r.distance_miles) ?? "",
     metaLine: "",
     photoUrl: photoUrl || categoryPhoto(r.service_category),
     photoCount: 0,
@@ -142,7 +143,7 @@ function rowToMatch(v: Record<string, unknown>, rank: number, note: string): Ven
     rank, featured: rank === 1, adjacent: false, matchReason: note,
     matchedTags: dietary.slice(0, 3).map((d) => ({ label: d, good: true })),
     category: (svc.category as string) || "Vendor",
-    distance: (v.base_postcode as string) || "",
+    distance: formatLocation(v.area as string | null, v.base_postcode as string | null) ?? "",
     metaLine: "",
     photoUrl: categoryPhoto(svc.category as string),
     photoCount: 0,

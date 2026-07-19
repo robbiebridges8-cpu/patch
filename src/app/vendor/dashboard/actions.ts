@@ -247,15 +247,82 @@ export async function markThreadRead(enquiryId: string): Promise<ActionState> {
   return { ok: true };
 }
 
-async function geocode(postcode: string): Promise<{ lat: number; lng: number } | null> {
-  if (!postcode) return null;
+/**
+ * Resolve whatever the vendor typed into coordinates, an outward code and an
+ * area name.
+ *
+ * The field asks for an area now ("Hackney") rather than insisting on a
+ * postcode, so a postcode-only lookup would silently leave new listings without
+ * coordinates — and a listing with no coordinates never appears in a location
+ * search. Tries, in order: full postcode, outward code, then place name.
+ */
+async function resolveLocation(
+  input: string,
+): Promise<{ lat: number; lng: number; postcode: string | null; area: string | null } | null> {
+  const raw = input.trim();
+  if (!raw) return null;
+
+  const compact = raw.replace(/\s+/g, "").toUpperCase();
+
+  // 1. Full postcode.
   try {
-    const res = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`);
+    const res = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(compact)}`);
     if (res.ok) {
-      const data = await res.json();
-      if (data.result) return { lat: data.result.latitude, lng: data.result.longitude };
+      const { result } = await res.json();
+      if (result) {
+        return {
+          lat: result.latitude,
+          lng: result.longitude,
+          postcode: result.outcode ?? null,
+          area: result.admin_district ?? null,
+        };
+      }
     }
-  } catch { /* ignore */ }
+  } catch { /* fall through */ }
+
+  // 2. Outward code on its own ("E8"). Its centroid is reverse-geocoded because
+  //    the outcode's own admin_district list is alphabetical, not by coverage —
+  //    taking the first entry gives W2 -> Ealing, which is wrong.
+  try {
+    const res = await fetch(`https://api.postcodes.io/outcodes/${encodeURIComponent(compact)}`);
+    if (res.ok) {
+      const { result } = await res.json();
+      if (result?.latitude != null) {
+        const rev = await fetch(
+          `https://api.postcodes.io/postcodes?lon=${result.longitude}&lat=${result.latitude}`,
+        );
+        const area = rev.ok ? (await rev.json()).result?.[0]?.admin_district ?? null : null;
+        return { lat: result.latitude, lng: result.longitude, postcode: result.outcode, area };
+      }
+    }
+  } catch { /* fall through */ }
+
+  // 3. Place name ("Hackney", "Peckham"). Prefer a London match, then reverse
+  //    geocode to get a canonical borough and outward code back.
+  try {
+    const res = await fetch(`https://api.postcodes.io/places?q=${encodeURIComponent(raw)}&limit=10`);
+    if (res.ok) {
+      const { result } = await res.json();
+      if (result?.length) {
+        const inLondon = result.find(
+          (p: { latitude: number; longitude: number }) =>
+            p.latitude >= 51.28 && p.latitude <= 51.7 && p.longitude >= -0.51 && p.longitude <= 0.33,
+        );
+        const best = inLondon || result[0];
+        const rev = await fetch(
+          `https://api.postcodes.io/postcodes?lon=${best.longitude}&lat=${best.latitude}`,
+        );
+        const nearest = rev.ok ? (await rev.json()).result?.[0] : null;
+        return {
+          lat: best.latitude,
+          lng: best.longitude,
+          postcode: nearest?.outcode ?? null,
+          area: nearest?.admin_district ?? best.name_1 ?? null,
+        };
+      }
+    }
+  } catch { /* fall through */ }
+
   return null;
 }
 
@@ -270,18 +337,24 @@ export async function createListing(_prev: ActionState, formData: FormData): Pro
   const postcode = str(formData.get("postcode"), 20);
   if (!name) return { error: "Your business needs a name." };
 
-  const geo = postcode ? await geocode(postcode) : null;
+  const loc = postcode ? await resolveLocation(postcode) : null;
 
   const { data: vendorId, error } = await supabase.rpc("create_vendor_listing", {
     p_name: name,
     p_category: category,
     p_description: description,
-    p_postcode: postcode,
-    p_lat: geo?.lat ?? null,
-    p_lng: geo?.lng ?? null,
+    p_postcode: loc?.postcode ?? postcode,
+    p_lat: loc?.lat ?? null,
+    p_lng: loc?.lng ?? null,
   });
 
   if (error) return { error: error.message };
+
+  // Persist the resolved area so the listing reads "Hackney (E8)" rather than
+  // echoing back whatever the vendor typed.
+  if (typeof vendorId === "string" && loc?.area) {
+    await supabase.from("vendors").update({ area: loc.area }).eq("id", vendorId);
+  }
 
   // Embed the new listing so it's searchable the moment it's published.
   if (typeof vendorId === "string") {

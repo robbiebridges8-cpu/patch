@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { safeJsonLd } from "@/lib/sanitize";
+import { formatLocation } from "@/lib/location";
 import { cache } from "react";
 import Image from "next/image";
 import type { Metadata } from "next";
@@ -174,7 +175,7 @@ export default async function VendorPage({
     areaServed: "London",
     address: {
       "@type": "PostalAddress",
-      addressLocality: "London",
+      addressLocality: (vendor.area as string) || "London",
       postalCode: (vendor.base_postcode as string) || undefined,
       addressCountry: "GB",
     },
@@ -202,7 +203,7 @@ export default async function VendorPage({
 
   const glance: { label: string; value: string; sub?: string }[] = [];
   if (capMax) glance.push({ label: "Serves", value: capMin ? `${capMin}–${capMax}` : `up to ${capMax}`, sub: "guests" });
-  if (vendor.coverage_radius_miles) glance.push({ label: "Covers", value: `${vendor.coverage_radius_miles} mi`, sub: vendor.base_postcode as string });
+  if (vendor.coverage_radius_miles) glance.push({ label: "Covers", value: `${vendor.coverage_radius_miles} mi`, sub: formatLocation(vendor.area as string | null, vendor.base_postcode as string | null) ?? undefined });
   if (years) glance.push({ label: "Trading", value: `${years} yr${years > 1 ? "s" : ""}` });
   if (rating > 0) glance.push({ label: "Rated", value: rating.toFixed(1), sub: `${reviewCount} review${reviewCount !== 1 ? "s" : ""}` });
 
@@ -271,7 +272,7 @@ export default async function VendorPage({
             <h1 className={styles.name}>{vendor.name as string}</h1>
 
             <div className={styles.meta}>
-              <span>{vendor.base_postcode as string}</span>
+              <span>{formatLocation(vendor.area as string | null, vendor.base_postcode as string | null)}</span>
               {vendor.coverage_radius_miles && (
                 <>
                   <span className={styles.metaDot}>·</span>
@@ -489,7 +490,7 @@ export default async function VendorPage({
             {vendor.base_postcode && (
               <div className={styles.sideDetail}>
                 <span className={styles.sideDetailLabel}>Based in</span>
-                <span className={styles.sideDetailValue}>{vendor.base_postcode as string}</span>
+                <span className={styles.sideDetailValue}>{formatLocation(vendor.area as string | null, vendor.base_postcode as string | null)}</span>
               </div>
             )}
             <div className={styles.sideDetail}>

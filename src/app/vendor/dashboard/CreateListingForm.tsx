@@ -49,8 +49,8 @@ export default function CreateListingForm() {
         </div>
 
         <div className={styles.field}>
-          <label className={styles.labelText} htmlFor="postcode">Base postcode <span className={styles.hint}>(so we can match you to nearby events)</span></label>
-          <input id="postcode" name="postcode" maxLength={20} className={styles.input} placeholder="e.g. E8 3RL" />
+          <label className={styles.labelText} htmlFor="postcode">Where you're based <span className={styles.hint}>(so we can match you to nearby events)</span></label>
+          <input id="postcode" name="postcode" maxLength={60} className={styles.input} placeholder="e.g. Hackney, or E8 3RL" />
         </div>
 
         {state?.error && <div className={`${styles.notice} ${styles.noticeErr}`}>{state.error}</div>}

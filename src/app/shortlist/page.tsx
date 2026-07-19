@@ -145,8 +145,8 @@ export default function ShortlistPage() {
                 <input name="guests" type="number" min={1} max={100000} className={styles.input} inputMode="numeric" />
               </label>
               <label className={styles.field}>
-                <span className={styles.labelText}>Event postcode</span>
-                <input name="postcode" maxLength={10} className={styles.input} placeholder="e.g. E8 3RL" />
+                <span className={styles.labelText}>Event area</span>
+                <input name="postcode" maxLength={60} className={styles.input} placeholder="e.g. Hackney, or E8" />
               </label>
             </div>
             <label className={styles.field}>

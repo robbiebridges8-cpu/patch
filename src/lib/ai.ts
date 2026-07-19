@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { supabase } from "./supabase";
+import { formatLocation } from "./location";
 
 const anthropic = new Anthropic();
 
@@ -119,6 +120,7 @@ export interface VendorResult {
   vendor_description: string | null;
   vendor_bio: string | null;
   vendor_base_postcode: string | null;
+  vendor_area: string | null;
   vendor_price_from: number | null;
   vendor_price_notes: string | null;
   vendor_rating_avg: number | null;
@@ -457,7 +459,7 @@ async function fallbackSearch(parsed: ParsedQuery, limit: number = SEARCH_LIMIT)
     .from("vendor_services")
     .select(`
       id, title, category, attributes,
-      vendors!inner ( id, slug, name, description, bio, base_postcode,
+      vendors!inner ( id, slug, name, description, bio, base_postcode, area,
         price_from, price_notes, rating_avg, review_count,
         coverage_radius_miles, status )
     `)
@@ -487,6 +489,7 @@ async function fallbackSearch(parsed: ParsedQuery, limit: number = SEARCH_LIMIT)
       vendor_id: vid, vendor_slug: v.slug as string, vendor_name: v.name as string,
       vendor_description: v.description as string | null, vendor_bio: v.bio as string | null,
       vendor_base_postcode: v.base_postcode as string | null,
+      vendor_area: v.area as string | null,
       vendor_price_from: v.price_from as number | null, vendor_price_notes: v.price_notes as string | null,
       vendor_rating_avg: v.rating_avg as number | null, vendor_review_count: v.review_count as number,
       vendor_coverage_radius_miles: v.coverage_radius_miles as number,
@@ -526,7 +529,7 @@ async function narrateResults(
       const parts = [
         `${i + 1}. [${r.vendor_id}] ${r.vendor_name}`,
         r.service_category ? `Category: ${r.service_category}` : null,
-        r.vendor_base_postcode ? `Location: ${r.vendor_base_postcode}` : null,
+        formatLocation(r.vendor_area, r.vendor_base_postcode) ? `Location: ${formatLocation(r.vendor_area, r.vendor_base_postcode)}` : null,
         r.distance_miles != null ? `${r.distance_miles} miles away` : null,
         r.vendor_price_from ? `From £${r.vendor_price_from}` : null,
         r.vendor_price_notes || null,
@@ -686,7 +689,7 @@ export async function narrateSummary(
     const parts = [
       `${i + 1}. ${r.vendor_name}`,
       r.service_category ? `(${r.service_category})` : null,
-      r.vendor_base_postcode || null,
+      formatLocation(r.vendor_area, r.vendor_base_postcode),
       r.distance_miles != null ? `${r.distance_miles.toFixed(1)} mi` : null,
       r.vendor_price_from ? `from £${r.vendor_price_from}` : null,
       describeAttributes(r.service_attributes),
