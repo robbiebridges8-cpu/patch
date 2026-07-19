@@ -18,6 +18,7 @@ import { type ThreadMessage } from "./MessageThread";
 import BillingCard from "./BillingCard";
 import AnalyticsCard, { type Analytics } from "./AnalyticsCard";
 import CompletenessCard from "./CompletenessCard";
+import NotificationsCard from "./NotificationsCard";
 import { assessListing } from "@/lib/completeness";
 import { canAccess, TIER, FREE_PHOTO_LIMIT } from "@/lib/tiers";
 import { signOut } from "./actions";
@@ -204,6 +205,13 @@ export default async function VendorDashboard({
                 hasAvailability: ((blocked as unknown[]) || []).length > 0,
               })}
               previewHref={`/vendors/${vendor.slug as string}?preview=1`}
+            />
+
+            {/* Notifications are the reason the vendor side is installable, so
+                this is available on every tier — the paid feature is the
+                *instant* alert, not the ability to be notified at all. */}
+            <NotificationsCard
+              vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null}
             />
 
             {canAccess(vendor.tier as number, "analytics") && (

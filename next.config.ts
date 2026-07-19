@@ -29,6 +29,8 @@ const SUPABASE_HOST = "https://mddxsyhjmglisugrshkb.supabase.co";
 
 const csp = [
   "default-src 'self'",
+  "worker-src 'self'",
+  "manifest-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://images.unsplash.com " + SUPABASE_HOST,
@@ -60,7 +62,19 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      {
+        // The worker file sits at the root but must control /vendor/ only.
+        // Without this header the browser refuses a scope above the file's own
+        // directory, and registration fails silently.
+        source: "/vendor-sw.js",
+        headers: [
+          { key: "Service-Worker-Allowed", value: "/vendor/" },
+          { key: "Cache-Control", value: "no-cache" },
+        ],
+      },
+    ];
   },
   images: {
     remotePatterns: [

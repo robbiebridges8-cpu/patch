@@ -2,6 +2,8 @@ import { supabase } from "@/lib/supabase";
 import { sendVendorEnquiryEmail, sendLockedEnquiryEmail } from "@/lib/email";
 import { rateLimit, clientIp } from "@/lib/rateLimit";
 import { canAccess } from "@/lib/tiers";
+import { sendPush, pushConfigured } from "@/lib/push";
+import { createServiceClient } from "@/lib/supabase/service";
 import { captureException } from "@/lib/monitoring";
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -105,6 +107,58 @@ export async function POST(request: Request) {
     })),
   );
   if (eventErr) console.error("[enquiry] contact_event insert failed:", eventErr.message);
+
+  // Push the vendors who've installed the control panel. Best-effort and
+  // strictly additive: the enquiry is already stored and the email still goes,
+  // so a failure here costs a notification, not a lead.
+  //
+  // Reading push credentials needs the service role — they're secrets, and RLS
+  // deliberately gives anon no access. Without that key this no-ops, exactly
+  // like email does without RESEND_API_KEY.
+  if (pushConfigured()) {
+    const svc = createServiceClient();
+    if (svc) {
+      const { data: subs } = await svc
+        .from("push_subscriptions")
+        .select("id, vendor_id, endpoint, p256dh, auth")
+        .in("vendor_id", vendors.map((v) => v.id));
+
+      if (subs?.length) {
+        const byVendor = new Map<string, typeof subs>();
+        for (const sub of subs) {
+          const list = byVendor.get(sub.vendor_id) ?? [];
+          list.push(sub);
+          byVendor.set(sub.vendor_id, list);
+        }
+
+        const expired: string[] = [];
+        await Promise.all(
+          vendors.map(async (v) => {
+            const targets = byVendor.get(v.id as string);
+            if (!targets?.length) return;
+            // Free listings get told a lead exists, not who sent it — the same
+            // line the locked inbox draws.
+            const unlocked = canAccess(v.tier as number, "unlock_leads");
+            const result = await sendPush(targets, {
+              title: "New enquiry on Patch",
+              body: unlocked
+                ? `${name} — ${eventDate ? `${eventDate}, ` : ""}${postcode || "no area given"}`
+                : "Someone wants to hire you. Open Patch to see who.",
+              url: "/vendor/dashboard",
+              tag: `lead-${v.id}`,
+            });
+            expired.push(...result.expired);
+          }),
+        );
+
+        // Drop dead endpoints so a vendor who reinstalls doesn't accumulate
+        // stale subscriptions that fail on every future send.
+        if (expired.length) {
+          await svc.from("push_subscriptions").delete().in("id", expired);
+        }
+      }
+    }
+  }
 
   // Best-effort email to each vendor (no-ops without RESEND_API_KEY).
   //
