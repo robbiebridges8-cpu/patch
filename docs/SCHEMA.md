@@ -25,10 +25,10 @@ refactor dropped 6 tables, 15 columns, and 4 orphaned enum types.
 | `faq` (jsonb), `signature_items` (jsonb) | Profile content; signatures also feed the embedding. |
 | `attributes` (jsonb) | **The vertical-agnostic bag.** Dietary, capacity, certifications, `vibe`, `good_for` — anything trade-specific. Folded into the embedding; UI-set values are exact filters. |
 | `rating_avg`, `review_count` | Denormalised from `reviews` by trigger. |
-| `primary_category` | Display + SEO label only — **never an AI hard filter**. |
+| `primary_category` | The business's headline category for display + SEO — **never an AI hard filter**. Mirrors `vendor_services.category` today (1:1), but they're distinct concepts: in the 1:many future a vendor offering several service categories still has one primary label. The editor writes both in sync. |
 | `years_active` | "Trading 4 yrs" trust signal. |
 
-### `vendor_services` — what a vendor offers (13 cols, 500 rows)
+### `vendor_services` — what a vendor offers (12 cols, 500 rows)
 Search reads **this** table, not `vendors`. 1:1 today, modelled 1:many.
 
 | Column | Why |
@@ -38,7 +38,8 @@ Search reads **this** table, not `vendors`. 1:1 today, modelled 1:many.
 | `category` | Exact-match category filter (UI-set only). |
 | `attributes` (jsonb) | **Single source of truth for capacity, dietary, etc.** |
 | `embedding` (vector 1024) | Voyage voyage-3 vector, HNSW-indexed — what semantic search matches. |
-| `price_from`, `price_to`, `price_notes`, `position` | **Where price lives.** `price_from` is the budget hard filter and the "from £X" shown everywhere; `price_to` the top of a range; `price_notes` the free-text caveat ("£14/head, min spend £600"). A vendor with two services can price them differently — the reason price is here, not on the business. `position` orders the list. |
+| `price_from`, `price_notes`, `position` | **Where price lives.** `price_from` is the budget hard filter and the "from £X" shown everywhere; `price_notes` the free-text caveat ("£14/head, min spend £600"). A vendor with two services can price them differently — the reason price is here, not on the business. `position` orders the list. |
+| `attributes` **key ownership** | `dietary`, `capacity_min/max`, `setting` and the free-form extras live **here** (search reads this bag). `vibe` / `good_for` live on `vendors.attributes`. Reads (profile + embedding) merge both bags, so each key has exactly one home — the editor never double-writes. |
 
 ### `enquiries` — a buyer contacting a vendor (17 cols)
 Created anonymously; no account needed to send.
@@ -61,8 +62,11 @@ via a definer function.
 
 ### `reviews` — post-enquiry ratings (14 cols, 185 rows)
 `vendor_id`, `rating` (1–5), `title`, `body`, `event_date`, `details` (jsonb).
-`enquiry_id` FK is the integrity anchor — a review can only come from a real
-enquiry. `verified` = enquiry reached `booked`. `hidden` = admin-moderated
+`enquiry_id` FK is the integrity anchor — `submit_review` only writes a review
+for a real enquiry, and it now rejects reviewing a listing you own. `ON DELETE
+RESTRICT` stops a deleted enquiry orphaning its review. (The 185 synthetic seed
+reviews predate the anchor and carry a null `enquiry_id`; real user reviews are
+always anchored.) `verified` = enquiry reached `booked`. `hidden` = admin-moderated
 (drops out of `rating_avg` via trigger). `author_id` = logged-in reviewer.
 
 ### `subscriptions` — vendor billing (14 cols)

@@ -53,11 +53,6 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
     }
   }
 
-  const attributes: Record<string, unknown> = { ...extraAttrs };
-  if (dietary.length) attributes.dietary = dietary;
-  if (vibe.length) attributes.vibe = vibe;
-  if (capMin != null) attributes.capacity_min = capMin;
-  if (capMax != null) attributes.capacity_max = capMax;
   const coverage = num(formData.get("coverage_radius_miles"));
   const sigRaw = str(formData.get("signature_items"), 1000);
   const signature = sigRaw ? sigRaw.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 10) : [];
@@ -76,11 +71,33 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
 
   const { data: before } = await supabase
     .from("vendors")
-    .select("name, primary_category, description, bio, attributes, signature_items")
+    .select("name, primary_category, description, bio, attributes, signature_items, vendor_services ( id, attributes )")
     .eq("id", id)
     .eq("owner_id", user.id)
     .maybeSingle();
   if (!before) return { error: "We couldn't find your listing." };
+
+  const svcRow = ((before.vendor_services as { id: string; attributes: Record<string, unknown> | null }[] | null) ?? [])[0];
+
+  // Attributes live in two bags that reads (profile + embedding) MERGE, so each
+  // key must have a single home — otherwise the editor double-writes and, worse,
+  // overwriting a whole bag drops keys the form doesn't manage (good_for feeds
+  // the embedding; setting is service-level). Merge into each existing bag and
+  // keep dietary/capacity/extras on the service, brand vibe on the vendor.
+  const prevVendorAttrs = (before.attributes as Record<string, unknown>) ?? {};
+  const prevSvcAttrs = svcRow?.attributes ?? {};
+
+  const vendorAttributes: Record<string, unknown> = { ...prevVendorAttrs };
+  if (vibe.length) vendorAttributes.vibe = vibe; else delete vendorAttributes.vibe;
+  // Service-level keys must not linger on the vendor bag (they'd double up on read).
+  delete vendorAttributes.dietary;
+  delete vendorAttributes.capacity_min;
+  delete vendorAttributes.capacity_max;
+
+  const serviceAttributes: Record<string, unknown> = { ...prevSvcAttrs, ...extraAttrs };
+  if (dietary.length) serviceAttributes.dietary = dietary; else delete serviceAttributes.dietary;
+  if (capMin != null) serviceAttributes.capacity_min = capMin; else delete serviceAttributes.capacity_min;
+  if (capMax != null) serviceAttributes.capacity_max = capMax; else delete serviceAttributes.capacity_max;
 
   const { error } = await supabase
     .from("vendors")
@@ -94,7 +111,7 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
       website: str(formData.get("website"), 500),
       instagram: str(formData.get("instagram"), 100),
       coverage_radius_miles: coverage ?? 5,
-      attributes,
+      attributes: vendorAttributes,
       signature_items: signature,
       faq: faq.length ? faq : null,
     })
@@ -103,27 +120,31 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
 
   if (error) return { error: error.message };
 
-  // Keep the service row (what search reads) in sync with the listing. Price
-  // lives here now, not on the vendor.
-  await supabase
-    .from("vendor_services")
-    .update({
-      title: name,
-      description,
-      category,
-      attributes,
-      price_from: num(formData.get("price_from")),
-      price_notes: str(formData.get("price_notes"), 500),
-    })
-    .eq("vendor_id", id);
+  // Keep the service row (what search reads) in sync. Scope to the vendor's own
+  // service by id — .eq(vendor_id) would clobber every service a vendor lists.
+  if (svcRow?.id) {
+    await supabase
+      .from("vendor_services")
+      .update({
+        title: name,
+        description,
+        category,
+        attributes: serviceAttributes,
+        price_from: num(formData.get("price_from")),
+        price_notes: str(formData.get("price_notes"), 500),
+      })
+      .eq("id", svcRow.id);
+  }
 
-  // Re-embed only when the searchable text actually changed (best-effort).
+  // Re-embed only when the searchable text actually changed (best-effort). The
+  // embedding merges both attribute bags, so compare both.
   const changed =
     before.name !== name ||
     before.primary_category !== category ||
     before.description !== description ||
     before.bio !== bio ||
-    JSON.stringify(before.attributes ?? {}) !== JSON.stringify(attributes) ||
+    JSON.stringify(prevVendorAttrs) !== JSON.stringify(vendorAttributes) ||
+    JSON.stringify(prevSvcAttrs) !== JSON.stringify(serviceAttributes) ||
     !sameArr(
       (Array.isArray(before.signature_items) ? before.signature_items : []).map(String),
       signature,

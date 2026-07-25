@@ -30,7 +30,7 @@ const getVendor = cache(async function getVendor(slug: string) {
     .from("vendors")
     .select(`
       *,
-      vendor_services ( id, category, attributes, title, description, price_from, price_to, position ),
+      vendor_services ( id, category, attributes, title, description, price_from, position ),
       vendor_photos ( id, url, alt_text, position ),
       reviews ( id, rating, title, body, event_date, details, verified, created_at )
     `)
@@ -56,7 +56,7 @@ async function getOwnPreview(slug: string) {
     .from("vendors")
     .select(`
       *,
-      vendor_services ( id, category, attributes, title, description, price_from, price_to, position ),
+      vendor_services ( id, category, attributes, title, description, price_from, position ),
       vendor_photos ( id, url, alt_text, position ),
       reviews ( id, rating, title, body, event_date, details, verified, created_at )
     `)
@@ -121,10 +121,12 @@ export default async function VendorPage({
   const services = ((vendor.vendor_services as Record<string, unknown>[]) || [])
     .sort((a, b) => (a.position as number) - (b.position as number));
   // Price lives on the service now — the sidebar "from" is the cheapest service.
-  const priceFrom = services
-    .map((s) => s.price_from as number | null)
-    .filter((p): p is number => p != null)
-    .sort((a, b) => a - b)[0] ?? null;
+  // Track the whole service so the caption names the one the price came from
+  // (not just services[0], which need not be the cheapest).
+  const cheapestService = services
+    .filter((s) => (s.price_from as number | null) != null)
+    .sort((a, b) => (a.price_from as number) - (b.price_from as number))[0] ?? null;
+  const priceFrom = (cheapestService?.price_from as number | null) ?? null;
   const reviews = ((vendor.reviews as Record<string, unknown>[]) || [])
     .sort((a, b) => new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime());
 
@@ -356,9 +358,7 @@ export default async function VendorPage({
                   <div className={styles.serviceHeader}>
                     <div className={styles.serviceTitle}>{s.title as string}</div>
                     {(s.price_from as number | null) != null && (
-                      <div className={styles.servicePrice}>
-                        £{s.price_from as number}{(s.price_to as number | null) != null ? `–£${s.price_to}` : "+"}
-                      </div>
+                      <div className={styles.servicePrice}>from £{s.price_from as number}</div>
                     )}
                   </div>
                   {(s.description as string | null) && (
@@ -436,7 +436,7 @@ export default async function VendorPage({
               <div className={styles.sidePrice}>From</div>
               <div className={styles.sidePriceAmount}>£{priceFrom}</div>
               <div className={styles.sidePriceUnit}>
-                {services.length > 0 ? (services[0].title as string) : ""}
+                {(cheapestService?.title as string) ?? ""}
               </div>
             </>
           )}
