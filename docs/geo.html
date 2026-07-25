@@ -1,0 +1,172 @@
+<title>Patch — GEO Readiness</title>
+<style>
+  :root {
+    --bg: #f6f3ee; --panel: #fffdfa; --panel-2: #efe9e0; --line: #e3ddd2;
+    --ink: #201c18; --ink-2: #6b635a; --ink-3: #948b7e;
+    --accent: #e8563f; --accent-soft: #fbe8e4;
+    --live: #2f9e63; --live-bg: #e6f4ec;
+    --partial: #b6812a; --partial-bg: #f7eed9;
+    --next: #55606f; --next-bg: #eceef1;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --shadow: 0 1px 2px rgba(40,30,20,.05), 0 8px 26px rgba(40,30,20,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16140f; --panel: #201d17; --panel-2: #2a261e; --line: #35302a;
+      --ink: #f3eee4; --ink-2: #b2a897; --ink-3: #847b6d;
+      --accent: #ff7a63; --accent-soft: #3a221c;
+      --live: #5fce92; --live-bg: #172e20; --partial: #e6b45c; --partial-bg: #33280f;
+      --next: #9aa3b0; --next-bg: #24282e;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f3ee; --panel: #fffdfa; --panel-2: #efe9e0; --line: #e3ddd2;
+    --ink: #201c18; --ink-2: #6b635a; --ink-3: #948b7e; --accent: #e8563f;
+    --live: #2f9e63; --live-bg: #e6f4ec; --partial: #b6812a; --partial-bg: #f7eed9;
+    --next: #55606f; --next-bg: #eceef1;
+  }
+  :root[data-theme="dark"] {
+    --bg: #16140f; --panel: #201d17; --panel-2: #2a261e; --line: #35302a;
+    --ink: #f3eee4; --ink-2: #b2a897; --ink-3: #847b6d; --accent: #ff7a63;
+    --live: #5fce92; --live-bg: #172e20; --partial: #e6b45c; --partial-bg: #33280f;
+    --next: #9aa3b0; --next-bg: #24282e;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 940px; margin: 0 auto; padding: clamp(22px,4vw,56px) clamp(16px,4vw,40px) 90px; }
+
+  header.top { border-bottom: 1px solid var(--line); padding-bottom: 26px; margin-bottom: 28px; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); margin: 0 0 12px; }
+  h1 { font-size: clamp(30px,5.5vw,50px); line-height: 1.03; letter-spacing: -.025em; margin: 0 0 14px; font-weight: 700; text-wrap: balance; }
+  h1 .sub { display: block; font-size: clamp(15px,2.4vw,20px); font-weight: 500; color: var(--ink-2); letter-spacing: -.01em; margin-top: 8px; }
+  .lede { color: var(--ink-2); max-width: 70ch; margin: 0; font-size: 16px; }
+  .lede b { color: var(--ink); font-weight: 600; }
+
+  .score { display: flex; gap: 12px; flex-wrap: wrap; margin: 26px 0 6px; }
+  .scorecard { flex: 1; min-width: 150px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .scorecard b { display: block; font-size: 30px; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .scorecard.live b { color: var(--live); } .scorecard.partial b { color: var(--partial); } .scorecard.next b { color: var(--next); }
+  .scorecard span { font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .05em; }
+
+  section.block { margin-top: 40px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-2); margin: 0 0 16px; display: flex; align-items: baseline; gap: 10px; }
+  h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  .row { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin-bottom: 12px; box-shadow: var(--shadow); }
+  .row-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .row-head h3 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: -.01em; }
+  .pill { font-family: var(--mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 3px 9px; border-radius: 6px; white-space: nowrap; }
+  .p-live { color: var(--live); background: var(--live-bg); } .p-partial { color: var(--partial); background: var(--partial-bg); } .p-next { color: var(--next); background: var(--next-bg); }
+  .row p { margin: 0; color: var(--ink-2); font-size: 14.5px; }
+  .row p + p { margin-top: 7px; }
+  .row .did { color: var(--ink); }
+  .row .did b { font-weight: 640; }
+  .row code { font-family: var(--mono); font-size: 12px; background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
+
+  .why { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius: 14px; padding: 18px 20px; margin-top: 26px; }
+  .why p { margin: 0; font-size: 15px; color: var(--ink); }
+  .why b { color: var(--accent); }
+
+  footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 12.5px; }
+  footer code { font-family: var(--mono); }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">Patch · Generative Engine Optimization · 25 Jul 2026</p>
+    <h1>GEO readiness<span class="sub">Being the source AI answer engines cite — not just a page Google ranks.</span></h1>
+    <p class="lede">Patch's whole pitch is "describe a job, get a reasoned shortlist." So the strategic prize isn't a blue link on page one — it's being <b>the answer</b> when someone asks ChatGPT, Perplexity, Gemini or Claude for "the best pizza caterer in Hackney." This is where that stands after this pass.</p>
+    <div class="score">
+      <div class="scorecard live"><b>8</b><span>Live</span></div>
+      <div class="scorecard partial"><b>1</b><span>Partial</span></div>
+      <div class="scorecard next"><b>3</b><span>Next</span></div>
+    </div>
+    <div class="why">
+      <p><b>Why GEO ≠ SEO here.</b> AI crawlers often don't run JavaScript, cite <em>structured facts</em> over prose, resolve the <em>entity</em> before quoting it, and lift <em>answer-shaped</em> pages wholesale. Patch was already strong on the first (everything is server-rendered) and weak on the rest. This pass closed most of the gap.</p>
+    </div>
+  </header>
+
+  <section class="block">
+    <h2>Foundations — Live</h2>
+
+    <div class="row">
+      <div class="row-head"><h3>Server-rendered content</h3><span class="pill p-live">Live · was already</span></div>
+      <p>Every content page (home, about, for-vendors, profiles, the new service pages) is a server component. AI crawlers that never execute JS still get the full content — the fundamental most JS sites fail.</p>
+    </div>
+
+    <div class="row">
+      <div class="row-head"><h3>Explicit AI-crawler welcome</h3><span class="pill p-live">Live</span></div>
+      <p class="did"><b>Did:</b> <code>robots.ts</code> now names GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot, Google-Extended, Applebot-Extended, CCBot &amp; more with an explicit <code>Allow</code> — intent stated, not left to a wildcard, and guarded against an accidental future block.</p>
+    </div>
+
+    <div class="row">
+      <div class="row-head"><h3><code>/llms.txt</code></h3><span class="pill p-live">Live</span></div>
+      <p class="did"><b>Did:</b> Added the curated map + canonical facts LLMs read first — what Patch is, how it matches, coverage, the free/no-vet truth, and the Patch.com disambiguation. Table stakes for an AI-native product; most sites don't have it.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Machine legibility — Live</h2>
+
+    <div class="row">
+      <div class="row-head"><h3>Entity disambiguation (the "Patch" problem)</h3><span class="pill p-live">Live</span></div>
+      <p>"Patch" collides with <b>Patch.com</b> (US hyperlocal news) — an AI resolving the wrong entity won't cite you. </p>
+      <p class="did"><b>Did:</b> Organization schema now carries <code>alternateName</code> ("Patch London/UK"), a <code>disambiguatingDescription</code> that explicitly separates it from Patch.com, <code>knowsAbout</code> and a UK-scoped <code>areaServed</code> — on the homepage, <code>/about</code> and <code>/llms.txt</code>.</p>
+    </div>
+
+    <div class="row">
+      <div class="row-head"><h3>Structured data across the site</h3><span class="pill p-live">Live</span></div>
+      <p class="did"><b>Did:</b> Organization + WebSite/SearchAction + FAQPage on the homepage; AboutPage→Organization on <code>/about</code>; WebPage→Service on <code>/for-vendors</code>; per-vendor LocalBusiness + Offer + FAQPage + AggregateRating + BreadcrumbList; ItemList + BreadcrumbList + FAQPage on every service page.</p>
+    </div>
+
+    <div class="row">
+      <div class="row-head"><h3>Citable facts &amp; freshness</h3><span class="pill p-live">Live</span></div>
+      <p class="did"><b>Did:</b> The homepage states a real, current figure — "<b>N+ vendors across M London areas</b>" from a live count, revalidated hourly. Specific, dated numbers are what engines quote.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Answer-shaped content — Live &amp; Next</h2>
+
+    <div class="row">
+      <div class="row-head"><h3>Location × category landing pages</h3><span class="pill p-live">Live · the big one</span></div>
+      <p>"[service] in [area]" is exactly what people ask an AI — and the answer is a page that <em>is</em> that answer.</p>
+      <p class="did"><b>Did:</b> <code>/services/[category]/[location]</code> — 28 categories × 22 London areas = <b>616 pages</b> over existing PostGIS data, each with a ranked vendor list (ItemList), a from-price, an FAQ, cross-links, and a breadcrumb. A <code>/services</code> hub links them, which also fixes the orphaned-profile problem (hub → area page → profile) and puts 600+ URLs in the sitemap.</p>
+    </div>
+
+    <div class="row">
+      <div class="row-head"><h3>Site-level FAQ</h3><span class="pill p-live">Live</span></div>
+      <p class="did"><b>Did:</b> "What is Patch / is it free / how does it match / does it vet / what's covered" — rendered visibly and as FAQPage. These are the literal questions typed into assistants.</p>
+    </div>
+
+    <div class="row">
+      <div class="row-head"><h3>Publish the AI reasoning</h3><span class="pill p-partial">Partial</span></div>
+      <p>Patch generates exactly the comparative prose engines love — "I'd lean X for a wedding because…" — but it lives behind a <code>noindex</code>, per-request <code>/search</code> and evaporates. The new service pages capture some of this as durable content; turning curated shortlists / occasion pages into crawlable, citable prose is the rest.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Next — highest leverage remaining</h2>
+
+    <div class="row">
+      <div class="row-head"><h3>Expand the location/category matrix</h3><span class="pill p-next">Next</span></div>
+      <p>616 pages ship now. As inventory grows (more areas, non-food verticals), widen the curated area + category lists and split the sitemap into an index past 45k URLs. Programmatic scale is the compounding organic + citation engine.</p>
+    </div>
+
+    <div class="row">
+      <div class="row-head"><h3>Editorial "best of" lists</h3><span class="pill p-next">Next</span></div>
+      <p>AI answers lean on ranked list content ("top mobile pizza caterers in East London"). Programmatic once the data density is there; a strong, quotable format.</p>
+    </div>
+
+    <div class="row">
+      <div class="row-head"><h3>Real <code>sameAs</code> + off-site presence</h3><span class="pill p-next">Next</span></div>
+      <p>The strongest entity signal is corroboration: verified social profiles, a Crunchbase/Companies-House entry, a Wikidata item — linked via <code>sameAs</code>. Left out here rather than fabricated; add once the real URLs exist.</p>
+    </div>
+  </section>
+
+  <footer>
+    Shipped this pass in commits <code>179bbc6</code> &amp; <code>84304ab</code> — clean build, 86 unit tests, 18-test e2e green, 638 pages prerendered. Server-rendered structured content, an explicit AI-crawler policy, entity disambiguation, and 616 answer-shaped pages are the difference between being crawlable and being <em>cited</em>.
+  </footer>
+</div>
