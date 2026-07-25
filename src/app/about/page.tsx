@@ -1,4 +1,7 @@
 import Header from "@/components/layout/Header";
+import { safeJsonLd } from "@/lib/sanitize";
+
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
 
 export const metadata = {
   title: "About",
@@ -6,9 +9,27 @@ export const metadata = {
   alternates: { canonical: "/about" },
 };
 
+// AboutPage → Organization so the canonical "what is Patch" answer is machine-
+// readable and entity-disambiguated wherever an engine quotes this page.
+const aboutJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  url: `${SITE}/about`,
+  mainEntity: {
+    "@type": "Organization",
+    name: "Patch",
+    alternateName: ["Patch London", "Patch UK"],
+    url: SITE,
+    description: "AI-native marketplace for hiring local services in London. Describe a job in plain words and get a short, AI-reasoned shortlist of vendors that fit.",
+    disambiguatingDescription: "The UK London services marketplace at patch.london. Not affiliated with Patch.com, the US local-news network.",
+    areaServed: { "@type": "City", name: "London" },
+  },
+};
+
 export default function AboutPage() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(aboutJsonLd) }} />
       <Header />
       <main id="main-content" style={{ maxWidth: 720, margin: "0 auto", padding: "64px 32px" }}>
         <h1 style={{ fontSize: 32, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 24, letterSpacing: "-0.02em" }}>About Patch</h1>

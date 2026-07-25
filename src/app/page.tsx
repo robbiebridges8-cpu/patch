@@ -1,9 +1,39 @@
 import { safeJsonLd } from "@/lib/sanitize";
 import Header from "@/components/layout/Header";
 import HeroSearch from "@/components/search/HeroSearch";
+import { supabase } from "@/lib/supabase";
 import styles from "./page.module.css";
 
+// Live stats keep the citable numbers accurate for both readers and AI engines.
+export const revalidate = 3600;
+
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+
+// Questions people actually ask an assistant about a service like this. Rendered
+// visibly AND as FAQPage structured data — prime answer-engine citation fodder.
+const SITE_FAQ: { q: string; a: string }[] = [
+  {
+    q: "What is Patch?",
+    a: "Patch is an AI-native marketplace for hiring local services in London. You describe a job in plain words — the occasion, area, budget and guest count — and Patch returns a short, reasoned shortlist of vendors that fit, with a note on why each one made the list. It is the UK London services marketplace at patch.london, not to be confused with the US news network Patch.com.",
+  },
+  {
+    q: "Is Patch free to use?",
+    a: "Yes, for buyers Patch is free and needs no account. You describe what you need, get a shortlist, and enquire directly. Patch takes no commission and never sits in the transaction — you agree terms with the vendor yourself.",
+  },
+  {
+    q: "How does Patch match vendors?",
+    a: "Patch reads your plain-language brief with AI, works out what actually matters in it — cuisine or service type, occasion, budget, guest count, location — and runs a meaning-based search over vendor listings. It returns a ranked shortlist rather than a keyword page.",
+  },
+  {
+    q: "Does Patch vet or verify vendors?",
+    a: "No. Listings are self-declared, and Patch does not vet businesses. Reviews can only be left by someone who made a real enquiry, so ratings reflect genuine jobs — but you should always confirm any licences, insurance or certifications that matter for your booking directly with the vendor.",
+  },
+  {
+    q: "What areas and services does Patch cover?",
+    a: "Patch covers London. Mobile food and catering is the first vertical, with 500+ live vendors across more than 27 areas, and the platform is built to expand to photographers, DJs, mobile bars, cleaners and trades.",
+  },
+];
+
 // Organization + WebSite (with SearchAction) so answer engines and Google can
 // disambiguate the entity and surface the sitelinks search box.
 const orgJsonLd = {
@@ -13,10 +43,14 @@ const orgJsonLd = {
       "@type": "Organization",
       "@id": `${SITE}/#organization`,
       name: "Patch",
+      alternateName: ["Patch London", "Patch UK"],
       url: SITE,
       logo: `${SITE}/icons/vendor-512.png`,
       description: "AI-native marketplace matching Londoners with the right local services and trades — described in plain words, shortlisted and reasoned by AI.",
-      areaServed: "London",
+      // Explicitly distinguish from Patch.com (US hyperlocal news).
+      disambiguatingDescription: "The UK marketplace for hiring local services in London (patch.london). Not affiliated with Patch.com, the US local-news network.",
+      areaServed: { "@type": "City", name: "London", containedInPlace: { "@type": "Country", name: "United Kingdom" } },
+      knowsAbout: ["Catering", "Mobile catering", "Event services", "Local services", "Private hire", "London events"],
     },
     {
       "@type": "WebSite",
@@ -30,10 +64,27 @@ const orgJsonLd = {
         "query-input": "required name=search_term_string",
       },
     },
+    {
+      "@type": "FAQPage",
+      "@id": `${SITE}/#faq`,
+      mainEntity: SITE_FAQ.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    },
   ],
 };
 
-export default function Home() {
+export default async function Home() {
+  // Real, current figures make the on-page facts citable rather than vague.
+  const [{ count: vendorCount }, { data: areaRows }] = await Promise.all([
+    supabase.from("vendors").select("id", { count: "exact", head: true }).eq("status", "live"),
+    supabase.from("vendors").select("area").eq("status", "live").not("area", "is", null),
+  ]);
+  const areaCount = new Set((areaRows ?? []).map((r) => (r as { area: string }).area)).size;
+  const vendorsRounded = vendorCount ? Math.floor(vendorCount / 10) * 10 : 0;
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(orgJsonLd) }} />
@@ -50,6 +101,11 @@ export default function Home() {
           a short, reasoned set — and says why each one fits.
         </p>
         <HeroSearch />
+        {vendorsRounded > 0 && (
+          <p className={styles.heroStat}>
+            <strong>{vendorsRounded}+</strong> vendors across <strong>{areaCount}</strong> London areas — matched by AI, hired direct.
+          </p>
+        )}
       </main>
 
       {/* ─── TESTIMONIALS ───
@@ -151,6 +207,22 @@ export default function Home() {
               </svg>
             </a>
           </div>
+        </div>
+      </section>
+
+      {/* ─── FAQ ─── (visible + FAQPage schema above; prime answer-engine content) */}
+      <section className={styles.faq}>
+        <div className={styles.faqInner}>
+          <span className={styles.sectionEyebrow}>Questions</span>
+          <h2 className={styles.sectionH2}>How Patch works, in plain terms</h2>
+          <dl className={styles.faqList}>
+            {SITE_FAQ.map((f) => (
+              <div key={f.q} className={styles.faqItem}>
+                <dt className={styles.faqQ}>{f.q}</dt>
+                <dd className={styles.faqA}>{f.a}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 

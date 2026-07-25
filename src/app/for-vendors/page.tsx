@@ -1,9 +1,29 @@
 import Header from "@/components/layout/Header";
+import { safeJsonLd } from "@/lib/sanitize";
 import { TIER_PRICE, TIER, annualPrice } from "@/lib/tiers";
+
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
 
 // Prices come from the tier config rather than being written into the copy, so
 // the page and the checkout can never disagree — they did, at £20 vs £29.
 const PAID = TIER_PRICE[TIER.PAID];
+
+// WebPage describing the vendor-acquisition offer, machine-readable for engines
+// answering "how do I list my catering business in London".
+const forVendorsJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  url: `${SITE}/for-vendors`,
+  name: "List your service on Patch",
+  isPartOf: { "@type": "WebSite", "@id": `${SITE}/#website` },
+  about: {
+    "@type": "Service",
+    name: "Patch vendor listing",
+    provider: { "@type": "Organization", name: "Patch", url: SITE },
+    areaServed: { "@type": "City", name: "London" },
+    description: `Free listing for local-service businesses in London. No commission and no per-lead charges; an optional £${PAID}/month plan unlocks every enquiry and paid ranking.`,
+  },
+};
 
 export const metadata = {
   title: "List your service",
@@ -30,6 +50,7 @@ const body = {
 export default function ForVendorsPage() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(forVendorsJsonLd) }} />
       <Header />
       <main id="main-content" style={{ maxWidth: 720, margin: "0 auto", padding: "64px 32px" }}>
         <h1 style={{ fontSize: 32, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 24, letterSpacing: "-0.02em" }}>
