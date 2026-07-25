@@ -95,8 +95,6 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
       price_from: num(formData.get("price_from")),
       price_notes: str(formData.get("price_notes"), 500),
       coverage_radius_miles: coverage ?? 5,
-      typical_event_size_min: capMin,
-      typical_event_size_max: capMax,
       attributes,
       vibe_tags: vibe,
       signature_items: signature,

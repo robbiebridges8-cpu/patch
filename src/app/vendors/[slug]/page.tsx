@@ -155,8 +155,11 @@ export default async function VendorPage({
     .map((s) => (typeof s === "string" ? s : (s as { name?: string })?.name))
     .filter(Boolean) as string[];
   const faq = (Array.isArray(vendor.faq) ? vendor.faq : []) as { q?: string; a?: string }[];
-  const capMin = vendor.typical_event_size_min as number | null;
-  const capMax = vendor.typical_event_size_max as number | null;
+  // Capacity lives in the service's attributes (its single source of truth),
+  // not on the vendor row.
+  const svcAttrs = (services[0]?.attributes as Record<string, unknown>) ?? {};
+  const capMin = (svcAttrs.capacity_min as number | null) ?? null;
+  const capMax = (svcAttrs.capacity_max as number | null) ?? null;
   const years = vendor.years_active as number | null;
   const rating = (vendor.rating_avg as number) || 0;
   const reviewCount = (vendor.review_count as number) || 0;

@@ -24,17 +24,12 @@ export interface Vendor {
   contactPhone: string | null;
   website: string | null;
   instagram: string | null;
-  whatsapp: string | null;
   basePostcode: string | null;
   coverageRadiusMiles: number;
   priceFrom: number | null;
-  priceTo: number | null;
   priceNotes: string | null;
   bio: string | null;
   faq: Record<string, string>[] | null;
-  cancellationPolicy: string | null;
-  minLeadDays: number;
-  maxAdvanceDays: number;
   ratingAvg: number | null;
   reviewCount: number;
   createdAt: string;

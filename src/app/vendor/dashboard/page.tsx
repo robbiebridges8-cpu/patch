@@ -115,7 +115,7 @@ export default async function VendorDashboard({
 
   const { data: vendor } = await supabase
     .from("vendors")
-    .select("id, name, slug, description, bio, contact_email, contact_phone, website, instagram, price_from, price_notes, coverage_radius_miles, typical_event_size_min, typical_event_size_max, attributes, vibe_tags, signature_items, faq, status, primary_category, tier")
+    .select("id, name, slug, description, bio, contact_email, contact_phone, website, instagram, price_from, price_notes, coverage_radius_miles, attributes, vibe_tags, signature_items, faq, status, primary_category, tier")
     .eq("owner_id", user.id)
     .maybeSingle();
 
@@ -194,8 +194,7 @@ export default async function VendorDashboard({
                 bio: vendor.bio as string | null,
                 price_from: vendor.price_from as number | null,
                 contact_email: vendor.contact_email as string | null,
-                typical_event_size_min: vendor.typical_event_size_min as number | null,
-                typical_event_size_max: vendor.typical_event_size_max as number | null,
+                capacityMax: ((vendor.attributes as Record<string, unknown>)?.capacity_max as number | null) ?? null,
                 attributes: (vendor.attributes as Record<string, unknown> | null) ?? null,
                 signature_items: vendor.signature_items as string[] | null,
                 vibe_tags: vendor.vibe_tags as string[] | null,
@@ -241,8 +240,6 @@ export default async function VendorDashboard({
                   price_from: vendor.price_from as number | null,
                   price_notes: vendor.price_notes as string | null,
                   coverage_radius_miles: vendor.coverage_radius_miles as number | null,
-                  typical_event_size_min: vendor.typical_event_size_min as number | null,
-                  typical_event_size_max: vendor.typical_event_size_max as number | null,
                   attributes: (vendor.attributes as Record<string, unknown> | null) ?? null,
                   vibe_tags: vendor.vibe_tags as string[] | null,
                   signature_items: (vendor.signature_items as string[] | null) ?? null,

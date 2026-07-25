@@ -27,8 +27,6 @@ export interface EditableVendor {
   price_from: number | null;
   price_notes: string | null;
   coverage_radius_miles: number | null;
-  typical_event_size_min: number | null;
-  typical_event_size_max: number | null;
   attributes: Record<string, unknown> | null;
   vibe_tags: string[] | null;
   signature_items: string[] | null;
@@ -121,11 +119,11 @@ export default function EditListingForm({ vendor }: { vendor: EditableVendor }) 
       <div className={styles.row2}>
         <div className={styles.field}>
           <label className={styles.labelText} htmlFor="capacity_min">Serves from (guests)</label>
-          <input id="capacity_min" name="capacity_min" type="number" min={1} className={styles.input} defaultValue={vendor.typical_event_size_min ?? ""} />
+          <input id="capacity_min" name="capacity_min" type="number" min={1} className={styles.input} defaultValue={(vendor.attributes?.capacity_min as number | null) ?? ""} />
         </div>
         <div className={styles.field}>
           <label className={styles.labelText} htmlFor="capacity_max">Up to (guests)</label>
-          <input id="capacity_max" name="capacity_max" type="number" min={1} className={styles.input} defaultValue={vendor.typical_event_size_max ?? ""} />
+          <input id="capacity_max" name="capacity_max" type="number" min={1} className={styles.input} defaultValue={(vendor.attributes?.capacity_max as number | null) ?? ""} />
         </div>
       </div>
 

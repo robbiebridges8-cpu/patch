@@ -9,8 +9,7 @@ export interface CompletenessInput {
   bio?: string | null;
   price_from?: number | null;
   contact_email?: string | null;
-  typical_event_size_min?: number | null;
-  typical_event_size_max?: number | null;
+  capacityMax?: number | null;
   attributes?: Record<string, unknown> | null;
   signature_items?: string[] | null;
   vibe_tags?: string[] | null;
@@ -95,7 +94,7 @@ export function assessListing(v: CompletenessInput): Completeness {
       key: "capacity",
       label: "Typical job size",
       why: "Lets Patch rule you in for the right scale of work.",
-      done: v.typical_event_size_max != null && v.typical_event_size_max > 0,
+      done: v.capacityMax != null && v.capacityMax > 0,
       weight: 8,
       essential: false,
     },
