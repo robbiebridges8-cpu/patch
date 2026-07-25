@@ -28,7 +28,6 @@ export interface EditableVendor {
   price_notes: string | null;
   coverage_radius_miles: number | null;
   attributes: Record<string, unknown> | null;
-  vibe_tags: string[] | null;
   signature_items: string[] | null;
   faq: { q?: string; a?: string }[] | null;
 }
@@ -39,7 +38,7 @@ export default function EditListingForm({ vendor }: { vendor: EditableVendor }) 
   const diet = new Set(Array.isArray(attrs.dietary) ? (attrs.dietary as string[]) : []);
   // Everything except the keys with dedicated inputs is edited free-form, so a
   // plumber can add "gas safe: 123456" without anyone shipping a schema for it.
-  const RESERVED = new Set(["dietary", "capacity_min", "capacity_max"]);
+  const RESERVED = new Set(["dietary", "capacity_min", "capacity_max", "vibe", "good_for"]);
   const extraAttrs = Object.entries(attrs)
     .filter(([k, v]) => !RESERVED.has(k) && v != null && v !== "")
     .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`)
@@ -103,7 +102,7 @@ export default function EditListingForm({ vendor }: { vendor: EditableVendor }) 
 
       <div className={styles.field}>
         <label className={styles.labelText} htmlFor="vibe">Vibe tags <span className={styles.hint}>(comma-separated — helps AI matching)</span></label>
-        <input id="vibe" name="vibe" maxLength={500} className={styles.input} defaultValue={(vendor.vibe_tags ?? []).join(", ")} placeholder="e.g. wedding-ready, casual, interactive, instagrammable" />
+        <input id="vibe" name="vibe" maxLength={500} className={styles.input} defaultValue={(Array.isArray(vendor.attributes?.vibe) ? (vendor.attributes!.vibe as string[]) : []).join(", ")} placeholder="e.g. wedding-ready, casual, interactive, instagrammable" />
       </div>
 
       <div className={styles.field}>

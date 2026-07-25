@@ -32,9 +32,7 @@ const getVendor = cache(async function getVendor(slug: string) {
       *,
       vendor_services ( id, category, attributes, title, description, price_from, price_to, position ),
       vendor_photos ( id, url, alt_text, position ),
-      vendor_tag_assignments ( tag_id, tags ( slug, name, category ) ),
-      reviews ( id, rating, title, body, event_date, details, verified, created_at ),
-      vendor_coverage_areas ( postcode_district )
+      reviews ( id, rating, title, body, event_date, details, verified, created_at )
     `)
     .eq("slug", slug)
     .eq("status", "live")
@@ -60,9 +58,7 @@ async function getOwnPreview(slug: string) {
       *,
       vendor_services ( id, category, attributes, title, description, price_from, price_to, position ),
       vendor_photos ( id, url, alt_text, position ),
-      vendor_tag_assignments ( tag_id, tags ( slug, name, category ) ),
-      reviews ( id, rating, title, body, event_date, details, verified, created_at ),
-      vendor_coverage_areas ( postcode_district )
+      reviews ( id, rating, title, body, event_date, details, verified, created_at )
     `)
     .eq("slug", slug)
     .eq("owner_id", user.id)
@@ -124,19 +120,9 @@ export default async function VendorPage({
   const sortedPhotos = [...photos].sort((a, b) => (a.position as number) - (b.position as number));
   const services = ((vendor.vendor_services as Record<string, unknown>[]) || [])
     .sort((a, b) => (a.position as number) - (b.position as number));
-  const tagAssignments = (vendor.vendor_tag_assignments as Record<string, unknown>[]) || [];
   const reviews = ((vendor.reviews as Record<string, unknown>[]) || [])
     .sort((a, b) => new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime());
-  const coverageAreas = (vendor.vendor_coverage_areas as Record<string, unknown>[]) || [];
 
-  const credentials = tagAssignments.filter((ta) => {
-    const tag = ta.tags as Record<string, unknown>;
-    return tag.category === "credential";
-  });
-  const otherTags = tagAssignments.filter((ta) => {
-    const tag = ta.tags as Record<string, unknown>;
-    return tag.category !== "credential";
-  });
 
   const categories = [...new Set(services.map((s) => s.category as string).filter(Boolean))];
   const category = categories.slice(0, 2).join(" · ") || "Mobile catering";
@@ -282,24 +268,6 @@ export default async function VendorPage({
                   <span>Covers {vendor.coverage_radius_miles as number} miles</span>
                 </>
               )}
-              {credentials.length > 0 && (
-                <>
-                  <span className={styles.metaDot}>·</span>
-                  {/* A shield badge asserts something was checked. Nothing in the
-                      product verifies credentials, so vendor_tag_assignments must
-                      only ever be populated from an actual verification step —
-                      never from self-declared listing data or a seed import. */}
-                  {credentials.map((ta) => {
-                    const tag = ta.tags as Record<string, unknown>;
-                    return (
-                      <span key={tag.slug as string} className={styles.verified}>
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 6v6c0 5 3.4 9.4 8 10 4.6-.6 8-5 8-10V6z"/></svg>
-                        {tag.name as string}
-                      </span>
-                    );
-                  })}
-                </>
-              )}
             </div>
 
             {(vendor.rating_avg as number) > 0 && (
@@ -314,20 +282,6 @@ export default async function VendorPage({
 
             <p className={styles.desc}>{vendor.description as string}</p>
 
-            <div className={styles.tags}>
-              {credentials.map((ta) => {
-                const tag = ta.tags as Record<string, unknown>;
-                return (
-                  <span key={tag.slug as string} className={styles.tagGood}><Check />{tag.name as string}</span>
-                );
-              })}
-              {otherTags.map((ta) => {
-                const tag = ta.tags as Record<string, unknown>;
-                return (
-                  <span key={tag.slug as string} className={styles.tag}>{tag.name as string}</span>
-                );
-              })}
-            </div>
 
             <div className={styles.ctaRow}>
               <EnquiryButton
@@ -503,9 +457,7 @@ export default async function VendorPage({
             <div className={styles.sideDetail}>
               <span className={styles.sideDetailLabel}>Coverage</span>
               <span className={styles.sideDetailValue}>
-                {coverageAreas.length > 0
-                  ? coverageAreas.map((a) => a.postcode_district as string).join(", ")
-                  : `${vendor.coverage_radius_miles} miles`}
+                {`${vendor.coverage_radius_miles} miles`}
               </span>
             </div>
             <div className={styles.sideDetail}>

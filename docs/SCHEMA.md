@@ -1,163 +1,115 @@
 # Database schema
 
-*Live reference, generated from the database 2026-07-25. 19 app tables.*
+*Live reference, regenerated after the 2026-07-25 refactor. 13 app tables.*
 
-Every table has **Row Level Security on**. Convention throughout: `id` is a
-`uuid` primary key, `created_at`/`updated_at` are `timestamptz` defaulting to
-`now()`. Those three are omitted from the column tables below unless they carry
-meaning beyond the obvious.
-
-Legend: **PK** primary key · **FK** foreign key · **RLS** who can see/write it.
+Every table has **Row Level Security on**. Convention: `id` is a `uuid` PK,
+`created_at`/`updated_at` are `timestamptz` defaulting to `now()` — omitted from
+the tables below unless they carry meaning. Nothing here is dead weight; the
+refactor dropped 6 tables, 15 columns, and 4 orphaned enum types.
 
 ---
 
 ## Core domain
 
-### `vendors` — the business entity (30 cols, 500 rows)
-One row per listed business. The heart of the platform.
+### `vendors` — the business (28 cols, 500 rows)
+| Column | Why it exists |
+|---|---|
+| `slug` (unique) | URL + SEO identity. |
+| `name`, `description`, `bio` | Display copy; all feed the embedding. |
+| `status` (enum draft/live/paused/rejected) | Only `live` is public — the core RLS gate. |
+| `owner_id` (FK auth.users) | Controlling account. Null = unclaimed. |
+| `tier` (smallint) | 0 free / 1 paid. Drives ranking + the lead paywall. Integer so a 2nd tier needs no migration. |
+| `base_postcode`, `base_location` (geography), `coverage_radius_miles`, `area` | Location — the one clean hard filter (`ST_DWithin` + radius). `area` is the "Hackney (E8)" label. |
+| `price_from`, `price_notes`, `price_range` | Budget filter (`price_from`), free-text caveats, and the "££" band for JSON-LD. |
+| `contact_email`, `contact_phone`, `website`, `instagram` | Contact + outbound-click analytics targets. |
+| `faq` (jsonb), `signature_items` (jsonb) | Profile content; signatures also feed the embedding. |
+| `attributes` (jsonb) | **The vertical-agnostic bag.** Dietary, capacity, certifications, `vibe`, `good_for` — anything trade-specific. Folded into the embedding; UI-set values are exact filters. |
+| `rating_avg`, `review_count` | Denormalised from `reviews` by trigger. |
+| `primary_category` | Display + SEO label only — **never an AI hard filter**. |
+| `years_active` | "Trading 4 yrs" trust signal. |
 
-| Column | Type | Why it exists |
-|---|---|---|
-| `slug` | text, unique | URL identity (`/vendors/taco-loco`). Human-readable, SEO. |
-| `name` | text | Display name. |
-| `description` | text | One-liner shown on cards; feeds the embedding. |
-| `bio` | text | Long-form profile copy; richest embedding input. |
-| `status` | enum | `draft` / `live` / `paused` / `rejected`. Only `live` is publicly visible — the core RLS gate. |
-| `owner_id` | uuid, FK→auth.users | Which account controls this listing. Null = unclaimed (seed data, or a scraped listing awaiting its owner). |
-| `tier` | smallint | 0 free / 1 paid. Drives search ranking and the lead paywall. Integer not boolean so a 2nd paid tier needs no migration. |
-| `base_postcode` | text | Vendor's base. Stored as outward code ("E8"). |
-| `base_location` | geography(Point) | PostGIS point — **the** location filter. `ST_DWithin` against the buyer's search point. |
-| `coverage_radius_miles` | numeric | How far they travel. Second half of the location filter. |
-| `area` | text | Human borough ("Hackney") for the "Hackney (E8)" label. Backfilled from postcodes.io. |
-| `price_from` | numeric | Starting price — **the** budget filter (`price_from <= budget`, nulls pass). |
-| `price_notes` | text | Free-text pricing caveats ("per head", "min spend £300"). |
-| `contact_email` | text | Where enquiries are emailed. |
-| `contact_phone`, `website`, `instagram` | text | Contact channels; the outbound-click analytics targets. |
-| `faq` | jsonb | `[{q,a}]` shown on the profile. |
-| `attributes` | jsonb | **Vertical-agnostic bag.** Dietary, capacity, certifications — anything trade-specific. Folded into the embedding; UI-set values are exact filters. This is the schema's answer to 1,000 verticals. |
-| `rating_avg`, `review_count` | numeric/int | Denormalised from `reviews` by a trigger. Cheap sort/display without a join. |
-| `primary_category` | text | Display + SEO label only. **Never a hard filter from AI.** Fuzzy is fine. |
-| `signature_items` | jsonb | "Known for" list; embedding input + profile. |
-| `years_active` | int | "Trading 4 yrs" trust signal. |
-| `price_range` | text | "££" band for JSON-LD structured data. |
-| `vibe_tags`, `occasion_fit` | text[] | **Legacy soft fields** — feed the embedding only. Food/event-shaped; candidates to fold into `attributes`. |
-
-### `vendor_services` — what a vendor offers (13 cols, 500 rows)
-1:1 with `vendors` today, modelled 1:many for later. **Search reads this table**,
-not `vendors` — the embedding and the filterable attributes live here.
-
-| Column | Type | Why it exists |
-|---|---|---|
-| `vendor_id` | uuid, FK→vendors | Owner. |
-| `title`, `description` | text | Service-level copy; embedding input. |
-| `category` | text | The exact-match category filter (UI-set only). |
-| `attributes` | jsonb | **Capacity, dietary, etc. — the single source of truth** (the profile reads capacity from here after the July cleanup). |
-| `embedding` | vector(1024) | Voyage voyage-3 vector. HNSW-indexed. The thing semantic search actually matches on. |
-| `price_from`, `price_to` | numeric | Service-level pricing. |
-| `position` | int | Ordering when a vendor has several services. |
-| `secondary_categories` | text[] | **Unused.** Legacy; safe to drop. |
-
-### `enquiries` — a buyer contacting a vendor (20 cols, ~live)
-The conversion event. Created anonymously — no buyer account needed.
-
-| Column | Type | Why it exists |
-|---|---|---|
-| `vendor_id` | uuid, FK | Who was contacted. |
-| `status` | enum | `sent`/`viewed`/`replied`/`booked`/`declined`/`expired`. `booked` is the self-reported outcome — the closest thing to ROI data. |
-| `parent_name` / `parent_email` / `parent_phone` | text | **Buyer** contact. The "parent" naming is kids-party legacy — it means the buyer. Worth renaming. |
-| `event_date` | date | When they need it. Powers the availability signal. |
-| `postcode` | text | Where the job is. |
-| `budget` | numeric | Their stated budget. |
-| `message` | text | The brief. |
-| `details` | jsonb | Vertical-specific extras (guest count, etc.) — the vertical-agnostic pattern applied to enquiries. |
-| `vendor_response`, `responded_at` | text/ts | Reply tracking. |
-| `service_id`, `query_id` | uuid, FK | Optional links to the service enquired about and the search that produced it. |
-| `parent_id`, `child_age`, `setting` | uuid/int/enum | **Kids-party legacy. Unused. Drop candidates.** |
-
-### `messages` — in-platform buyer↔vendor thread (7 cols)
-One thread per enquiry.
+### `vendor_services` — what a vendor offers (12 cols, 500 rows)
+Search reads **this** table, not `vendors`. 1:1 today, modelled 1:many.
 
 | Column | Why |
 |---|---|
-| `enquiry_id` FK | The thread this belongs to. |
-| `sender` | `'buyer'` or `'vendor'`. RLS pins the vendor side; the buyer side goes through a definer function (buyers are anonymous). |
-| `body` | Message text (1–4000 chars, checked). |
-| `read_by_buyer` / `read_by_vendor` | Unread badges + read receipts. |
+| `vendor_id` (FK) | Owner. |
+| `title`, `description` | Service copy; embedding input. |
+| `category` | Exact-match category filter (UI-set only). |
+| `attributes` (jsonb) | **Single source of truth for capacity, dietary, etc.** |
+| `embedding` (vector 1024) | Voyage voyage-3 vector, HNSW-indexed — what semantic search matches. |
+| `price_from`, `price_to`, `position` | Service pricing + ordering. |
+
+### `enquiries` — a buyer contacting a vendor (17 cols)
+Created anonymously; no account needed to send.
+
+| Column | Why |
+|---|---|
+| `vendor_id` (FK), `service_id` (FK) | Who / which service. |
+| `status` (enum) | sent/viewed/replied/booked/declined/expired. `booked` is the self-reported outcome — the closest thing to ROI data. |
+| `buyer_name`, `buyer_email`, `buyer_phone` | Buyer contact. **Renamed from `parent_*`** (kids-party legacy). |
+| `buyer_id` (FK auth.users, nullable) | **Buyer identity.** Null at send (anonymous); set when a buyer claims their history by email on login. Indexed on `lower(buyer_email)` for that claim. |
+| `event_date`, `postcode`, `budget` | When / where / how much. |
+| `message` | The brief. |
+| `details` (jsonb) | Vertical-specific extras (guest count, etc.). |
+| `vendor_response`, `responded_at` | Reply tracking. |
+
+### `messages` — buyer↔vendor thread (7 cols)
+`enquiry_id` FK · `sender` (buyer/vendor) · `body` (1–4000, checked) ·
+`read_by_buyer`/`read_by_vendor`. Vendor side via RLS; buyer side (anonymous)
+via a definer function.
 
 ### `reviews` — post-enquiry ratings (14 cols, 185 rows)
-| Column | Why |
-|---|---|
-| `vendor_id` FK | Who's reviewed. |
-| `rating` | 1–5, required. |
-| `title`, `body` | The review. |
-| `enquiry_id` FK | **The integrity anchor** — a review can only come from a real enquiry. |
-| `verified` | Enquiry reached `booked`. Cleared on all seed rows (they had no booking). |
-| `hidden` | Admin moderation. Hidden rows drop out of `rating_avg` via trigger. |
-| `event_date`, `details` | When/context; `details` is the vertical-agnostic jsonb. |
-| `author_id`, `service_id` | Optional links. |
+`vendor_id`, `rating` (1–5), `title`, `body`, `event_date`, `details` (jsonb).
+`enquiry_id` FK is the integrity anchor — a review can only come from a real
+enquiry. `verified` = enquiry reached `booked`. `hidden` = admin-moderated
+(drops out of `rating_avg` via trigger). `author_id` = logged-in reviewer.
 
-### `subscriptions` — vendor billing (15 cols)
-Mirrors Stripe. Written only by the webhook (service role).
-
-| Column | Why |
-|---|---|
-| `vendor_id` FK | Whose subscription. |
-| `status` | Stripe status → drives `vendors.tier`. |
-| `plan_tier` | Which tier bought (1). |
-| `billing_interval` | `month`/`year` (annual = 10 months for 12). |
-| `stripe_customer_id`, `stripe_subscription_id` | Stripe linkage. |
-| `current_period_end`, `cancelled_at`, `trial_ends_at` | Lifecycle. |
-| `plan_price_monthly`, `currency` | **Stale** — price lives in `lib/tiers.ts` now. Historical. |
+### `subscriptions` — vendor billing (14 cols)
+Written only by the Stripe webhook (service role). `vendor_id`, `status`
+(→ `vendors.tier`), `plan_tier`, `billing_interval` (month/year), the two
+`stripe_*` ids, period/cancellation timestamps, `currency`.
 
 ---
 
 ## Supporting
 
-| Table | Rows | Why it exists |
+| Table | Rows | Why |
 |---|---|---|
-| **`profiles`** | per-user | 1:1 with `auth.users`. Holds `role` (`parent`/`vendor`/`admin`) — `admin` gates the admin panel; the role enum still uses the legacy `parent` for buyer. Auto-created by a signup trigger. |
-| **`contact_events`** | 51 | Analytics event log: `profile_view`, `enquiry_sent`, outbound clicks. `session_id` dedupes views per visit. Powers the vendor Performance card. Anon insert-only; owner-read. |
-| **`push_subscriptions`** | live | Web Push credentials for the vendor PWA. Treated as secrets (endpoint+keys can notify someone) — no anon access, sends need service role. |
-| **`vendor_blocked_dates`** | 2,471 | Dates a vendor is unavailable. Soft signal — ranks them down for that date, doesn't exclude. |
-| **`vendor_photos`** | 0 | Gallery images (Supabase Storage URLs). Empty — seed vendors use category stock photos. |
-
----
+| `profiles` | per-user | 1:1 with auth.users. `role` enum **buyer**/vendor/admin (renamed from `parent`); `admin` gates the admin panel. Auto-created by signup trigger. |
+| `contact_events` | ~50 | Analytics log: `profile_view`, `enquiry_sent`, outbound clicks. `session_id` dedupes views. Anon insert-only, owner-read. |
+| `push_subscriptions` | live | Web Push creds for the vendor PWA. Treated as secrets — no anon access. |
+| `vendor_blocked_dates` | 2,471 | Unavailable dates (`reason` enum). Soft signal — ranks down, doesn't exclude. |
+| `vendor_photos` | 0 | Gallery (Storage URLs). Empty; seed uses category stock. |
 
 ## Infrastructure
 
-| Table | Why it exists |
+| Table | Why |
 |---|---|
-| **`rate_limits`** | Atomic cross-instance rate limiting (`key`, `window_start`, `count`). RLS on, **no policies** — reachable only through the `check_rate_limit` definer function. That's deliberate, not a gap. |
-| **`ai_usage`** | Daily AI-spend counter for the circuit breaker. Admin-read. |
+| `rate_limits` | Atomic cross-instance rate limiting. RLS on, no policies — reached only via the `check_rate_limit` definer function (deliberate). |
+| `ai_usage` | Daily AI-spend counter for the circuit breaker. Admin-read. |
 
 ---
 
-## Unused / legacy — candidates for the next cleanup
+## Enums (6)
+`vendor_status`, `enquiry_status`, `subscription_status`, `user_role`
+(buyer/vendor/admin), `contact_event_type`, `blocked_reason`. The four
+kids-party orphans (`service_type`, `setting_type`, `tag_category`, `day_type`)
+were dropped in the refactor.
 
-Present in the schema, **zero or near-zero use**. Kept for now because dropping
-needs a check, not because they earn their place.
+## What the refactor removed
+- **Tables (6):** `queries` (superseded by contact_events), `tags` +
+  `vendor_tag_assignments` (credential system with no verification behind it),
+  `service_pricing`, `vendor_coverage_areas`, `vendor_schedules` (never built).
+- **Columns:** `enquiries.parent_id/child_age/setting/query_id`,
+  `contact_events.query_id`, `vendor_services.secondary_categories`,
+  `vendors.vibe_tags/occasion_fit` (folded into `attributes`),
+  `subscriptions.plan_price_monthly`.
+- **Renames:** `enquiries.parent_* → buyer_*`; `user_role 'parent' → 'buyer'`.
 
-| Table | Rows | Status |
-|---|---|---|
-| `queries` | 0 | Was meant to log searches. Superseded by `contact_events`. |
-| `tags` / `vendor_tag_assignments` | 0 | Credential-badge system with no verification behind it. The badge renders nothing today (see the vetting-claim commit). |
-| `vendor_coverage_areas` | 0 | Per-district coverage. Never built a UI; coverage is a radius. |
-| `vendor_schedules` | 0 | Recurring availability. Never built; RLS on with no policies (deny-all). |
-| `service_pricing` | 0 | Structured per-service price list. Never surfaced. |
-
-**Column-level legacy** (kids-party / food origin, still present):
-- `enquiries.parent_id`, `enquiries.child_age`, `enquiries.setting` — unused, droppable
-- `enquiries.parent_*` naming — means "buyer"; rename for clarity
-- `vendor_services.secondary_categories` — unused
-- `vendors.vibe_tags`, `vendors.occasion_fit` — embedding-only, fold into `attributes`
-- `profiles.role` enum value `parent` — means "buyer"
-
----
-
-## The one structural gap: buyers have no account
-
-`enquiries` stores the buyer by **email string**, not a `buyer_id` FK. There is
-no buyer account, so enquiry history lives in the browser's localStorage and
-dies with it. Adding optional buyer auth (see BACKLOG) means an
-`enquiries.buyer_id uuid` linking to `auth.users`, backfilled by matching email,
-so a buyer can claim past anonymous enquiries on first login.
+## The remaining known gap
+`enquiries.buyer_id` now exists, but **there is no buyer-auth UI yet** — buyers
+still can't log in, so enquiry history is localStorage-only in practice. The
+schema is ready (nullable FK + email index for claim-by-email); the flow
+(optional post-enquiry OTP/Google login, backfill by email) is the next build.
+See BACKLOG.

@@ -13,7 +13,6 @@ const FULL: CompletenessInput = {
   capacityMax: 200,
   attributes: { dietary: ["vegan"], gas_safe: "123456" },
   signature_items: ["Baja fish taco"],
-  vibe_tags: ["street"],
   faq: [{ q: "Do you travel?", a: "Yes" }],
   coverage_radius_miles: 15,
   photoCount: 4,

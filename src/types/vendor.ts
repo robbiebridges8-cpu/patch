@@ -2,7 +2,7 @@
 
 export interface Profile {
   id: string;
-  role: "parent" | "vendor" | "admin";
+  role: "buyer" | "vendor" | "admin";
   displayName: string | null;
   email: string | null;
   phone: string | null;

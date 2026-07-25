@@ -12,7 +12,6 @@ export interface CompletenessInput {
   capacityMax?: number | null;
   attributes?: Record<string, unknown> | null;
   signature_items?: string[] | null;
-  vibe_tags?: string[] | null;
   faq?: unknown[] | null;
   coverage_radius_miles?: number | null;
   photoCount: number;

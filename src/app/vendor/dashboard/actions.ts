@@ -55,6 +55,7 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
 
   const attributes: Record<string, unknown> = { ...extraAttrs };
   if (dietary.length) attributes.dietary = dietary;
+  if (vibe.length) attributes.vibe = vibe;
   if (capMin != null) attributes.capacity_min = capMin;
   if (capMax != null) attributes.capacity_max = capMax;
   const coverage = num(formData.get("coverage_radius_miles"));
@@ -75,7 +76,7 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
 
   const { data: before } = await supabase
     .from("vendors")
-    .select("name, primary_category, description, bio, attributes, vibe_tags, signature_items")
+    .select("name, primary_category, description, bio, attributes, signature_items")
     .eq("id", id)
     .eq("owner_id", user.id)
     .maybeSingle();
@@ -96,7 +97,6 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
       price_notes: str(formData.get("price_notes"), 500),
       coverage_radius_miles: coverage ?? 5,
       attributes,
-      vibe_tags: vibe,
       signature_items: signature,
       faq: faq.length ? faq : null,
     })
@@ -123,7 +123,6 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
     before.description !== description ||
     before.bio !== bio ||
     JSON.stringify(before.attributes ?? {}) !== JSON.stringify(attributes) ||
-    !sameArr(before.vibe_tags, vibe) ||
     !sameArr(
       (Array.isArray(before.signature_items) ? before.signature_items : []).map(String),
       signature,
@@ -212,10 +211,10 @@ export async function sendVendorMessage(enquiryId: string, body: string): Promis
   // Best-effort buyer notification.
   const { data: enq } = await supabase
     .from("enquiries")
-    .select("parent_email, vendor_id")
+    .select("buyer_email, vendor_id")
     .eq("id", enquiryId)
     .maybeSingle();
-  if (enq?.parent_email) {
+  if (enq?.buyer_email) {
     const { data: vendor } = await supabase
       .from("vendors")
       .select("name")
@@ -223,7 +222,7 @@ export async function sendVendorMessage(enquiryId: string, body: string): Promis
       .maybeSingle();
     const site = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
     await sendThreadMessageEmail({
-      to: enq.parent_email as string,
+      to: enq.buyer_email as string,
       fromName: (vendor?.name as string) || "Your vendor",
       threadUrl: `${site}/enquiries`,
       body: text,

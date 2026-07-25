@@ -66,7 +66,7 @@ export async function POST(request: Request) {
   if (service) {
     const { data: enq } = await service
       .from("enquiries")
-      .select("parent_name, vendors(name, slug, contact_email)")
+      .select("buyer_name, vendors(name, slug, contact_email)")
       .eq("id", enquiryId)
       .maybeSingle();
 
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       const site = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
       await sendThreadMessageEmail({
         to: vendor.contact_email,
-        fromName: (enq?.parent_name as string) || "A client",
+        fromName: (enq?.buyer_name as string) || "A client",
         threadUrl: `${site}/vendor/dashboard`,
         body: text,
       });

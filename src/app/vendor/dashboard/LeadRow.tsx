@@ -8,9 +8,9 @@ import styles from "../vendor.module.css";
 
 export interface Lead {
   id: string;
-  parent_name: string | null;
-  parent_email: string | null;
-  parent_phone: string | null;
+  buyer_name: string | null;
+  buyer_email: string | null;
+  buyer_phone: string | null;
   event_date: string | null;
   postcode: string | null;
   details: Record<string, unknown> | null;
@@ -49,8 +49,8 @@ export default function LeadRow({
 
   const isNew = status === "sent" || status === "viewed";
   const subject = encodeURIComponent(`Re: your Patch enquiry`);
-  const mailto = lead.parent_email
-    ? `mailto:${lead.parent_email}?subject=${subject}`
+  const mailto = lead.buyer_email
+    ? `mailto:${lead.buyer_email}?subject=${subject}`
     : undefined;
 
   function set(value: string) {
@@ -96,15 +96,15 @@ export default function LeadRow({
   return (
     <div className={`${styles.lead} ${isNew ? styles.leadNew : ""}`}>
       <div className={styles.leadHead}>
-        <span className={styles.leadName}>{lead.parent_name || "Enquiry"}</span>
+        <span className={styles.leadName}>{lead.buyer_name || "Enquiry"}</span>
         <span className={`${styles.leadStatus} ${styles["status_" + (isNew ? "new" : status)] || ""}`}>
           {statusLabel(status)}
         </span>
       </div>
       <div className={styles.leadMeta}>
         {[
-          lead.parent_email,
-          lead.parent_phone,
+          lead.buyer_email,
+          lead.buyer_phone,
           lead.event_date ? `Event: ${new Date(lead.event_date).toLocaleDateString("en-GB")}` : null,
           // Whatever the enquiry form captured for this vertical.
           ...Object.entries(lead.details ?? {})
@@ -148,7 +148,7 @@ export default function LeadRow({
         <MessageThread
           enquiryId={lead.id}
           initial={thread}
-          buyerName={lead.parent_name || "the client"}
+          buyerName={lead.buyer_name || "the client"}
         />
       )}
     </div>

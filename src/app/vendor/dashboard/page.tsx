@@ -28,7 +28,7 @@ async function LeadsCard({ vendorId, tier }: { vendorId: string; tier: number })
   const supabase = await createClient();
   const { data } = await supabase
     .from("enquiries")
-    .select("id, parent_name, parent_email, parent_phone, event_date, postcode, details, message, status, created_at")
+    .select("id, buyer_name, buyer_email, buyer_phone, event_date, postcode, details, message, status, created_at")
     .eq("vendor_id", vendorId)
     .order("created_at", { ascending: false });
 
@@ -43,9 +43,9 @@ async function LeadsCard({ vendorId, tier }: { vendorId: string; tier: number })
   const leads: Lead[] = locked
     ? rawLeads.map((l) => ({
         id: l.id,
-        parent_name: null,
-        parent_email: null,
-        parent_phone: null,
+        buyer_name: null,
+        buyer_email: null,
+        buyer_phone: null,
         event_date: l.event_date,
         postcode: l.postcode,
         details: l.details,
@@ -115,7 +115,7 @@ export default async function VendorDashboard({
 
   const { data: vendor } = await supabase
     .from("vendors")
-    .select("id, name, slug, description, bio, contact_email, contact_phone, website, instagram, price_from, price_notes, coverage_radius_miles, attributes, vibe_tags, signature_items, faq, status, primary_category, tier")
+    .select("id, name, slug, description, bio, contact_email, contact_phone, website, instagram, price_from, price_notes, coverage_radius_miles, attributes, signature_items, faq, status, primary_category, tier")
     .eq("owner_id", user.id)
     .maybeSingle();
 
@@ -197,7 +197,6 @@ export default async function VendorDashboard({
                 capacityMax: ((vendor.attributes as Record<string, unknown>)?.capacity_max as number | null) ?? null,
                 attributes: (vendor.attributes as Record<string, unknown> | null) ?? null,
                 signature_items: vendor.signature_items as string[] | null,
-                vibe_tags: vendor.vibe_tags as string[] | null,
                 faq: vendor.faq as unknown[] | null,
                 coverage_radius_miles: vendor.coverage_radius_miles as number | null,
                 photoCount: ((photos as { id: string }[]) || []).length,
@@ -241,8 +240,7 @@ export default async function VendorDashboard({
                   price_notes: vendor.price_notes as string | null,
                   coverage_radius_miles: vendor.coverage_radius_miles as number | null,
                   attributes: (vendor.attributes as Record<string, unknown> | null) ?? null,
-                  vibe_tags: vendor.vibe_tags as string[] | null,
-                  signature_items: (vendor.signature_items as string[] | null) ?? null,
+                    signature_items: (vendor.signature_items as string[] | null) ?? null,
                   faq: (vendor.faq as { q?: string; a?: string }[] | null) ?? null,
                 }}
               />

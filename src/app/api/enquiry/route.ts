@@ -72,9 +72,9 @@ export async function POST(request: Request) {
   const rows = vendors.map((v, i) => ({
     id: records[i].enquiryId,
     vendor_id: v.id,
-    parent_name: name.slice(0, 200),
-    parent_email: email.slice(0, 320),
-    parent_phone: phone ? phone.slice(0, 30) : null,
+    buyer_name: name.slice(0, 200),
+    buyer_email: email.slice(0, 320),
+    buyer_phone: phone ? phone.slice(0, 30) : null,
     event_date: eventDate,
     postcode: postcode ? postcode.slice(0, 10) : null,
     // Vertical-specific extras live here, not as columns. A plumber enquiry

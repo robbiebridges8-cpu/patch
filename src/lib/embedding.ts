@@ -9,8 +9,6 @@ interface VendorText {
   primary_category?: string | null;
   description?: string | null;
   bio?: string | null;
-  vibe_tags?: string[] | null;
-  occasion_fit?: string[] | null;
   signature_items?: unknown;
   attributes?: Record<string, unknown> | null;
 }
@@ -22,7 +20,6 @@ interface ServiceText {
 
 /** Compose the rich "document" that gets embedded (not what's shown to users). */
 export function composeEmbeddingText(vendor: VendorText, service: ServiceText): string {
-  const arr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
   const sig = Array.isArray(vendor.signature_items)
     ? (vendor.signature_items as unknown[]).map((s) => (typeof s === "string" ? s : (s as { name?: string })?.name)).filter(Boolean)
     : [];
@@ -41,8 +38,6 @@ export function composeEmbeddingText(vendor: VendorText, service: ServiceText): 
     vendor.description,
     vendor.bio,
     sig.length ? "Signature items: " + sig.join(", ") : null,
-    arr(vendor.vibe_tags).length ? "Vibe: " + arr(vendor.vibe_tags).join(", ") : null,
-    arr(vendor.occasion_fit).length ? "Good for: " + arr(vendor.occasion_fit).join(", ") : null,
     attrLines.length ? attrLines.join("\n") : null,
   ];
   return parts.filter(Boolean).join("\n\n");
@@ -74,7 +69,7 @@ export async function reembedVendor(
 ): Promise<{ ok: boolean; error?: string }> {
   const { data: vendor, error: ve } = await client
     .from("vendors")
-    .select("primary_category, description, bio, vibe_tags, occasion_fit, attributes, signature_items")
+    .select("primary_category, description, bio, attributes, signature_items")
     .eq("id", vendorId)
     .maybeSingle();
   if (ve || !vendor) return { ok: false, error: ve?.message || "vendor not found" };
