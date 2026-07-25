@@ -133,8 +133,8 @@ function rowToMatch(v: Record<string, unknown>, rank: number, note: string): Ven
       ownerId: null, contactEmail: null, contactPhone: null, website: null,
       instagram: null, basePostcode: v.base_postcode as string | null,
       coverageRadiusMiles: (v.coverage_radius_miles as number) ?? 5,
-      priceFrom: v.price_from as number | null,
-      priceNotes: v.price_notes as string | null, bio: v.bio as string | null,
+      priceFrom: svc.price_from as number | null,
+      priceNotes: svc.price_notes as string | null, bio: v.bio as string | null,
       faq: null,
       ratingAvg: v.rating_avg as number | null, reviewCount: (v.review_count as number) ?? 0,
       createdAt: "", updatedAt: "",
@@ -148,7 +148,7 @@ function rowToMatch(v: Record<string, unknown>, rank: number, note: string): Ven
     photoCount: 0,
     rating: (v.rating_avg as number) || 0,
     bookingCount: (v.review_count as number) || 0,
-    priceLabel: v.price_from ? `from £${v.price_from}` : "Enquire",
+    priceLabel: svc.price_from ? `from £${svc.price_from}` : "Enquire",
     priceUnit: "",
   };
 }
@@ -350,7 +350,7 @@ async function KeywordResults({
   // cap trips, so it has to survive 100k vendors, not just 500.
   const { data } = await supabase
     .from("vendors")
-    .select("*, vendor_services ( category, attributes )")
+    .select("*, vendor_services ( category, attributes, price_from, price_notes )")
     .eq("status", "live")
     .order("tier", { ascending: false })
     .order("rating_avg", { ascending: false, nullsFirst: false })
@@ -367,7 +367,12 @@ async function KeywordResults({
   }
   if (params.budget) {
     const max = parseInt(params.budget, 10);
-    if (!isNaN(max)) rows = rows.filter((v) => (v.price_from as number | null) == null || (v.price_from as number) <= max);
+    if (!isNaN(max)) rows = rows.filter((v) => {
+      // Price lives on the service now, not the vendor.
+      const svc = ((v.vendor_services as Record<string, unknown>[]) || [])[0];
+      const price = svc?.price_from as number | null;
+      return price == null || price <= max;
+    });
   }
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (terms.length) {

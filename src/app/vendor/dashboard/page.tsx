@@ -115,9 +115,22 @@ export default async function VendorDashboard({
 
   const { data: vendor } = await supabase
     .from("vendors")
-    .select("id, name, slug, description, bio, contact_email, contact_phone, website, instagram, price_from, price_notes, coverage_radius_miles, attributes, signature_items, faq, status, primary_category, tier")
+    .select("id, name, slug, description, bio, contact_email, contact_phone, website, instagram, coverage_radius_miles, attributes, signature_items, faq, status, primary_category, tier")
     .eq("owner_id", user.id)
     .maybeSingle();
+
+  // Price lives on the service now. 1:1 today, so read the vendor's one service.
+  const { data: service } = vendor
+    ? await supabase
+        .from("vendor_services")
+        .select("price_from, price_notes")
+        .eq("vendor_id", vendor.id as string)
+        .order("position", { ascending: true })
+        .limit(1)
+        .maybeSingle()
+    : { data: null };
+  const priceFrom = (service?.price_from as number | null) ?? null;
+  const priceNotes = (service?.price_notes as string | null) ?? null;
 
   const { data: sub } = vendor
     ? await supabase
@@ -192,7 +205,7 @@ export default async function VendorDashboard({
                 primary_category: vendor.primary_category as string | null,
                 description: vendor.description as string | null,
                 bio: vendor.bio as string | null,
-                price_from: vendor.price_from as number | null,
+                price_from: priceFrom,
                 contact_email: vendor.contact_email as string | null,
                 capacityMax: ((vendor.attributes as Record<string, unknown>)?.capacity_max as number | null) ?? null,
                 attributes: (vendor.attributes as Record<string, unknown> | null) ?? null,
@@ -236,8 +249,8 @@ export default async function VendorDashboard({
                   contact_phone: vendor.contact_phone as string | null,
                   website: vendor.website as string | null,
                   instagram: vendor.instagram as string | null,
-                  price_from: vendor.price_from as number | null,
-                  price_notes: vendor.price_notes as string | null,
+                  price_from: priceFrom,
+                  price_notes: priceNotes,
                   coverage_radius_miles: vendor.coverage_radius_miles as number | null,
                   attributes: (vendor.attributes as Record<string, unknown> | null) ?? null,
                     signature_items: (vendor.signature_items as string[] | null) ?? null,

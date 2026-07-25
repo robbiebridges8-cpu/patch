@@ -120,6 +120,11 @@ export default async function VendorPage({
   const sortedPhotos = [...photos].sort((a, b) => (a.position as number) - (b.position as number));
   const services = ((vendor.vendor_services as Record<string, unknown>[]) || [])
     .sort((a, b) => (a.position as number) - (b.position as number));
+  // Price lives on the service now — the sidebar "from" is the cheapest service.
+  const priceFrom = services
+    .map((s) => s.price_from as number | null)
+    .filter((p): p is number => p != null)
+    .sort((a, b) => a - b)[0] ?? null;
   const reviews = ((vendor.reviews as Record<string, unknown>[]) || [])
     .sort((a, b) => new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime());
 
@@ -426,10 +431,10 @@ export default async function VendorPage({
 
         {/* Sidebar */}
         <div className={styles.sideCard}>
-          {vendor.price_from && (
+          {priceFrom != null && (
             <>
               <div className={styles.sidePrice}>From</div>
-              <div className={styles.sidePriceAmount}>£{vendor.price_from as number}</div>
+              <div className={styles.sidePriceAmount}>£{priceFrom}</div>
               <div className={styles.sidePriceUnit}>
                 {services.length > 0 ? (services[0].title as string) : ""}
               </div>
@@ -511,8 +516,8 @@ export default async function VendorPage({
 
       {/* Mobile: keep the primary action reachable while scrolling */}
       <div className={styles.stickyBar}>
-        {vendor.price_from && (
-          <span className={styles.stickyPrice}>from £{vendor.price_from as number}</span>
+        {priceFrom != null && (
+          <span className={styles.stickyPrice}>from £{priceFrom}</span>
         )}
         <EnquiryButton
           vendorId={vendor.id as string}

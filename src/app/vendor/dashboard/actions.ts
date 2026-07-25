@@ -93,8 +93,6 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
       contact_phone: str(formData.get("contact_phone"), 30),
       website: str(formData.get("website"), 500),
       instagram: str(formData.get("instagram"), 100),
-      price_from: num(formData.get("price_from")),
-      price_notes: str(formData.get("price_notes"), 500),
       coverage_radius_miles: coverage ?? 5,
       attributes,
       signature_items: signature,
@@ -105,7 +103,8 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
 
   if (error) return { error: error.message };
 
-  // Keep the service row (what search reads) in sync with the listing.
+  // Keep the service row (what search reads) in sync with the listing. Price
+  // lives here now, not on the vendor.
   await supabase
     .from("vendor_services")
     .update({
@@ -113,6 +112,8 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
       description,
       category,
       attributes,
+      price_from: num(formData.get("price_from")),
+      price_notes: str(formData.get("price_notes"), 500),
     })
     .eq("vendor_id", id);
 

@@ -458,10 +458,9 @@ async function fallbackSearch(parsed: ParsedQuery, limit: number = SEARCH_LIMIT)
   let query = supabase
     .from("vendor_services")
     .select(`
-      id, title, category, attributes,
+      id, title, category, attributes, price_from, price_notes,
       vendors!inner ( id, slug, name, description, bio, base_postcode, area,
-        price_from, price_notes, rating_avg, review_count,
-        coverage_radius_miles, status )
+        rating_avg, review_count, coverage_radius_miles, status )
     `)
     .eq("vendors.status", "live");
 
@@ -472,7 +471,8 @@ async function fallbackSearch(parsed: ParsedQuery, limit: number = SEARCH_LIMIT)
     query = query.contains("attributes", parsed.attributes);
   }
   if (parsed.budget_max) {
-    query = query.or(`price_from.is.null,price_from.lte.${parsed.budget_max}`, { referencedTable: "vendors" });
+    // Price lives on the service now — filter it there, not on the vendor.
+    query = query.or(`price_from.is.null,price_from.lte.${parsed.budget_max}`);
   }
 
   const { data, error } = await query.order("rating_avg", { referencedTable: "vendors", ascending: false }).limit(limit * 2);
@@ -490,7 +490,7 @@ async function fallbackSearch(parsed: ParsedQuery, limit: number = SEARCH_LIMIT)
       vendor_description: v.description as string | null, vendor_bio: v.bio as string | null,
       vendor_base_postcode: v.base_postcode as string | null,
       vendor_area: v.area as string | null,
-      vendor_price_from: v.price_from as number | null, vendor_price_notes: v.price_notes as string | null,
+      vendor_price_from: row.price_from as number | null, vendor_price_notes: row.price_notes as string | null,
       vendor_rating_avg: v.rating_avg as number | null, vendor_review_count: v.review_count as number,
       vendor_coverage_radius_miles: v.coverage_radius_miles as number,
       service_id: row.id as string, service_title: row.title as string,

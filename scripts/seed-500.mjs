@@ -419,8 +419,8 @@ async function main() {
     const chunk = vendors.slice(i, i + CHUNK);
     const vRows = chunk.map((v) => ({
       id: v.id, slug: v.slug, name: v.name, description: v.desc, status: "live",
-      base_postcode: v.area, coverage_radius_miles: v.coverage, price_from: v.priceFrom,
-      price_range: v.priceRange, price_notes: v.priceNotes, primary_category: v.category,
+      base_postcode: v.area, coverage_radius_miles: v.coverage,
+      price_range: v.priceRange, primary_category: v.category,
       bio: v.bio, contact_email: v.email, contact_phone: v.phone, website: v.website,
       instagram: v.instagram, rating_avg: v.rating, review_count: v.reviewCount,
       min_lead_days: 7, max_advance_days: 180, vibe_tags: v.vibe, occasion_fit: v.occ,
@@ -433,7 +433,8 @@ async function main() {
     const sRows = chunk.map((v) => ({
       id: v.serviceId, vendor_id: v.id, service_type: "other", category: v.category,
       dietary_options: v.diet, title: v.title, description: v.desc, setting: "either",
-      capacity_min: v.capMin, capacity_max: v.capMax, price_from: v.priceFrom, position: 0,
+      capacity_min: v.capMin, capacity_max: v.capMax, price_from: v.priceFrom,
+      price_notes: v.priceNotes, position: 0,
       embedding: embBySlug.get(v.slug),
     }));
     const { error: se } = await supabase.from("vendor_services").insert(sRows);

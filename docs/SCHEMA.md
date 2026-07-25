@@ -11,7 +11,7 @@ refactor dropped 6 tables, 15 columns, and 4 orphaned enum types.
 
 ## Core domain
 
-### `vendors` — the business (28 cols, 500 rows)
+### `vendors` — the business (26 cols, 500 rows)
 | Column | Why it exists |
 |---|---|
 | `slug` (unique) | URL + SEO identity. |
@@ -20,7 +20,7 @@ refactor dropped 6 tables, 15 columns, and 4 orphaned enum types.
 | `owner_id` (FK auth.users) | Controlling account. Null = unclaimed. |
 | `tier` (smallint) | 0 free / 1 paid. Drives ranking + the lead paywall. Integer so a 2nd tier needs no migration. |
 | `base_postcode`, `base_location` (geography), `coverage_radius_miles`, `area` | Location — the one clean hard filter (`ST_DWithin` + radius). `area` is the "Hackney (E8)" label. |
-| `price_from`, `price_notes`, `price_range` | Budget filter (`price_from`), free-text caveats, and the "££" band for JSON-LD. |
+| `price_range` | The "££" band for JSON-LD structured data — an establishment-level property, not a price anyone pays. The actual price lives on the service (see `vendor_services.price_from`). |
 | `contact_email`, `contact_phone`, `website`, `instagram` | Contact + outbound-click analytics targets. |
 | `faq` (jsonb), `signature_items` (jsonb) | Profile content; signatures also feed the embedding. |
 | `attributes` (jsonb) | **The vertical-agnostic bag.** Dietary, capacity, certifications, `vibe`, `good_for` — anything trade-specific. Folded into the embedding; UI-set values are exact filters. |
@@ -28,7 +28,7 @@ refactor dropped 6 tables, 15 columns, and 4 orphaned enum types.
 | `primary_category` | Display + SEO label only — **never an AI hard filter**. |
 | `years_active` | "Trading 4 yrs" trust signal. |
 
-### `vendor_services` — what a vendor offers (12 cols, 500 rows)
+### `vendor_services` — what a vendor offers (13 cols, 500 rows)
 Search reads **this** table, not `vendors`. 1:1 today, modelled 1:many.
 
 | Column | Why |
@@ -38,7 +38,7 @@ Search reads **this** table, not `vendors`. 1:1 today, modelled 1:many.
 | `category` | Exact-match category filter (UI-set only). |
 | `attributes` (jsonb) | **Single source of truth for capacity, dietary, etc.** |
 | `embedding` (vector 1024) | Voyage voyage-3 vector, HNSW-indexed — what semantic search matches. |
-| `price_from`, `price_to`, `position` | Service pricing + ordering. |
+| `price_from`, `price_to`, `price_notes`, `position` | **Where price lives.** `price_from` is the budget hard filter and the "from £X" shown everywhere; `price_to` the top of a range; `price_notes` the free-text caveat ("£14/head, min spend £600"). A vendor with two services can price them differently — the reason price is here, not on the business. `position` orders the list. |
 
 ### `enquiries` — a buyer contacting a vendor (17 cols)
 Created anonymously; no account needed to send.
@@ -106,6 +106,10 @@ were dropped in the refactor.
   `vendors.vibe_tags/occasion_fit` (folded into `attributes`),
   `subscriptions.plan_price_monthly`.
 - **Renames:** `enquiries.parent_* → buyer_*`; `user_role 'parent' → 'buyer'`.
+- **Moved to the service:** `vendors.price_from` + `price_notes` → `vendor_services`.
+  A vendor with two services needs two prices, so price is authored on the
+  service (where search already reads). `vendors.price_range` stays — it's the
+  categorical £-band for JSON-LD, an establishment property, not a paid price.
 
 ## The remaining known gap
 `enquiries.buyer_id` now exists, but **there is no buyer-auth UI yet** — buyers
