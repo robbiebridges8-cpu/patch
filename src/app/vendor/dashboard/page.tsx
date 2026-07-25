@@ -26,11 +26,15 @@ import styles from "../vendor.module.css";
 
 async function LeadsCard({ vendorId, tier }: { vendorId: string; tier: number }) {
   const supabase = await createClient();
+  // Most-recent 50: a busy vendor accumulates enquiries without bound, and this
+  // (plus every thread on them) renders in one RSC pass. The messages query below
+  // is scoped to these leads, so bounding here bounds both.
   const { data } = await supabase
     .from("enquiries")
     .select("id, buyer_name, buyer_email, buyer_phone, event_date, postcode, details, message, status, created_at")
     .eq("vendor_id", vendorId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(50);
 
   const rawLeads = (data as Lead[]) || [];
   const newCount = rawLeads.filter((l) => l.status === "sent" || l.status === "viewed").length;
@@ -119,47 +123,29 @@ export default async function VendorDashboard({
     .eq("owner_id", user.id)
     .maybeSingle();
 
-  // Price lives on the service now. 1:1 today, so read the vendor's one service.
-  const { data: service } = vendor
-    ? await supabase
-        .from("vendor_services")
-        .select("price_from, price_notes")
-        .eq("vendor_id", vendor.id as string)
-        .order("position", { ascending: true })
-        .limit(1)
-        .maybeSingle()
-    : { data: null };
+  // These five reads are independent once we know the vendor — run them together
+  // rather than in six sequential round-trips. Price lives on the service now
+  // (1:1 today, so the vendor's one service).
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const vid = vendor?.id as string | undefined;
+  const [
+    { data: service },
+    { data: sub },
+    { data: photos },
+    { data: analytics },
+    { data: blocked },
+  ] = vendor
+    ? await Promise.all([
+        supabase.from("vendor_services").select("price_from, price_notes").eq("vendor_id", vid!).order("position", { ascending: true }).limit(1).maybeSingle(),
+        supabase.from("subscriptions").select("status, stripe_customer_id").eq("vendor_id", vid!).maybeSingle(),
+        supabase.from("vendor_photos").select("id, url").eq("vendor_id", vid!).order("position", { ascending: true }),
+        supabase.rpc("vendor_analytics", { p_vendor_id: vid!, p_days: 30 }),
+        supabase.from("vendor_blocked_dates").select("blocked_date").eq("vendor_id", vid!).gte("blocked_date", todayIso),
+      ])
+    : [{ data: null }, { data: null }, { data: [] }, { data: null }, { data: [] }];
+
   const priceFrom = (service?.price_from as number | null) ?? null;
   const priceNotes = (service?.price_notes as string | null) ?? null;
-
-  const { data: sub } = vendor
-    ? await supabase
-        .from("subscriptions")
-        .select("status, stripe_customer_id")
-        .eq("vendor_id", vendor.id as string)
-        .maybeSingle()
-    : { data: null };
-
-  const { data: photos } = vendor
-    ? await supabase
-        .from("vendor_photos")
-        .select("id, url")
-        .eq("vendor_id", vendor.id as string)
-        .order("position", { ascending: true })
-    : { data: [] };
-
-  const { data: analytics } = vendor
-    ? await supabase.rpc("vendor_analytics", { p_vendor_id: vendor.id as string, p_days: 30 })
-    : { data: null };
-
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const { data: blocked } = vendor
-    ? await supabase
-        .from("vendor_blocked_dates")
-        .select("blocked_date")
-        .eq("vendor_id", vendor.id as string)
-        .gte("blocked_date", todayIso)
-    : { data: [] };
 
   return (
     <>

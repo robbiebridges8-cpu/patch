@@ -36,6 +36,9 @@ const getVendor = cache(async function getVendor(slug: string) {
     `)
     .eq("slug", slug)
     .eq("status", "live")
+    // Cap the nested reviews — the page renders the most recent and JSON-LD uses 5.
+    .order("created_at", { referencedTable: "reviews", ascending: false })
+    .limit(30, { referencedTable: "reviews" })
     .single();
 
   return data;
