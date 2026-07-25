@@ -192,15 +192,19 @@ export async function setEnquiryStatus(enquiryId: string, status: string): Promi
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Your session expired. Please sign in again." };
 
-  const { error } = await supabase
+  // .select() so an RLS-blocked update (someone else's enquiry) returns zero
+  // rows and a real error, instead of a silent { ok: true } that changed nothing.
+  const { data, error } = await supabase
     .from("enquiries")
     .update({
       status,
       responded_at: status === "replied" || status === "booked" ? new Date().toISOString() : null,
     })
-    .eq("id", enquiryId);
+    .eq("id", enquiryId)
+    .select("id");
 
   if (error) return { error: error.message };
+  if (!data || data.length === 0) return { error: "We couldn't find that enquiry." };
   revalidatePath("/vendor/dashboard");
   return { ok: true };
 }

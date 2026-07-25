@@ -382,8 +382,10 @@ async function vectorSearch(
   const { data, error } = await supabase.rpc("match_vendors", rpcParams);
 
   if (error) {
+    // Throw rather than silently returning keyword rows: the caller degrades to
+    // fallback AND sets usedFallback, so the "basic results" banner actually shows.
     console.error("[vectorSearch] RPC failed:", error.message, error.details, error.hint);
-    return fallbackSearch(parsed, limit);
+    throw new Error(`match_vendors failed: ${error.message}`);
   }
 
   const results = (data || []) as VendorResult[];
@@ -650,7 +652,15 @@ export async function quickSearch(
     results = await fallbackSearch(parsed);
     usedFallback = true;
   } else {
-    ({ results, relaxed } = await searchWithRecovery(parsed, embedding, geo, limit));
+    try {
+      ({ results, relaxed } = await searchWithRecovery(parsed, embedding, geo, limit));
+    } catch (err) {
+      // Vector search (the match_vendors RPC) failed — degrade to keyword and
+      // flag it so the page shows the "basic results" disclosure.
+      console.error("[quickSearch] vector search failed, degrading to keyword:", err);
+      results = await fallbackSearch(parsed, limit);
+      usedFallback = true;
+    }
   }
 
   return { parsed, results, usedFallback, relaxed };

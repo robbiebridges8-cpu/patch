@@ -185,10 +185,13 @@ async function StreamedNote({ promise }: { promise: Promise<{ summary: string }>
 // ── AI results (fast cards first, narration streams in) ──
 
 async function AIResults({ query, params }: { query: string; params: SearchParams }) {
+  // A budget of 0 or a non-numeric value means "no budget", not "exclude
+  // everything priced" — guard the parse so a hand-edited URL can't empty the page.
+  const parsedBudget = params.budget ? parseInt(params.budget, 10) : NaN;
   const overrides = {
     categories: params.type ? params.type.split(",") : undefined,
     attributes: params.diet ? { dietary: params.diet.split(",") } : undefined,
-    budgetMax: params.budget ? parseInt(params.budget, 10) : undefined,
+    budgetMax: Number.isFinite(parsedBudget) && parsedBudget > 0 ? parsedBudget : undefined,
   };
   const rl = await rateLimit(`search:${clientIp(await headers())}`, 25, 60_000);
   if (!rl.ok) {
@@ -263,10 +266,17 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
   const recommended = matches.slice(0, recCount);
   const others = matches.slice(recCount);
 
+  // Narrate over the FINAL displayed order, not raw relevance — otherwise the
+  // note can endorse a vendor that availability/sort has since bumped off the top.
+  const resultById = new Map(quick.results.map((r) => [r.vendor_id, r]));
+  const orderedResults = matches
+    .map((m) => resultById.get(m.vendor.id))
+    .filter((r): r is (typeof quick.results)[number] => r != null);
+
   // Kick off the heavy narration but don't await it — it streams into its own boundary.
   const narratePromise = quick.usedFallback
     ? null
-    : narrateSummary(query, quick.parsed, quick.results);
+    : narrateSummary(query, quick.parsed, orderedResults);
 
   return (
     <>
@@ -360,7 +370,8 @@ async function KeywordResults({
   }
   if (params.budget) {
     const max = parseInt(params.budget, 10);
-    if (!isNaN(max)) rows = rows.filter((v) => {
+    // A 0 / non-numeric budget means "no budget", not "exclude everything priced".
+    if (Number.isFinite(max) && max > 0) rows = rows.filter((v) => {
       // Price lives on the service now, not the vendor.
       const svc = ((v.vendor_services as Record<string, unknown>[]) || [])[0];
       const price = svc?.price_from as number | null;
