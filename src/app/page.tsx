@@ -78,12 +78,12 @@ const orgJsonLd = {
 
 export default async function Home() {
   // Real, current figures make the on-page facts citable rather than vague.
-  const [{ count: vendorCount }, { data: areaRows }] = await Promise.all([
-    supabase.from("vendors").select("id", { count: "exact", head: true }).eq("status", "live"),
-    supabase.from("vendors").select("area").eq("status", "live").not("area", "is", null),
-  ]);
-  const areaCount = new Set((areaRows ?? []).map((r) => (r as { area: string }).area)).size;
-  const vendorsRounded = vendorCount ? Math.floor(vendorCount / 10) * 10 : 0;
+  // Counted in SQL (platform_stats) so it stays correct + cheap at any catalogue
+  // size — not by pulling every row and deduping in JS.
+  const { data: stats } = await supabase.rpc("platform_stats").single();
+  const s = stats as { vendor_count: number; area_count: number } | null;
+  const areaCount = s?.area_count ?? 0;
+  const vendorsRounded = s?.vendor_count ? Math.floor(s.vendor_count / 10) * 10 : 0;
 
   return (
     <>
