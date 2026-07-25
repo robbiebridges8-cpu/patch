@@ -75,3 +75,30 @@ depth.
 - **Taking payment / commission.** Higher ceiling, but creates exactly the
   liability discovery-only exists to avoid. Genuinely open as a *strategy*
   change (PRD §4) — just not a small one.
+
+---
+
+## UX gaps (audit 2026-07-25)
+
+Driven end-to-end. **What's solid:** no 500s on any route; missing vendor 404s,
+logged-out dashboard redirects to login; enquiry modal opens and blocks empty
+submit (3 required fields, native validation); every empty state has a CTA;
+search streams a skeleton so the 6–9s feels responsive.
+
+### Functional gaps — the "bulletproof" ones
+| Gap | Impact |
+|---|---|
+| **Buyer enquiry history is localStorage-only** | Clear the browser or switch device and a buyer's sent enquiries / review links vanish. No account to recover them. The single biggest buyer-side UX hole. |
+| **Free-tier locked lead can read as broken** | A free vendor gets "someone enquired" but can't see who. Correct by design, but needs to *feel* like a paywall, not a bug — worth a usability check with a real vendor. |
+| **Magic-link auth** | Friction, and a poor fit for the PWA (email→browser→app handoff). Backlogged above; flagged here as a UX cost, not just a tech one. |
+| **Search 6–9s vs Netlify 10s timeout** | Streaming hides it from the user until it 500s under load. Config, above. |
+
+### Consistency / framing gaps (deliberate hold — your call on timing)
+The homepage was made industry-agnostic last week; **`/search` and the metadata
+were not**, so the two now disagree. All food-shaped:
+- **`<title>` / meta / OG**: "mobile food & catering vendors in London" — drives Google + AI-answer text.
+- **`/search` empty state**: renders the food QuickStarts (Popular occasions + Cuisines) and copy "Describe your occasion… the vibe, guest count".
+- **Search bar placeholder**: "pizza van for a 40th in Hackney…".
+- **Profile capacity label**: "Serves 40–200 **guests**".
+
+None is a bug; all contradict the horizontal positioning. Cheap to flip when you're ready.
