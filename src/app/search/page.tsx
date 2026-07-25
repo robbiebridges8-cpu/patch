@@ -375,7 +375,12 @@ async function KeywordResults({
       return terms.some((t) => hay.includes(t));
     });
   }
-  rows.sort((a, b) => ((b.review_count as number) || 0) - ((a.review_count as number) || 0));
+  // Paid tier first (mirrors the AI path's rank boost), then most-reviewed. A
+  // plain review_count sort would silently drop the tier priority the initial
+  // query ordered by.
+  rows.sort((a, b) =>
+    ((b.tier as number) || 0) - ((a.tier as number) || 0) ||
+    ((b.review_count as number) || 0) - ((a.review_count as number) || 0));
 
   const matches = rows.map((v, i) => rowToMatch(v, i + 1, (v.description as string) || ""));
   const note = `<strong>${matches.length} vendor${matches.length !== 1 ? "s" : ""}</strong> found${

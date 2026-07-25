@@ -1,0 +1,510 @@
+<title>Patch — Gap Register</title>
+<style>
+  :root {
+    --bg: #f7f4ef; --panel: #fffdfa; --panel-2: #f1ece4; --line: #e2dcd1;
+    --ink: #211d1a; --ink-2: #6d655b; --ink-3: #938a7d;
+    --accent: #e8563f; --accent-soft: #fbe9e5;
+    --blocker: #b91c1c; --blocker-bg: #fbe7e7;
+    --high: #b45309; --high-bg: #fbefdd;
+    --medium: #1d4ed8; --medium-bg: #e6ecfb;
+    --low: #55606f; --low-bg: #eceef1;
+    --new: #7a2ea8; --tracked: #6d655b;
+    --shadow: 0 1px 2px rgba(40,30,20,.05), 0 6px 20px rgba(40,30,20,.05);
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17150f; --panel: #201d17; --panel-2: #2a261e; --line: #35302704;
+      --line: #35302a; --ink: #f3eee5; --ink-2: #b3a998; --ink-3: #857c6e;
+      --accent: #ff7a63; --accent-soft: #3a221c;
+      --blocker: #f87171; --blocker-bg: #3a1d1d;
+      --high: #fbbf5a; --high-bg: #3a2c14;
+      --medium: #7fa6f5; --medium-bg: #1c2740;
+      --low: #9aa3b0; --low-bg: #262a30;
+      --new: #cd97ee; --tracked: #b3a998;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f7f4ef; --panel: #fffdfa; --panel-2: #f1ece4; --line: #e2dcd1;
+    --ink: #211d1a; --ink-2: #6d655b; --ink-3: #938a7d;
+    --accent: #e8563f; --accent-soft: #fbe9e5;
+    --blocker: #b91c1c; --blocker-bg: #fbe7e7; --high: #b45309; --high-bg: #fbefdd;
+    --medium: #1d4ed8; --medium-bg: #e6ecfb; --low: #55606f; --low-bg: #eceef1;
+    --new: #7a2ea8; --tracked: #6d655b;
+  }
+  :root[data-theme="dark"] {
+    --bg: #17150f; --panel: #201d17; --panel-2: #2a261e; --line: #35302a;
+    --ink: #f3eee5; --ink-2: #b3a998; --ink-3: #857c6e;
+    --accent: #ff7a63; --accent-soft: #3a221c;
+    --blocker: #f87171; --blocker-bg: #3a1d1d; --high: #fbbf5a; --high-bg: #3a2c14;
+    --medium: #7fa6f5; --medium-bg: #1c2740; --low: #9aa3b0; --low-bg: #262a30;
+    --new: #cd97ee; --tracked: #b3a998;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans);
+    line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: clamp(20px, 4vw, 52px) clamp(16px, 4vw, 40px) 80px; }
+
+  header.top { border-bottom: 1px solid var(--line); padding-bottom: 26px; margin-bottom: 26px; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 10px; }
+  h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.05; letter-spacing: -.02em; margin: 0 0 12px;
+    font-weight: 680; text-wrap: balance; }
+  .lede { color: var(--ink-2); max-width: 68ch; margin: 0; font-size: 15.5px; }
+  .lede b { color: var(--ink); font-weight: 640; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 10px; margin: 24px 0 4px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+  .stat b { display: block; font-size: 26px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1; }
+  .stat span { font-size: 11.5px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em; }
+  .stat.sev-blocker b { color: var(--blocker); } .stat.sev-high b { color: var(--high); }
+  .stat.sev-medium b { color: var(--medium); } .stat.sev-low b { color: var(--low); }
+
+  .controls { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px); padding: 14px 0 12px; margin: 20px 0 8px; border-bottom: 1px solid var(--line);
+    display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+  .filtset { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .filtset .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); margin-right: 2px; }
+  button.chip { font-family: var(--sans); font-size: 12.5px; border: 1px solid var(--line); background: var(--panel);
+    color: var(--ink-2); padding: 5px 11px; border-radius: 999px; cursor: pointer; transition: .12s; }
+  button.chip:hover { border-color: var(--accent); color: var(--ink); }
+  button.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  :root[data-theme="dark"] button.chip[aria-pressed="true"],
+  @media (prefers-color-scheme: dark) { }
+  button.chip[aria-pressed="true"] { background: var(--accent); color: #1a0f0c; font-weight: 600; }
+  input.search { flex: 1; min-width: 160px; font-family: var(--sans); font-size: 13.5px; padding: 7px 12px;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); }
+  input.search::placeholder { color: var(--ink-3); }
+  input.search:focus-visible, button.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .group { margin-top: 30px; }
+  .group > h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-2);
+    margin: 0 0 12px; display: flex; align-items: baseline; gap: 10px; }
+  .group > h2 .ct { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+  .group > h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  .item { background: var(--panel); border: 1px solid var(--line); border-left-width: 3px; border-radius: 12px;
+    padding: 15px 17px; margin-bottom: 10px; box-shadow: var(--shadow); }
+  .item.s-blocker { border-left-color: var(--blocker); }
+  .item.s-high { border-left-color: var(--high); }
+  .item.s-medium { border-left-color: var(--medium); }
+  .item.s-low { border-left-color: var(--low); }
+  .item .row1 { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 7px; }
+  .badge { font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 5px; white-space: nowrap; }
+  .b-blocker { color: var(--blocker); background: var(--blocker-bg); }
+  .b-high { color: var(--high); background: var(--high-bg); }
+  .b-medium { color: var(--medium); background: var(--medium-bg); }
+  .b-low { color: var(--low); background: var(--low-bg); }
+  .b-domain { color: var(--ink-2); background: var(--panel-2); border: 1px solid var(--line); }
+  .b-status { border: 1px solid currentColor; background: transparent; }
+  .b-new { color: var(--new); } .b-tracked { color: var(--tracked); }
+  .item h3 { font-size: 15px; line-height: 1.32; margin: 0 0 5px; font-weight: 620; letter-spacing: -.01em; }
+  .item .ref { font-family: var(--mono); font-size: 12px; color: var(--accent); word-break: break-word; }
+  .item p { margin: 6px 0 0; font-size: 13.5px; color: var(--ink-2); }
+  .item p .fix { color: var(--ink); font-weight: 600; }
+  .item p .fix::before { content: "→ "; color: var(--accent); font-weight: 700; }
+
+  .empty { text-align: center; color: var(--ink-3); padding: 50px 0; font-size: 14px; }
+  footer { margin-top: 44px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 12.5px; }
+  @media (max-width: 560px) { .controls { position: static; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">Patch · full-surface audit · 25 Jul 2026</p>
+    <h1>Gap register</h1>
+    <p class="lede">Every gap six parallel auditors found across <b>security, correctness, schema, product/UX, SEO and a11y/tests/monitoring/scale</b> — each read the real code and queried the live database. Excludes the known missing-secrets/config items (Stripe keys, Resend, service-role key, Anthropic credit, <code>SITE_URL</code>). <b>Tracked</b> = already in the backlog; <b>New</b> = surfaced here. Filter, or search a file path.</p>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="controls">
+    <div class="filtset" id="sevFilters">
+      <span class="lbl">Severity</span>
+      <button class="chip" data-sev="all" aria-pressed="true">All</button>
+      <button class="chip" data-sev="blocker" aria-pressed="false">Blocker</button>
+      <button class="chip" data-sev="high" aria-pressed="false">High</button>
+      <button class="chip" data-sev="medium" aria-pressed="false">Medium</button>
+      <button class="chip" data-sev="low" aria-pressed="false">Low</button>
+    </div>
+    <div class="filtset" id="domFilters">
+      <span class="lbl">Domain</span>
+      <button class="chip" data-dom="all" aria-pressed="true">All</button>
+    </div>
+    <div class="filtset" id="statusFilters">
+      <span class="lbl">Status</span>
+      <button class="chip" data-status="all" aria-pressed="true">All</button>
+      <button class="chip" data-status="new" aria-pressed="false">New</button>
+      <button class="chip" data-status="tracked" aria-pressed="false">Tracked</button>
+    </div>
+    <input class="search" id="search" type="search" placeholder="Search title or file…" aria-label="Search findings">
+  </div>
+
+  <div id="list"></div>
+  <div class="empty" id="empty" hidden>No findings match those filters.</div>
+
+  <footer>
+    Generated from a six-way parallel audit. Severities are the auditors' own calls, verified against code. This is an internal engineering register, not a public document.
+  </footer>
+</div>
+
+<script>
+const SEV_ORDER = { blocker: 0, high: 1, medium: 2, low: 3 };
+const DOMAINS = {
+  security: "Security", monetization: "Monetization", data: "Data model",
+  ux: "Product / UX", seo: "SEO / discovery", bug: "Bugs", a11y: "Accessibility",
+  tests: "Tests", observability: "Observability", perf: "Perf / scale"
+};
+// severity, domain, status: 'new'|'tracked', title, ref, impact, fix
+const F = [
+  // ── Security ──
+  { sev:"blocker", dom:"security", status:"new", title:"Any signed-in vendor can self-promote to admin",
+    ref:"profiles RLS own_profile_update + column grant on role",
+    impact:"profiles.role carries an authenticated UPDATE grant and own_profile_update has no column restriction. A vendor PATCHes /rest/v1/profiles?id=eq.<uid> {\"role\":\"admin\"} with the public key — RLS passes. is_admin() then unlocks all buyer PII, tier grants, listing moderation and review moderation.",
+    fix:"REVOKE UPDATE(role),INSERT(role) FROM authenticated,anon + BEFORE UPDATE trigger pinning role unless is_admin()." },
+  { sev:"high", dom:"security", status:"new", title:"Vendors can fabricate their own verified 5★ reviews",
+    ref:"submit_review() + setEnquiryStatus — actions.ts:166",
+    impact:"submit_review never checks the caller isn't the reviewed vendor and marks the review verified when the enquiry is 'booked'. A vendor sets their own enquiry to booked, then calls submit_review → verified review rolls into rating_avg. Corrupts the platform's core trust signal.",
+    fix:"Reject when the enquiry's vendor is owned by auth.uid(); derive verified from a server-trusted booking signal, not a vendor-settable status." },
+  { sev:"medium", dom:"security", status:"new", title:"All API rate limits bypassable via public PostgREST",
+    ref:"enquiries / contact_events WITH CHECK(true) + anon RPCs",
+    impact:"The per-IP limiters only guard the Next API routes. With the public key an attacker POSTs straight to /rest/v1/enquiries (or send_buyer_message) — no limiter applies. Unbounded junk leads into any vendor's dashboard, arbitrary vendor_id/buyer fields, message-row flooding.",
+    fix:"Enforce the limit inside the definer fns / a BEFORE INSERT trigger; tighten INSERT policies beyond true; WAF (tracked)." },
+  { sev:"medium", dom:"security", status:"new", title:"Vendor analytics can be poisoned / self-inflated",
+    ref:"contact_events insert — api/track/route.ts:40",
+    impact:"Neither the route nor RLS checks vendor_id is real/live or the event genuine; event_type is validated only in the route, which the direct-insert path skips. An attacker inflates profile_view/reveal_phone for any vendor — fabricating the numbers vendor_analytics() shows paid vendors.",
+    fix:"Constrain event_type + require an existing live vendor at the DB layer; attest/dedupe sessions." },
+  { sev:"low", dom:"security", status:"new", title:"Rate-limit key spoofable when Netlify header absent",
+    ref:"clientIp() — lib/rateLimit.ts:119",
+    impact:"Falls back to attacker-controlled X-Forwarded-For when x-nf-client-connection-ip is missing; a fresh XFF per request gives each its own bucket, defeating both limiters.",
+    fix:"Only trust a known-good proxy header; ignore client-supplied X-Forwarded-For." },
+  { sev:"low", dom:"security", status:"new", title:"Public storage bucket allows full object listing",
+    ref:"storage policy vendor_photos_public_read",
+    impact:"Broad SELECT lets any client enumerate every file in the vendor-photos bucket, not just fetch by URL. Minor info exposure.",
+    fix:"Drop the listing policy; public object URLs still resolve without it." },
+
+  // ── Monetization / correctness ──
+  { sev:"high", dom:"monetization", status:"new", title:"AI search silently discards the paid-tier ranking boost",
+    ref:"vectorSearch — lib/ai.ts:393",
+    impact:"match_vendors orders by rank_score (cosine + tier_rank_weight, a −0.12 penalty on free). vectorSearch then re-sorts by the raw similarity column, throwing the tier weight away. Every AI search re-interleaves free/paid by pure similarity — nullifying search_visibility / featured_placement, the core monetization.",
+    fix:"Drop the JS re-sort (trust the RPC order), or return and sort by rank_score." },
+  { sev:"medium", dom:"monetization", status:"new", title:"Keyword fallback path also drops tier ordering",
+    ref:"KeywordResults — search/page.tsx:378",
+    impact:"Query orders by tier then rating, but a later rows.sort by review_count fully re-orders, so paid vendors get no boost in the keyword / over-budget path either.",
+    fix:"Fold tier into the final comparator (tier, then review_count)." },
+
+  // ── Data model ──
+  { sev:"high", dom:"data", status:"new", title:"'dietary' duplicated across two writable attributes bags",
+    ref:"vendors.attributes.dietary + vendor_services.attributes.dietary",
+    impact:"Identical on all 500 rows today, kept in sync only by the editor writing one object to both tables. Search reads the service bag; the profile reads the vendor bag — any second writer (embed script, admin edit, backfill) drifts the two views of dietary. The exact price/capacity anti-pattern again.",
+    fix:"Make one table authoritative; have the profile read the service copy and drop dietary from vendors.attributes." },
+  { sev:"high", dom:"data", status:"new", title:"Attributes key-shapes diverge and the editor clobbers unknown keys",
+    ref:"updateListing — actions.ts:56",
+    impact:"vendors.attributes={good_for,vibe,dietary}; vendor_services.attributes={dietary,capacity_*,setting}. The editor builds one merged object and writes it to both, so the first edit makes vendors.attributes lose good_for/setting (not form fields). good_for feeds the embedding — edits quietly degrade search text.",
+    fix:"Partition key ownership per table; merge on write, never overwrite the whole bag." },
+  { sev:"high", dom:"data", status:"new", title:"reviews.enquiry_id 'integrity anchor' isn't enforced",
+    ref:"reviews.enquiry_id — nullable, ON DELETE SET NULL",
+    impact:"SCHEMA.md claims a review can only come from a real enquiry, but the column is nullable and all 185 live reviews have enquiry_id / author_id / service_id NULL. Enforcement lives only in submit_review(); the schema permits anchorless reviews and unanchors one if its enquiry is deleted.",
+    fix:"Make it NOT NULL / ON DELETE RESTRICT and backfill seed, or soften the doc claim to 'app-enforced for user reviews only'." },
+  { sev:"medium", dom:"data", status:"new", title:"vendors.primary_category mirrors vendor_services.category",
+    ref:"vendors.primary_category",
+    impact:"Two writable copies, identical on all 500 rows, kept in sync only by the editor writing the same value to both. Lower drift risk (single-value), but still denormalization to watch.",
+    fix:"Derive primary_category from the service, or document it as an intentional read-model mirror." },
+  { sev:"medium", dom:"data", status:"new", title:"vendor_services.price_to is a dead column",
+    ref:"vendor_services.price_to — 100% NULL",
+    impact:"NULL across all 500 rows and read by no code, RPC, script or seed (match_vendors returns price_from/notes only). Survived the original schema; SCHEMA.md describes it aspirationally as 'top of a range'.",
+    fix:"Drop it, or wire a real price range into the editor + match_vendors." },
+
+  // ── Product / UX ──
+  { sev:"high", dom:"ux", status:"new", title:"Buyer gets no confirmation email when they send an enquiry",
+    ref:"api/enquiry/route.ts + lib/email.ts",
+    impact:"The API emails/pushes only the vendor. A buyer's only record of a sent enquiry is a localStorage row + the on-screen card. Close the tab and there's nothing in their inbox proving it happened or letting them return.",
+    fix:"Send the buyer a 'here's what you sent to X, track it here' email with a tokenised link." },
+  { sev:"high", dom:"ux", status:"tracked", title:"Buyer enquiry history is localStorage-only",
+    ref:"lib/useEnquiries.ts + app/enquiries/page.tsx",
+    impact:"Clearing the browser or switching device wipes all sent enquiries, threads and review links. No buyer account to recover them. Schema is ready (buyer_id + email index) but there's no auth UI. The single biggest buyer-side hole.",
+    fix:"Optional post-enquiry OTP/Google login; backfill by email on the existing buyer_id index." },
+  { sev:"high", dom:"ux", status:"new", title:"Vendor-reply email links to a page that can't show the thread cross-device",
+    ref:"actions.ts:228 → /enquiries",
+    impact:"When a vendor replies the buyer is emailed, but the link points to /enquiries, which reads threads from localStorage. Open it on a phone and the reply the email announced renders as the empty state.",
+    fix:"Tokenise the thread URL (/enquiries?e=<id>) so BuyerThread opens without local state." },
+  { sev:"high", dom:"ux", status:"new", title:"Enquiring a free-tier vendor is a silent dead end for the buyer",
+    ref:"api/enquiry/route.ts:169 + EnquiryForm.tsx:96",
+    impact:"A free vendor's lead arrives locked — they can't read it without upgrading. Yet the buyer sees 'X has your brief and will reply — usually within a day.' For a locked vendor that reply may never come, and a batch shortlist gives no signal which vendors can actually respond.",
+    fix:"Soften the promise, or don't promise a timeline for vendors who can't currently read leads." },
+  { sev:"high", dom:"ux", status:"new", title:"Food-only onboarding category list blocks non-food verticals",
+    ref:"CreateListingForm.tsx:9",
+    impact:"The signup 'Cuisine' dropdown is 28 hardcoded food categories with no free-text/other. A plumber, DJ or photographer literally cannot describe what they do — a hard wall against the horizontal expansion the whole thesis is built on.",
+    fix:"Free-text category or a vertical-agnostic taxonomy." },
+  { sev:"high", dom:"ux", status:"tracked", title:"Magic-link vendor auth is a poor PWA fit",
+    ref:"app/vendor/login/page.tsx",
+    impact:"signInWithOtp sends a link; the email→browser→installed-app handoff drops people. The 'sent' state offers no resend and no way to fix a mistyped email except reloading.",
+    fix:"Switch to email OTP before vendors are on the PWA on phones." },
+  { sev:"medium", dom:"ux", status:"new", title:"Buyer is never told a booking/review is available",
+    ref:"enquiries/page.tsx:88 + actions.ts",
+    impact:"'Leave a review' only surfaces when the buyer returns to /enquiries and notices status==='booked'. Marking a lead Booked sends no email, so the review invite is passive and mostly missed — starving the review liquidity the strategy calls the moat.",
+    fix:"Email the buyer on 'booked' with a direct review link." },
+  { sev:"medium", dom:"ux", status:"new", title:"Review page depends on a ?v= slug query param",
+    ref:"app/review/[enquiryId]/page.tsx",
+    impact:"Without ?v=<slug> the heading is just 'Leave a review' and the success link vanishes; the only way to get the correct link is the localStorage-backed /enquiries list, so a cleared-storage buyer can never review a completed booking.",
+    fix:"Resolve the vendor from the enquiry id server-side; don't rely on the query param." },
+  { sev:"medium", dom:"ux", status:"new", title:"Homepage over-promises reviews at cold start",
+    ref:"app/page.tsx:65",
+    impact:"'Every listing is reviewed by real clients' + a review-led trust card, but there are ~0 real enquiries and most vendors have 0 reviews. Buyers click through to review-less cards — a credibility mismatch.",
+    fix:"Soften to a capability ('reviews come only from real enquiries'), not a claim." },
+  { sev:"medium", dom:"ux", status:"new", title:"Header 'Hackney, London' location pill is hardcoded",
+    ref:"components/layout/Header.tsx:12",
+    impact:"Static decoration on every page that reads as an active location filter, implying results are localised to Hackney when location comes only from the typed brief. Misleading scoping signal.",
+    fix:"Remove it, or wire it to the actually-searched location." },
+  { sev:"medium", dom:"ux", status:"new", title:"/enquiries has no loading or error state for the status fetch",
+    ref:"app/enquiries/page.tsx:31",
+    impact:"statuses starts empty so every enquiry flickers 'Awaiting reply' until the RPC resolves, and the .then has no .catch — if it errors the statuses stay wrong forever.",
+    fix:"Skeleton the status pill; handle RPC failure." },
+  { sev:"low", dom:"ux", status:"new", title:"Enquiry form allows past event dates; one top-level error only",
+    ref:"components/vendor/EnquiryForm.tsx:126",
+    impact:"<input type=date> has no min, so a buyer can book 'yesterday'. Validation is native-required on 3 fields with a single bottom-of-form alert, no per-field feedback. Same in shortlist/page.tsx.",
+    fix:"min={today} on the date; field-level errors." },
+
+  // ── SEO / discovery ──
+  { sev:"blocker", dom:"seo", status:"new", title:"Vendor profiles are orphans — no crawlable browse path",
+    ref:"app/vendors/[slug] (only route)",
+    impact:"The only internal links to profiles come from /search, which is noindex. There's no directory, category or location page, so Google reaches profiles only via sitemap.xml — no anchor text or PageRank flows in, indexing is shallow, and AI answer engines have nothing to crawl into.",
+    fix:"Ship /services/[category]/[location] and/or a plain browsable /vendors index linking every live profile." },
+  { sev:"high", dom:"seo", status:"tracked", title:"Location landing pages are the biggest organic + AI-citation lever",
+    ref:"docs/BACKLOG.md:26 — route not built",
+    impact:"People and AI answers search 'plumber in Hackney', not 'plumber'. Thousands of indexable pages sit latent in existing PostGIS data; sitemap lists only 6 static routes + slugs.",
+    fix:"Build /services/[category]/[location] over the existing data (highest-ROI SEO work)." },
+  { sev:"high", dom:"seo", status:"tracked", title:"Root title / description / OG / keywords are food-framed",
+    ref:"app/layout.tsx:47",
+    impact:"'Patch — mobile food & catering vendors in London' + food-only keywords, echoed into OG/Twitter. This is the text Google and AI answers surface for the brand; it hard-codes the proving vertical as the whole business. The homepage has no page-level metadata, so it inherits this verbatim.",
+    fix:"Horizontal title/description; drop food-only keywords." },
+  { sev:"high", dom:"seo", status:"new", title:"Homepage is still food-framed in copy AND Organization JSON-LD",
+    ref:"app/page.tsx:12,24,144,148",
+    impact:"Eyebrow 'Mobile food & catering', footer 'Mobile food vendors worth booking', 'Find food' column, and — worst — the Organization JSON-LD description says 'matching London event organisers with mobile food vendors and caterers'. That entity description is what Knowledge Graph and AI engines read.",
+    fix:"Make all four horizontal; the JSON-LD one matters most for machine readers." },
+  { sev:"high", dom:"seo", status:"new", title:"No default Open Graph / Twitter share image sitewide",
+    ref:"app/layout.tsx:56",
+    impact:"twitter.card is summary_large_image but no images is set and no opengraph-image file exists. Every share of /, /about, /for-vendors, /search etc. renders a blank/broken card — hurts social CTR and how links unfurl in chat/AI surfaces.",
+    fix:"Add a static opengraph-image (root + key routes) or a default metadata.openGraph.images." },
+  { sev:"medium", dom:"seo", status:"tracked", title:"/about is food-framed",
+    ref:"app/about/page.tsx:5",
+    impact:"Meta + body describe 'mobile food vendors and small caterers… street food trucks, catering companies, mobile bars.' /about is indexable and is exactly the page AI answer engines quote to say what Patch is.",
+    fix:"Rewrite horizontal — food as the first vertical, not the definition." },
+  { sev:"medium", dom:"seo", status:"new", title:"Vendor-profile fallbacks and section labels are food-framed",
+    ref:"app/vendors/[slug]/page.tsx:83,133,343",
+    impact:"Description fallback '<name> — mobile food & catering in London' (feeds meta+OG for any vendor without a bespoke description), category fallback 'Mobile catering', and hard-coded <h2>Signature dishes</h2> / 'Dietary options'. For non-food verticals these render literally wrong.",
+    fix:"Neutral fallbacks; label sections from the vertical/attributes, not hard-coded food nouns." },
+  { sev:"medium", dom:"seo", status:"new", title:"Missing FAQPage / BreadcrumbList / Offer structured data",
+    ref:"app/vendors/[slug]/page.tsx:159,419",
+    impact:"Vendor FAQs render as plain HTML (no FAQPage — a top rich-result + AI-extraction format), there's no BreadcrumbList anywhere, and priced services aren't emitted as Offer/makesOffer so they aren't machine-readable.",
+    fix:"Add FAQPage when faq has Q/A pairs; BreadcrumbList once category/location pages exist; makesOffer from vendor_services." },
+  { sev:"medium", dom:"seo", status:"new", title:"Home Organization schema is thin",
+    ref:"app/page.tsx:7",
+    impact:"No logo (blocks Knowledge-Panel logo), no sameAs (no entity disambiguation for AI/Google), no WebSite + SearchAction (blocks sitelinks search box + signals the search endpoint to answer engines).",
+    fix:"Enrich Organization + add a WebSite node with SearchAction → /search?q={query}." },
+  { sev:"medium", dom:"seo", status:"new", title:"/shortlist is indexable but thin / per-user",
+    ref:"app/shortlist/page.tsx + robots.ts:10",
+    impact:"A client component with no metadata, so it inherits index:true, and it's not in robots.ts disallow (only /api,/admin,/vendor/dashboard,/enquiries are). Empty for crawlers, thin content.",
+    fix:"Add /shortlist to robots disallow or a noindex wrapper." },
+  { sev:"low", dom:"seo", status:"new", title:"Vendor <title> omits category + location",
+    ref:"app/vendors/[slug]/page.tsx:86",
+    impact:"Title is just the name → 'Luigi's · Patch'. Adding vertical + area captures long-tail '[service] in [area]' queries on the highest-volume page type.",
+    fix:"Compose title from name + category + area." },
+  { sev:"low", dom:"seo", status:"tracked", title:"/search empty state + placeholders are food-shaped",
+    ref:"search/page.tsx:429 + QuickStarts.tsx",
+    impact:"'Or browse by food', a cuisine list, and the 'pizza van for a 40th in Hackney' placeholder. Noindex so it's UX/positioning, but it's the highest-traffic interactive page and contradicts the horizontal brand for every non-food buyer. NoResults starters are all food too.",
+    fix:"Horizontal quick-starts + placeholder; derive starters from the parsed vertical." },
+  { sev:"low", dom:"seo", status:"tracked", title:"Sitemap is a single file capped at 45k URLs",
+    ref:"app/sitemap.ts:25",
+    impact:"Paginated and warns at 45k, but one sitemap maxes at 50k and there's no index yet; it'll also need to enumerate the future location URLs.",
+    fix:"Split into a sitemap index before catalogue growth." },
+
+  // ── Bugs ──
+  { sev:"medium", dom:"bug", status:"new", title:"Profile 'From £X' is labelled with the wrong service",
+    ref:"app/vendors/[slug]/page.tsx:124 vs 434",
+    impact:"priceFrom is the cheapest service's price, but the caption renders services[0].title (first by position, not cheapest). A vendor with 'Full wedding £2000' at position 0 and 'Canapés £120' shows 'From £120 · Full wedding package'. (Introduced with the price-to-service move.)",
+    fix:"Derive the label from the same service the min price came from." },
+  { sev:"low", dom:"bug", status:"new", title:"Streamed AI note can praise a vendor that isn't the top card",
+    ref:"search/page.tsx:243",
+    impact:"narrateSummary is fed quick.results in raw relevance order and told to endorse the top one or two, but cards are then re-sorted by availability float + applySort. With an event date or chosen sort, the named pick can differ from the pinned 'Top match'.",
+    fix:"Narrate from the final ordered matches, or generate the note after sorting." },
+  { sev:"low", dom:"bug", status:"new", title:"RPC failure degrades silently with no disclosure",
+    ref:"lib/ai.ts:382",
+    impact:"When match_vendors errors, vectorSearch returns fallback rows but usedFallback stays false — so no 'basic results' banner shows and narration runs over similarity:0 keyword rows, exactly when the AI-busy disclosure should appear.",
+    fix:"Surface a fallback flag from vectorSearch." },
+  { sev:"low", dom:"bug", status:"new", title:"updateListing clobbers every service and re-embeds only one",
+    ref:"actions.ts:108 + lib/embedding.ts:77",
+    impact:"The service update uses .eq(vendor_id) (all rows) and reembedVendor selects only the first service. Latent under today's 1:1 editor, but the multiple_services paid feature exists — saving would overwrite all services and leave the 2nd+ embedding stale.",
+    fix:"Scope the update + editor to a specific service_id." },
+  { sev:"low", dom:"bug", status:"new", title:"Owner mutations report false success on a no-op",
+    ref:"actions.ts:166 (setEnquiryStatus, sendVendorMessage)",
+    impact:"Updates filter only .eq(id) and trust RLS to reject foreign rows. RLS holds (not a security hole), but a blocked update changes zero rows and still returns { ok:true } — misleading success.",
+    fix:"Check affected-row count, or scope by ownership explicitly." },
+  { sev:"low", dom:"bug", status:"new", title:"Budget of 0 over-filters everything",
+    ref:"search/page.tsx:191",
+    impact:"params.budget='0' → budgetMax:0 → filter excludes every priced vendor. Only reachable via a hand-edited URL, so minor.",
+    fix:"Treat non-positive / NaN budgets as 'no budget'." },
+
+  // ── Accessibility ──
+  { sev:"medium", dom:"a11y", status:"new", title:"Enquiry success state loses focus and isn't announced",
+    ref:"components/vendor/EnquiryForm.tsx:90",
+    impact:"On submit, setDone(true) unmounts the form (incl. the focused button) and swaps in 'Enquiry sent'; focus falls to <body> and there's no aria-live, so a screen-reader user never learns the conversion succeeded.",
+    fix:"Wrap the success block in role=status and move focus to its heading on mount." },
+  { sev:"medium", dom:"a11y", status:"new", title:"Message threads have no live region",
+    ref:"BuyerThread.tsx:94 + MessageThread.tsx:83",
+    impact:"The bubble list isn't aria-live and the optimistic append isn't announced; the buyer-side 'Loading conversation…' lacks role=status. Sent and newly loaded messages are silent to assistive tech.",
+    fix:"aria-live=polite on the thread list; role=status on the loading line." },
+  { sev:"low", dom:"a11y", status:"new", title:"Streamed AI reasoning note isn't announced when it arrives",
+    ref:"search/page.tsx:178",
+    impact:"Cards render first and the 'Patch recommends' rationale streams in later, but the container has no aria-live, so SR users never learn it appeared.",
+    fix:"Give the answerRow wrapper role=status." },
+  { sev:"low", dom:"a11y", status:"new", title:"Form errors aren't field-associated",
+    ref:"EnquiryForm.tsx:146 + review/[enquiryId]/page.tsx:100",
+    impact:"Errors use role=alert (good) but no aria-invalid / aria-describedby tying the message to the offending input; server-rejected cases (bad email) don't point at a field.",
+    fix:"Associate the alert with the relevant input." },
+  { sev:"low", dom:"a11y", status:"new", title:"Star rating uses aria-pressed buttons inside a radiogroup",
+    ref:"app/review/[enquiryId]/page.tsx:72",
+    impact:"Role/semantics mismatch — a radiogroup expects radios, not toggle buttons.",
+    fix:"Use radio semantics for the star group." },
+  { sev:"low", dom:"a11y", status:"new", title:"Header account icon is mislabelled",
+    ref:"components/layout/Header.tsx:25",
+    impact:"aria-label='Vendor sign in' on a link that points to /vendor/dashboard; a buyer may read the generic person icon as a buyer account.",
+    fix:"Relabel to match the destination." },
+
+  // ── Tests ──
+  { sev:"high", dom:"tests", status:"new", title:"Stripe webhook is entirely untested",
+    ref:"api/billing/webhook/route.ts",
+    impact:"mapStatus(), periodEnd() (reads two differently-shaped Stripe fields) and syncSubscription() — the code that turns a payment into access — have no unit tests. A regression silently fails to upgrade paying vendors.",
+    fix:"Unit-test the pure mappers and the vendorId-vs-customerId branch." },
+  { sev:"high", dom:"tests", status:"new", title:"Locked-lead paywall redaction has no test",
+    ref:"app/vendor/dashboard/page.tsx:43",
+    impact:"The server-side redaction that blanks buyer name/email/phone/message for free tier — the actual paywall, since props ship in the RSC payload — is untested. canAccess is covered, the redaction that depends on it isn't.",
+    fix:"Extract redaction to a pure function; test locked vs unlocked output." },
+  { sev:"medium", dom:"tests", status:"new", title:"Enquiry POST batch + email-branch untested",
+    ref:"api/enquiry/route.ts",
+    impact:"The vendorIds[] fan-out and per-vendor locked-vs-unlocked email branch have no coverage; e2e only does a single-vendor send. Batch enquiry from the shortlist is a core path with zero assertions.",
+    fix:"Integration-test batch insert + email-branch selection." },
+  { sev:"medium", dom:"tests", status:"new", title:"Search fallback / relaxation ladder untested",
+    ref:"lib/ai.ts:417 (searchWithRecovery, fallbackSearch)",
+    impact:"The budget/area/category relaxation order and the keyword fallback (parse-fail, embed-fail, spend-cap) are only hit via e2e with PATCH_STUB_AI, which stubs the failure. The dietary-never-relaxed invariant is unasserted.",
+    fix:"Unit-test the relaxation sequence + the never-relax-dietary invariant." },
+  { sev:"medium", dom:"tests", status:"new", title:"Message-send and status-transition paths untested",
+    ref:"actions.ts:166 + api/messages/route.ts",
+    impact:"Including the 'reply flips sent→replied' side-effect and the auth-boundary reliance on RLS. No test asserts a forged enquiryId fails.",
+    fix:"Cover the transition guard and an unauthorized-caller case." },
+
+  // ── Observability ──
+  { sev:"high", dom:"observability", status:"new", title:"Stripe webhook swallows DB write failures and returns 200",
+    ref:"api/billing/webhook/route.ts:72",
+    impact:"syncSubscription discards the results of the subscriptions.upsert and vendors.update; on error nothing throws, no captureException fires (file uses only console.error), and it still returns { received:true } so Stripe never retries. A vendor pays, tier isn't persisted, no signal emitted.",
+    fix:"Check both write results, captureException on failure, return non-2xx so Stripe retries." },
+  { sev:"high", dom:"observability", status:"tracked", title:"The 6–9s search path has no timeout instrumentation",
+    ref:"search/page.tsx:206 + lib/ai.ts",
+    impact:"The captureException only catches thrown JS errors; a Netlify 10s kill terminates the process and returns a 500 with nothing captured — exactly the failure that trips under load. No maxDuration is set anywhere.",
+    fix:"Raise maxDuration / move narration off the critical path + soft-timeout wrap that captures before the platform kill." },
+  { sev:"medium", dom:"observability", status:"new", title:"AI degradation events are console-only",
+    ref:"lib/ai.ts:611 + lib/rateLimit.ts:109",
+    impact:"parse-fail, embed-fail → keyword fallback, and the daily AI-cap hit only console.error. A platform outage or cap breach silently degrades every search with no captureMessage — the usedFallback flag reaches the UI but not observability.",
+    fix:"captureMessage(warning) on fallback and cap-reached so a spike is visible." },
+  { sev:"low", dom:"observability", status:"new", title:"Best-effort side-effect failures are console-only",
+    ref:"api/enquiry/route.ts:109 + track + email",
+    impact:"contact_events insert, the push-send loop, track inserts and email nudges use console.error with no captureException. The primary enquiry insert is correctly captured as fatal; these secondary paths fail invisibly in prod.",
+    fix:"Route the meaningful ones (contact_events, vendor push) through captureException at warning." },
+  { sev:"low", dom:"observability", status:"new", title:"No health / readiness endpoint",
+    ref:"(no route)",
+    impact:"Nothing pings Supabase/Anthropic/Voyage, so degradation is only detectable via user-facing 500s.",
+    fix:"Add a lightweight /api/health." },
+
+  // ── Perf / scale ──
+  { sev:"medium", dom:"perf", status:"new", title:"Dashboard loads leads + all their messages unbounded",
+    ref:"app/vendor/dashboard/page.tsx:29",
+    impact:"The enquiries select has no .limit(), and messages does .in(enquiry_id, every lead id) with no limit. A popular vendor pulls every enquiry ever plus every message across all of them into one RSC render — grows with success.",
+    fix:"Paginate leads (e.g. most-recent 50) and scope the messages query to the visible page." },
+  { sev:"low", dom:"perf", status:"new", title:"Dashboard issues 6 sequential Supabase round-trips",
+    ref:"app/vendor/dashboard/page.tsx:116",
+    impact:"vendor → service → sub → photos → analytics → blocked, each awaited in turn; the last five are independent once vendor is known. Avoidable latency on every dashboard load.",
+    fix:"Parallelize the post-vendor reads with Promise.all." },
+  { sev:"low", dom:"perf", status:"new", title:"Vendor profile selects * with unbounded nested reviews",
+    ref:"app/vendors/[slug]/page.tsx:28",
+    impact:"getVendor pulls all columns and every review row (only 5 used in JSON-LD). Bounded per vendor today, scales with review volume. (react.cache correctly dedupes the metadata+page calls.)",
+    fix:"Select explicit columns; cap/paginate reviews." },
+];
+
+// ── Render ──
+const listEl = document.getElementById("list");
+const emptyEl = document.getElementById("empty");
+const state = { sev: "all", dom: "all", status: "all", q: "" };
+
+// domain filter buttons (built from data, ordered by DOMAINS)
+const domCounts = {};
+F.forEach(f => domCounts[f.dom] = (domCounts[f.dom]||0)+1);
+const domWrap = document.getElementById("domFilters");
+Object.keys(DOMAINS).filter(d=>domCounts[d]).forEach(d => {
+  const b = document.createElement("button");
+  b.className = "chip"; b.dataset.dom = d; b.setAttribute("aria-pressed","false");
+  b.textContent = `${DOMAINS[d]} ${domCounts[d]}`;
+  domWrap.appendChild(b);
+});
+
+// stats
+const sevCounts = { blocker:0, high:0, medium:0, low:0 };
+F.forEach(f => sevCounts[f.sev]++);
+const newCount = F.filter(f=>f.status==="new").length;
+const statsEl = document.getElementById("stats");
+statsEl.innerHTML = `
+  <div class="stat"><b>${F.length}</b><span>total gaps</span></div>
+  <div class="stat sev-blocker"><b>${sevCounts.blocker}</b><span>Blocker</span></div>
+  <div class="stat sev-high"><b>${sevCounts.high}</b><span>High</span></div>
+  <div class="stat sev-medium"><b>${sevCounts.medium}</b><span>Medium</span></div>
+  <div class="stat sev-low"><b>${sevCounts.low}</b><span>Low</span></div>
+  <div class="stat"><b>${newCount}</b><span>newly found</span></div>
+  <div class="stat"><b>${F.length-newCount}</b><span>tracked</span></div>`;
+
+function esc(s){ return s.replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function render() {
+  const q = state.q.trim().toLowerCase();
+  const shown = F.filter(f =>
+    (state.sev==="all" || f.sev===state.sev) &&
+    (state.dom==="all" || f.dom===state.dom) &&
+    (state.status==="all" || f.status===state.status) &&
+    (!q || (f.title+" "+f.ref+" "+f.impact).toLowerCase().includes(q))
+  ).sort((a,b) => SEV_ORDER[a.sev]-SEV_ORDER[b.sev]);
+
+  emptyEl.hidden = shown.length>0;
+  // group by domain, in DOMAINS order
+  const byDom = {};
+  shown.forEach(f => (byDom[f.dom] ??= []).push(f));
+  listEl.innerHTML = Object.keys(DOMAINS).filter(d=>byDom[d]).map(d => `
+    <section class="group">
+      <h2>${DOMAINS[d]} <span class="ct">${byDom[d].length}</span></h2>
+      ${byDom[d].map(f => `
+        <article class="item s-${f.sev}">
+          <div class="row1">
+            <span class="badge b-${f.sev}">${f.sev}</span>
+            <span class="badge b-domain">${DOMAINS[f.dom]}</span>
+            <span class="badge b-status b-${f.status}">${f.status}</span>
+          </div>
+          <h3>${esc(f.title)}</h3>
+          <div class="ref">${esc(f.ref)}</div>
+          <p>${esc(f.impact)}</p>
+          <p><span class="fix">${esc(f.fix)}</span></p>
+        </article>`).join("")}
+    </section>`).join("");
+}
+
+function wire(id, key) {
+  document.getElementById(id).addEventListener("click", e => {
+    const b = e.target.closest("button.chip"); if (!b) return;
+    state[key] = b.dataset[key === "status" ? "status" : key];
+    [...e.currentTarget.querySelectorAll("button.chip")].forEach(x =>
+      x.setAttribute("aria-pressed", String(x === b)));
+    render();
+  });
+}
+wire("sevFilters","sev"); wire("domFilters","dom"); wire("statusFilters","status");
+document.getElementById("search").addEventListener("input", e => { state.q = e.target.value; render(); });
+render();
+</script>

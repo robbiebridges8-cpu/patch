@@ -117,9 +117,18 @@ export async function consumeAiBudget(units = 1): Promise<boolean> {
 }
 
 export function clientIp(headers: Headers): string {
+  // Trust order matters: x-nf-client-connection-ip is set by Netlify's edge and
+  // cannot be spoofed by the client — in production it is always present, so it
+  // wins. x-real-ip is set by the proxy layer. x-forwarded-for is client-
+  // appendable (an attacker can prepend a fake first hop to get a fresh bucket),
+  // so it is only a last resort for non-Netlify/local environments; take the
+  // LAST entry, which is the one the nearest trusted proxy added, not the first.
+  const xff = headers.get("x-forwarded-for");
+  const lastForwarded = xff ? xff.split(",").map((s) => s.trim()).filter(Boolean).at(-1) : null;
   return (
     headers.get("x-nf-client-connection-ip") ||
-    headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    headers.get("x-real-ip") ||
+    lastForwarded ||
     "anon"
   );
 }

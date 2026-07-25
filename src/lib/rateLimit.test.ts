@@ -118,9 +118,17 @@ describe("clientIp", () => {
     }))).toBe("1.2.3.4");
   });
 
-  it("takes the first hop of x-forwarded-for", async () => {
+  it("prefers x-real-ip over x-forwarded-for", async () => {
     const { clientIp } = await fresh();
-    expect(clientIp(new Headers({ "x-forwarded-for": "1.2.3.4, 5.6.7.8" }))).toBe("1.2.3.4");
+    expect(clientIp(new Headers({ "x-real-ip": "1.2.3.4", "x-forwarded-for": "9.9.9.9" }))).toBe("1.2.3.4");
+  });
+
+  it("takes the LAST hop of x-forwarded-for (proxy-appended, not client-spoofable)", async () => {
+    const { clientIp } = await fresh();
+    // A client can prepend fake entries to XFF; the trusted proxy appends the
+    // real one last. Taking the first hop would let an attacker mint a fresh
+    // rate-limit bucket per request.
+    expect(clientIp(new Headers({ "x-forwarded-for": "1.2.3.4, 5.6.7.8" }))).toBe("5.6.7.8");
   });
 
   it("falls back to a constant rather than throwing", async () => {

@@ -388,9 +388,10 @@ async function vectorSearch(
 
   const results = (data || []) as VendorResult[];
   console.log(`[vectorSearch] returned ${results.length} results`);
-  // The RPC already orders by similarity; sorting again is cheap insurance
-  // against the fallback path, which has no similarity to speak of.
-  results.sort((a, b) => (b.similarity || 0) - (a.similarity || 0));
+  // Trust the RPC order. match_vendors sorts by rank_score = similarity +
+  // tier_rank_weight(tier), so paid listings carry their ranking boost. Re-sorting
+  // by similarity here would silently throw that boost away — the boost is exactly
+  // what vendors pay for, and rank_score isn't returned to sort by instead.
   return results;
 }
 
