@@ -238,7 +238,7 @@ export default async function Home() {
           <div className={styles.footerLinks}>
             <div className={styles.footerCol}>
               <h4>Find services</h4>
-              <a href="#how-it-works">How it works</a>
+              <a href="/services">Browse by area</a>
               <a href="/search">Search</a>
             </div>
             <div className={styles.footerCol}>

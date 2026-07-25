@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import { supabase } from "@/lib/supabase";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { categoryPhoto } from "@/lib/categoryPhoto";
+import { SERVICE_CATEGORIES } from "@/lib/serviceAreas";
 import Header from "@/components/layout/Header";
 import EnquiryButton from "@/components/vendor/EnquiryForm";
 import TrackProfileView from "@/components/vendor/TrackProfileView";
@@ -234,6 +235,23 @@ export default async function VendorPage({
       }
     : null;
 
+  // Breadcrumb ties the profile into the Services → Category hierarchy (rich
+  // snippet + it tells engines where this vendor sits). Links to the category
+  // landing page when we have a matching slug.
+  const catSlug = SERVICE_CATEGORIES.find((c) => c.name === vendor.primary_category)?.slug;
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Patch", item: SITE },
+      { "@type": "ListItem", position: 2, name: "Services", item: `${SITE}/services` },
+      ...(catSlug
+        ? [{ "@type": "ListItem", position: 3, name: vendor.primary_category as string, item: `${SITE}/services/${catSlug}/london` }]
+        : []),
+      { "@type": "ListItem", position: catSlug ? 4 : 3, name: vendor.name as string, item: `${SITE}/vendors/${slug}` },
+    ],
+  };
+
   const glance: { label: string; value: string; sub?: string }[] = [];
   if (capMax) glance.push({ label: "Serves", value: capMin ? `${capMin}–${capMax}` : `up to ${capMax}`, sub: "guests" });
   if (vendor.coverage_radius_miles) glance.push({ label: "Covers", value: `${vendor.coverage_radius_miles} mi`, sub: formatLocation(vendor.area as string | null, vendor.base_postcode as string | null) ?? undefined });
@@ -243,6 +261,7 @@ export default async function VendorPage({
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }} />
       {faqJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }} />}
       {!isPreview && <TrackProfileView vendorId={vendor.id as string} slug={slug} />}
       <Header />

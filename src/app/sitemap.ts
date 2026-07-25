@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { supabase } from "@/lib/supabase";
+import { SERVICE_CATEGORIES, LONDON_AREAS } from "@/lib/serviceAreas";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
 
@@ -9,11 +10,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/search`, changeFrequency: "daily", priority: 0.9 },
+    { url: `${SITE_URL}/services`, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/for-vendors`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/about`, changeFrequency: "yearly", priority: 0.4 },
     { url: `${SITE_URL}/privacy`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE_URL}/terms`, changeFrequency: "yearly", priority: 0.3 },
   ];
+
+  // The category × location matrix — the organic + answer-engine surface. These
+  // are the pages that answer "[service] in [area]", so they carry real weight.
+  const serviceRoutes: MetadataRoute.Sitemap = SERVICE_CATEGORIES.flatMap((c) =>
+    LONDON_AREAS.map((a) => ({
+      url: `${SITE_URL}/services/${c.slug}/${a.slug}`,
+      changeFrequency: "weekly" as const,
+      priority: a.slug === "london" ? 0.8 : 0.7,
+    })),
+  );
 
   // PostgREST caps a single response at ~1000 rows, so a bare select silently
   // truncates once the catalogue outgrows one page — the sitemap would look
@@ -53,5 +65,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [...staticRoutes, ...vendorRoutes];
+  return [...staticRoutes, ...serviceRoutes, ...vendorRoutes];
 }
