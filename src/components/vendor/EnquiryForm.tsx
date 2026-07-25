@@ -88,16 +88,19 @@ export default function EnquiryButton({ vendorId, vendorName, className, label =
             </button>
 
             {done ? (
-              <div className={styles.success}>
+              <div className={styles.success} role="status" aria-live="polite">
                 <div className={styles.successIcon}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                 </div>
                 <h3 className={styles.successTitle}>Enquiry sent</h3>
                 <p className={styles.successBody}>
-                  {vendorName} has your brief and will reply directly — usually within a day.
-                  Comparing options? Shortlist a few more and enquire them all at once.
+                  We&apos;ve sent your brief to {vendorName}. If it&apos;s a good fit they&apos;ll reply
+                  directly, usually within a day or two. Comparing options? Shortlist a few more and
+                  enquire them all at once.
                 </p>
-                <button type="button" className={styles.primaryBtn} onClick={close}>Done</button>
+                {/* autoFocus so a screen reader lands on an actionable control, not
+                    the unmounted submit button. */}
+                <button type="button" className={styles.primaryBtn} onClick={close} autoFocus>Done</button>
               </div>
             ) : (
               <>
@@ -123,7 +126,7 @@ export default function EnquiryButton({ vendorId, vendorName, className, label =
                     </label>
                     <label className={styles.field}>
                       <span className={styles.labelText}>Event date</span>
-                      <input name="eventDate" type="date" className={styles.input} />
+                      <input name="eventDate" type="date" min={new Date().toISOString().slice(0, 10)} className={styles.input} />
                     </label>
                   </div>
 

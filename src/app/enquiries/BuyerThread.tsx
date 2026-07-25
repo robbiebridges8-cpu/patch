@@ -93,13 +93,13 @@ export default function BuyerThread({
   return (
     <div className={styles.thread}>
       {messages === null ? (
-        <p className={styles.threadEmpty}>Loading conversation…</p>
+        <p className={styles.threadEmpty} role="status">Loading conversation…</p>
       ) : messages.length === 0 ? (
         <p className={styles.threadEmpty}>
           No messages yet. Send {vendorName} a note here and they&apos;ll be notified by email.
         </p>
       ) : (
-        <ul className={styles.threadList}>
+        <ul className={styles.threadList} aria-live="polite" aria-relevant="additions">
           {messages.map((m) => (
             <li
               key={m.id}

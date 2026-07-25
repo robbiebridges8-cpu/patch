@@ -74,9 +74,10 @@ export default function ReviewPage() {
                   <button
                     key={n}
                     type="button"
+                    role="radio"
                     className={styles.star}
                     aria-label={`${n} star${n > 1 ? "s" : ""}`}
-                    aria-pressed={rating === n}
+                    aria-checked={rating === n}
                     onMouseEnter={() => setHover(n)}
                     onMouseLeave={() => setHover(0)}
                     onClick={() => setRating(n)}

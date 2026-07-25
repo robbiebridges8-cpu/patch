@@ -313,9 +313,13 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
       )}
 
       {narratePromise && (
-        <Suspense fallback={<AINoteSkeleton />}>
-          <StreamedNote promise={narratePromise} />
-        </Suspense>
+        // Live region so the "Patch recommends" rationale, which streams in after
+        // the cards, is announced to assistive tech when it arrives.
+        <div role="status" aria-live="polite">
+          <Suspense fallback={<AINoteSkeleton />}>
+            <StreamedNote promise={narratePromise} />
+          </Suspense>
+        </div>
       )}
 
       {recCount > 0 ? (

@@ -80,7 +80,7 @@ export default function MessageThread({
           email with a link back.
         </p>
       ) : (
-        <ul className={styles.threadList}>
+        <ul className={styles.threadList} aria-live="polite" aria-relevant="additions">
           {messages.map((m) => (
             <li
               key={m.id}
