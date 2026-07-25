@@ -2,13 +2,14 @@ import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/service";
 import { TIER } from "@/lib/tiers";
+import { captureException } from "@/lib/monitoring";
 
 // Stripe needs the raw body + Node crypto for signature verification.
 export const runtime = "nodejs";
 
 type SubStatus = "active" | "past_due" | "cancelled" | "trialing";
 
-function mapStatus(s: Stripe.Subscription.Status): SubStatus {
+export function mapStatus(s: Stripe.Subscription.Status): SubStatus {
   switch (s) {
     case "active": return "active";
     case "trialing": return "trialing";
@@ -19,7 +20,7 @@ function mapStatus(s: Stripe.Subscription.Status): SubStatus {
   }
 }
 
-function periodEnd(sub: Stripe.Subscription): string | null {
+export function periodEnd(sub: Stripe.Subscription): string | null {
   const top = (sub as unknown as { current_period_end?: number }).current_period_end;
   const item = sub.items?.data?.[0]?.current_period_end;
   const unix = top ?? item;
@@ -69,19 +70,24 @@ export async function POST(request: Request) {
     };
 
     if (vendorId) {
-      await svc!.from("subscriptions").upsert({ vendor_id: vendorId, ...row }, { onConflict: "vendor_id" });
+      const { error: subErr } = await svc!.from("subscriptions")
+        .upsert({ vendor_id: vendorId, ...row }, { onConflict: "vendor_id" });
       // A lapsed subscription drops the vendor to free — it does NOT hide the
       // listing. Their profile, reviews and SEO presence are supply density we
       // want to keep, and a live free listing is a standing upgrade prompt.
       // The tier comes from the completed payment, never from the client.
-      await svc!.from("vendors")
+      const { error: venErr } = await svc!.from("vendors")
         .update({ tier: paying ? boughtTier : TIER.FREE, status: "live" })
         .eq("id", vendorId);
+      // A discarded error here means a paid vendor silently never gets their
+      // tier. Throw so the handler returns non-2xx and Stripe retries.
+      if (subErr || venErr) throw new Error(`persist failed: ${(subErr ?? venErr)!.message}`);
     } else {
       // Fall back to matching by customer id.
-      await svc!.from("subscriptions")
+      const { error } = await svc!.from("subscriptions")
         .update(row)
         .eq("stripe_customer_id", row.stripe_customer_id as string);
+      if (error) throw new Error(`persist by customer failed: ${error.message}`);
     }
   }
 
@@ -105,7 +111,9 @@ export async function POST(request: Request) {
         break;
     }
   } catch (err) {
+    // A payment that doesn't persist is lost revenue and a vendor stuck on free.
     console.error("[stripe] handler error:", err);
+    captureException(err, { scope: "api/billing/webhook", severity: "fatal", extra: { eventType: event.type } });
     return Response.json({ error: "Handler failed." }, { status: 500 });
   }
 

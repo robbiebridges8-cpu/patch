@@ -1,15 +1,18 @@
 export const dynamic = "force-dynamic";
+// The parse→embed→geocode→match pipeline runs 6–9s; the platform default (10s)
+// kills it under load and 500s. Give the render headroom above the slow path.
+export const maxDuration = 30;
 
 export const metadata = {
   title: "Search",
-  description: "Describe your occasion and Patch returns a reasoned shortlist of mobile food vendors in London.",
+  description: "Describe what you need and Patch returns a reasoned shortlist of local services in London.",
   robots: { index: false, follow: true },
 };
 
 import { Suspense } from "react";
 import { headers } from "next/headers";
 import { rateLimit, clientIp, consumeAiBudget } from "@/lib/rateLimit";
-import { captureException } from "@/lib/monitoring";
+import { captureException, captureMessage } from "@/lib/monitoring";
 import { quickSearch, narrateSummary, type VendorResult, type ParsedQuery } from "@/lib/ai";
 import { categoryPhoto } from "@/lib/categoryPhoto";
 import { formatLocation, formatLocationWithDistance } from "@/lib/location";
@@ -216,6 +219,17 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
         <strong>Search hit a snag.</strong> We couldn&apos;t reach the matching engine just now —
         please try that search again in a moment.
       </div>
+    );
+  }
+
+  // Surface degradation to monitoring, not just the console — a spike here means
+  // the AI pipeline is down or the daily cap tripped, which is invisible otherwise.
+  if (quick.usedFallback) {
+    captureMessage(
+      aiBudgetOk
+        ? "Search degraded to keyword fallback (AI pipeline unavailable)"
+        : "Search served keyword results (daily AI budget cap reached)",
+      { scope: "search", severity: "warning", extra: { query } },
     );
   }
 

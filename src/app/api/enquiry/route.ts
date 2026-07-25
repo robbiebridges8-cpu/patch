@@ -106,7 +106,7 @@ export async function POST(request: Request) {
       session_id: typeof body.sessionId === "string" ? body.sessionId.slice(0, 64) : null,
     })),
   );
-  if (eventErr) console.error("[enquiry] contact_event insert failed:", eventErr.message);
+  if (eventErr) captureException(eventErr, { scope: "api/enquiry", severity: "warning", extra: { step: "contact_event", vendorCount: vendors.length } });
 
   // Push the vendors who've installed the control panel. Best-effort and
   // strictly additive: the enquiry is already stored and the email still goes,
