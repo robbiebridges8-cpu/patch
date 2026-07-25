@@ -61,11 +61,9 @@ depth.
 
 | Item | Note |
 |---|---|
-| `/search` empty state | Still renders the food-specific QuickStarts (cuisine list, "Browse by food"). Removed from the homepage; missed here. |
-| Root `<title>` / meta description | Still "mobile food & catering vendors in London". Drives what Google and AI answers show. |
-| `/about` copy | Still food-framed. |
+| **Static-param cap for `/services`** | `generateStaticParams` prerenders the *whole* category × location matrix (616 now, fine). It's multiplicative — past a few thousand combos, cap it to hot pages and let the long tail render on demand. Machinery is already there (`dynamicParams=true` + `revalidate`); it's a one-line change. Do it before the matrix (more categories × more areas) crosses ~2–3k pages. |
+| **Sitemap index** | A single sitemap caps at 50k URLs (warns at 45k). Now carries 616 service pages + all vendor URLs; still comfortably under, but the location matrix is what trips it first. Split into a sitemap index before ~45k. |
 | PWA icons | Placeholders generated in-repo. Recognisable, want real design. |
-| Sitemap index | Paginated correctly, but a single sitemap caps at 50k URLs. Warns at 45k; needs splitting beyond that. |
 | `vendor_schedules` | Dead table, RLS on with no policies. Drop it or use it. |
 | Second paid tier | `tier` is an integer and tier 2 already inherits every feature — adding one is a price constant and a name, no migration. |
 | Monitoring providers | Sentry and analytics seams exist, no keys wired. |
