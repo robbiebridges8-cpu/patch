@@ -14,6 +14,7 @@ import PublishButton from "./PublishButton";
 import PhotoManager from "./PhotoManager";
 import AvailabilityManager from "./AvailabilityManager";
 import LeadRow, { type Lead } from "./LeadRow";
+import { redactLead } from "@/lib/leadRedaction";
 import { type ThreadMessage } from "./MessageThread";
 import BillingCard from "./BillingCard";
 import AnalyticsCard, { type Analytics } from "./AnalyticsCard";
@@ -40,26 +41,9 @@ async function LeadsCard({ vendorId, tier }: { vendorId: string; tier: number })
   const newCount = rawLeads.filter((l) => l.status === "sent" || l.status === "viewed").length;
   const locked = !canAccess(tier, "unlock_leads");
 
-  // Redact server-side. Rendering a locked lead without its details is not
-  // enough: props passed to a client component are serialised into the RSC
-  // payload, so anything fetched here ships to the browser whether it is
-  // painted or not. A paywall you can defeat with view-source is not a paywall.
-  const leads: Lead[] = locked
-    ? rawLeads.map((l) => ({
-        id: l.id,
-        buyer_name: null,
-        buyer_email: null,
-        buyer_phone: null,
-        event_date: l.event_date,
-        postcode: l.postcode,
-        details: l.details,
-        // A word count proves the message is substantial without disclosing it.
-        message: null,
-        messageWords: l.message ? l.message.trim().split(/\s+/).length : 0,
-        status: l.status,
-        created_at: l.created_at,
-      }))
-    : rawLeads;
+  // Redact server-side (see redactLead) — the paywall lives in the RSC payload,
+  // not in what's painted.
+  const leads: Lead[] = rawLeads.map((l) => redactLead(l, locked));
 
   // One query for every thread on this vendor's leads (RLS scopes it to us).
   const { data: msgs } = leads.length && !locked

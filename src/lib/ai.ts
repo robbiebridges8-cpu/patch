@@ -403,19 +403,10 @@ async function vectorSearch(
  * and headcount are softest, area next, cuisine last. Dietary needs are never
  * relaxed — "vegan" is a requirement, not a preference.
  */
-const RELAXATIONS: {
-  label: string;
-  constraining: (p: ParsedQuery, geo: unknown) => boolean;
-  relax: (p: ParsedQuery) => void;
-  dropsGeo?: boolean;
-}[] = [
-  { label: "budget", constraining: (p) => p.budget_max != null, relax: (p) => { p.budget_max = null; } },
-  { label: "area", constraining: (_p, geo) => geo != null, relax: () => {}, dropsGeo: true },
-  { label: "service type", constraining: (p) => p.categories.length > 0, relax: (p) => { p.categories = []; } },
-  // Attributes are never relaxed. They only ever come from an explicit UI
-  // filter, so the buyer asked for them deliberately — and "nut-free" or
-  // "DBS checked" is a requirement, not a preference.
-];
+// The recovery ladder lives in its own module so its pure logic is testable
+// without loading the paid-client imports in this file.
+export { RELAXATIONS } from "./searchRelaxations";
+import { RELAXATIONS } from "./searchRelaxations";
 
 async function searchWithRecovery(
   parsed: ParsedQuery,
