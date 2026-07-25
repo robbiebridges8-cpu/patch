@@ -83,8 +83,8 @@ export default function Home() {
               <div className={styles.stepNum}>3</div>
               <h3 className={styles.stepTitle}>Book with confidence</h3>
               <p className={styles.stepDesc}>
-                Every listing is reviewed by real clients. See prices, availability and distance —
-                then get in touch directly.
+                Reviews come only from real enquiries, so ratings mean something. See prices,
+                availability and distance — then get in touch directly.
               </p>
             </div>
           </div>

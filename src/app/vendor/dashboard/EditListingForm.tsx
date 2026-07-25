@@ -4,12 +4,11 @@ import { useActionState } from "react";
 import { updateListing, type ActionState } from "./actions";
 import styles from "../vendor.module.css";
 
+// Suggestions only — free text so any vertical can list (see CreateListingForm).
 const CATEGORIES = [
-  "Pizza", "Burgers", "Tacos & Mexican", "BBQ", "Grazing & cheese", "Coffee",
-  "Desserts", "Ice cream", "Middle Eastern", "Indian", "Asian street food",
-  "British comfort", "Canapés", "Vegan", "Cocktail bar", "Caribbean", "Thai",
-  "Japanese", "Chinese", "Korean", "Greek", "Spanish", "Seafood", "Fried chicken",
-  "Crêpes & waffles", "Doughnuts", "Fish & chips", "African",
+  "Pizza", "Burgers", "BBQ", "Grazing & cheese", "Coffee", "Desserts",
+  "Cocktail bar", "Canapés", "Photographer", "DJ", "Florist", "Cleaner",
+  "Mobile bar", "Entertainer", "Event hire",
 ];
 
 const DIETARY = ["vegetarian", "vegan", "gluten-free", "halal", "dairy-free", "nut-free"];
@@ -54,11 +53,13 @@ export default function EditListingForm({ vendor }: { vendor: EditableVendor }) 
           <input id="name" name="name" required maxLength={200} className={styles.input} defaultValue={vendor.name ?? ""} />
         </div>
         <div className={styles.field}>
-          <label className={styles.labelText} htmlFor="category">Cuisine</label>
-          <select id="category" name="category" className={styles.input} defaultValue={vendor.primary_category ?? ""}>
-            <option value="">Choose a cuisine…</option>
-            {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <label className={styles.labelText} htmlFor="category">Category</label>
+          <input id="category" name="category" list="category-suggestions" maxLength={100}
+            className={styles.input} defaultValue={vendor.primary_category ?? ""}
+            placeholder="e.g. Pizza, Photographer, DJ…" autoComplete="off" />
+          <datalist id="category-suggestions">
+            {CATEGORIES.map((c) => <option key={c} value={c} />)}
+          </datalist>
         </div>
       </div>
 

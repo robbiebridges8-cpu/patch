@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { reembedVendor } from "@/lib/embedding";
-import { sendThreadMessageEmail } from "@/lib/email";
+import { sendThreadMessageEmail, sendBookingReviewEmail } from "@/lib/email";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -205,6 +205,28 @@ export async function setEnquiryStatus(enquiryId: string, status: string): Promi
 
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: "We couldn't find that enquiry." };
+
+  // On a confirmed booking, invite the buyer to review — best-effort, and only
+  // now that we know the update actually applied (RLS-scoped to this owner).
+  if (status === "booked") {
+    const { data: enq } = await supabase
+      .from("enquiries")
+      .select("buyer_name, buyer_email, vendors ( name, slug )")
+      .eq("id", enquiryId)
+      .maybeSingle();
+    const v = enq?.vendors as unknown;
+    const vendor = (Array.isArray(v) ? v[0] : v) as { name: string; slug: string } | null;
+    if (enq?.buyer_email && vendor) {
+      await sendBookingReviewEmail({
+        to: enq.buyer_email as string,
+        buyerName: (enq.buyer_name as string | null) ?? null,
+        vendorName: vendor.name,
+        vendorSlug: vendor.slug,
+        enquiryId,
+      }).catch(() => ({ sent: false }));
+    }
+  }
+
   revalidatePath("/vendor/dashboard");
   return { ok: true };
 }

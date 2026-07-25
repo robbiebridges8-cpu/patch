@@ -130,6 +130,120 @@ export async function sendVendorEnquiryEmail(
   }
 }
 
+export interface BookingReviewData {
+  to: string;
+  buyerName: string | null;
+  vendorName: string;
+  vendorSlug: string;
+  enquiryId: string;
+}
+
+/**
+ * Sent when a vendor marks a booking confirmed. Invites the buyer to review —
+ * the passive "notice it next time you visit /enquiries" path misses most
+ * reviews, and reviews are the platform's trust moat. No-ops without a key.
+ */
+export async function sendBookingReviewEmail(
+  d: BookingReviewData,
+): Promise<{ sent: boolean; reason?: string }> {
+  const key = process.env.RESEND_API_KEY;
+  const from = process.env.ENQUIRY_FROM_EMAIL || "Patch <enquiries@patch.london>";
+  if (!key) return { sent: false, reason: "no_api_key" };
+  if (!d.to) return { sent: false, reason: "no_recipient" };
+
+  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+  const link = `${site}/review/${encodeURIComponent(d.enquiryId)}?v=${encodeURIComponent(d.vendorSlug)}`;
+  const html = `
+    <div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;color:#2b2620">
+      <h2 style="font-size:20px;margin:0 0 12px">How was ${esc(d.vendorName)}?</h2>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 20px">Hi ${esc(d.buyerName || "there")}, your booking with <strong>${esc(d.vendorName)}</strong> is confirmed. When it's done, a short review helps other people book with confidence.</p>
+      <a href="${link}" style="display:inline-block;background:#e8563f;color:#fff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:10px">Leave a review</a>
+      <p style="color:#9a9186;font-size:13px;margin-top:20px">Only people who enquired through Patch can review, so ratings stay honest.</p>
+    </div>`;
+
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to: [d.to], subject: `How was ${d.vendorName}? Leave a review`, html }),
+    });
+    if (!res.ok) {
+      console.error("[email] Resend failed (booking review)", res.status, await res.text());
+      return { sent: false, reason: `resend_${res.status}` };
+    }
+    return { sent: true };
+  } catch (err) {
+    console.error("[email] Resend threw (booking review)", err);
+    return { sent: false, reason: "exception" };
+  }
+}
+
+export interface BuyerConfirmationData {
+  to: string;
+  buyerName: string;
+  vendorNames: string[];
+  message: string;
+  eventDate: string | null;
+  postcode: string;
+}
+
+/**
+ * Confirms to the BUYER what they just sent, and to whom. Without this a buyer's
+ * only record of an enquiry is a localStorage row — clearing the browser loses
+ * it. This gives them a durable copy in their own inbox. No-ops without a key.
+ */
+export async function sendBuyerConfirmationEmail(
+  d: BuyerConfirmationData,
+): Promise<{ sent: boolean; reason?: string }> {
+  const key = process.env.RESEND_API_KEY;
+  const from = process.env.ENQUIRY_FROM_EMAIL || "Patch <enquiries@patch.london>";
+
+  if (!key) {
+    console.warn("[email] RESEND_API_KEY not set — buyer confirmation skipped");
+    return { sent: false, reason: "no_api_key" };
+  }
+  if (!d.to) return { sent: false, reason: "no_recipient" };
+
+  const vendors = d.vendorNames.map((n) => `<li style="margin:2px 0">${esc(n)}</li>`).join("");
+  const meta = [
+    d.eventDate ? `Event date: <strong>${esc(d.eventDate)}</strong>` : null,
+    d.postcode ? `Area: <strong>${esc(d.postcode)}</strong>` : null,
+  ].filter(Boolean).join(" &nbsp;·&nbsp; ");
+
+  const html = `
+    <div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;color:#2b2620">
+      <h2 style="font-size:20px;margin:0 0 4px">Your enquiry is on its way</h2>
+      <p style="color:#7a736a;margin:0 0 20px">Hi ${esc(d.buyerName)}, we've sent your brief to:</p>
+      <ul style="font-size:15px;font-weight:600;padding-left:20px;margin:0 0 20px">${vendors}</ul>
+      ${meta ? `<p style="color:#7a736a;font-size:14px;margin:0 0 16px">${meta}</p>` : ""}
+      <div style="background:#faf7f2;border:1px solid #e7e0d6;border-radius:12px;padding:16px;font-size:15px;line-height:1.6;white-space:pre-wrap">${esc(d.message)}</div>
+      <p style="color:#9a9186;font-size:13px;margin-top:20px">Each will reply directly if it's a good fit. No account needed — just keep an eye on this inbox.</p>
+    </div>`;
+
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from,
+        to: [d.to],
+        subject: d.vendorNames.length > 1
+          ? `Your Patch enquiry to ${d.vendorNames.length} vendors`
+          : `Your Patch enquiry to ${d.vendorNames[0] ?? "a vendor"}`,
+        html,
+      }),
+    });
+    if (!res.ok) {
+      console.error("[email] Resend failed (buyer confirmation)", res.status, await res.text());
+      return { sent: false, reason: `resend_${res.status}` };
+    }
+    return { sent: true };
+  } catch (err) {
+    console.error("[email] Resend threw (buyer confirmation)", err);
+    return { sent: false, reason: "exception" };
+  }
+}
+
 export interface LockedEnquiryEmailData {
   to: string | null;
   vendorName: string;

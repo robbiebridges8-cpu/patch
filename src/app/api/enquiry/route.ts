@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { sendVendorEnquiryEmail, sendLockedEnquiryEmail } from "@/lib/email";
+import { sendVendorEnquiryEmail, sendLockedEnquiryEmail, sendBuyerConfirmationEmail } from "@/lib/email";
 import { rateLimit, clientIp } from "@/lib/rateLimit";
 import { canAccess } from "@/lib/tiers";
 import { sendPush, pushConfigured } from "@/lib/push";
@@ -189,6 +189,20 @@ export async function POST(request: Request) {
           }),
     ),
   );
+
+  // Confirm to the buyer what they sent — their durable record, independent of
+  // localStorage. Best-effort: never fail an already-stored enquiry over it.
+  await sendBuyerConfirmationEmail({
+    to: email,
+    buyerName: name,
+    vendorNames: vendors.map((v) => v.name as string),
+    message,
+    eventDate,
+    postcode,
+  }).catch((err) => {
+    captureException(err, { scope: "api/enquiry", severity: "warning", extra: { step: "buyer_confirmation" } });
+    return { sent: false };
+  });
 
   return Response.json({
     ok: true,

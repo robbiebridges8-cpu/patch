@@ -25,17 +25,31 @@ function statusLabel(s: string) {
 export default function EnquiriesPage() {
   const { items } = useEnquiries();
   const [statuses, setStatuses] = useState<Record<string, StatusRow>>({});
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
-    if (items.length === 0) return;
-    supabase.rpc("enquiry_status", { p_ids: items.map((i) => i.enquiryId) }).then(({ data }) => {
-      if (!data) return;
-      const map: Record<string, StatusRow> = {};
-      for (const row of data as StatusRow[]) map[row.id] = row;
-      setStatuses(map);
-    });
+    if (items.length === 0) { setLoading(false); return; }
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(false);
+    (async () => {
+      try {
+        const { data, error } = await supabase.rpc("enquiry_status", { p_ids: items.map((i) => i.enquiryId) });
+        if (cancelled) return;
+        if (error) { setLoadError(true); return; }
+        const map: Record<string, StatusRow> = {};
+        for (const row of (data as StatusRow[]) ?? []) map[row.id] = row;
+        setStatuses(map);
+      } catch {
+        if (!cancelled) setLoadError(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [items, supabase]);
 
   // Opening a thread marks it read server-side; mirror that in the badge.
@@ -58,7 +72,12 @@ export default function EnquiriesPage() {
         ) : (
           <>
             <p className={styles.sub}>Track responses and message vendors here. Once a vendor marks your booking confirmed, you can leave a review.</p>
-            <div className={styles.list}>
+            {loadError && (
+              <p className={styles.sub} role="status">
+                We couldn&apos;t load the latest status just now. Your enquiries are safe — refresh to try again.
+              </p>
+            )}
+            <div className={styles.list} aria-busy={loading}>
               {items.map((i) => {
                 const st = statuses[i.enquiryId];
                 const status = st?.status ?? "sent";
@@ -75,7 +94,7 @@ export default function EnquiriesPage() {
                         <span className={styles.date}>Sent {new Date(i.at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
                       </div>
                       <div className={styles.rowSide}>
-                        <span className={`${styles.status} ${replied ? styles.statusOn : ""}`}>{statusLabel(status)}</span>
+                        <span className={`${styles.status} ${replied ? styles.statusOn : ""}`}>{loading && !st ? "…" : statusLabel(status)}</span>
                         <button
                           type="button"
                           className={styles.threadToggle}

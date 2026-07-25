@@ -10,10 +10,13 @@ import styles from "./page.module.css";
 export default function ReviewPage() {
   const params = useParams<{ enquiryId: string }>();
   const searchParams = useSearchParams();
-  const slug = searchParams.get("v");
   const supabase = createClient();
 
   const [vendorName, setVendorName] = useState<string | null>(null);
+  // Resolve the vendor from the enquiry id itself, so a review link works even
+  // without the ?v= param (e.g. a buyer who cleared localStorage). Fall back to
+  // the param if the RPC hasn't resolved yet.
+  const [slug, setSlug] = useState<string | null>(searchParams.get("v"));
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [sending, setSending] = useState(false);
@@ -21,11 +24,14 @@ export default function ReviewPage() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    if (!slug) return;
-    supabase.from("vendors").select("name").eq("slug", slug).maybeSingle().then(({ data }) => {
-      if (data) setVendorName(data.name as string);
+    supabase.rpc("enquiry_status", { p_ids: [params.enquiryId] }).then(({ data }) => {
+      const row = (data as { vendor_name: string; vendor_slug: string }[] | null)?.[0];
+      if (row) {
+        setVendorName(row.vendor_name);
+        setSlug(row.vendor_slug);
+      }
     });
-  }, [slug, supabase]);
+  }, [params.enquiryId, supabase]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
