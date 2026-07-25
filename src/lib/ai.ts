@@ -53,7 +53,6 @@ function stubParse(query: string): ParsedQuery {
     location: postcode ?? place ?? null,
     event_date: iso,
     semantic_query: query,
-    chips: query.split(/\s+/).filter((w) => w.length > 3).slice(0, 5),
     categories: [],
     attributes: null,
   };
@@ -92,7 +91,6 @@ export interface ParsedQuery {
   location: string | null;
   event_date: string | null;
   semantic_query: string;
-  chips: string[];
   /** UI-supplied only. */
   categories: string[];
   /** UI-supplied only; jsonb containment against vendor_services.attributes. */
@@ -107,7 +105,6 @@ interface AIVendorMatch {
 }
 
 interface AIResult {
-  chips: string[];
   summary: string;
   vendorMatches: AIVendorMatch[];
   vendorIds: string[];
@@ -145,7 +142,6 @@ function bareQuery(
     location: null,
     event_date: null,
     semantic_query: query,
-    chips: query.split(/\s+/).filter(Boolean).slice(0, 5),
     categories: overrides?.categories ?? [],
     attributes: overrides?.attributes ?? null,
   };
@@ -172,10 +168,8 @@ Extract ONLY these, and only when clearly stated:
 
 For semantic_query: rewrite the whole request as a rich, descriptive sentence describing the service needed, including every qualitative requirement — the kind of work, the occasion, the vibe, and any specific needs (dietary, accessibility, certifications, equipment, experience). This string is matched against how vendors describe themselves, so keep the requirement words in it. Drop only the structured parts you extracted above (budget figures, locations, dates).
 
-For chips: short machine-terse labels shown back to the user as a readback of what you understood. Examples: "hackney", "14 aug", "≤ £600", "wedding", "vegan", "gas safe". Lowercase, 2-6 chips.
-
 Respond with ONLY valid JSON:
-{"budget_max": null, "location": null, "event_date": null, "semantic_query": "...", "chips": []}`,
+{"budget_max": null, "location": null, "event_date": null, "semantic_query": "..."}`,
     messages: [{ role: "user", content: query }],
   });
 
@@ -194,9 +188,6 @@ Respond with ONLY valid JSON:
         ? raw.event_date : null,
       semantic_query: typeof raw?.semantic_query === "string" && raw.semantic_query.trim()
         ? raw.semantic_query.slice(0, 2000) : query,
-      chips: Array.isArray(raw?.chips)
-        ? raw.chips.filter((c: unknown): c is string => typeof c === "string").slice(0, 8)
-        : [],
       categories: [],
       attributes: null,
     };
@@ -204,7 +195,6 @@ Respond with ONLY valid JSON:
     return {
       budget_max: null, location: null, event_date: null,
       semantic_query: query,
-      chips: query.split(/,\s*/).map((s) => s.trim()).filter(Boolean),
       categories: [], attributes: null,
     };
   }
@@ -590,7 +580,6 @@ Respond with ONLY valid JSON:
 
 export interface QuickSearchResult {
   parsed: ParsedQuery;
-  chips: string[];
   results: VendorResult[];
   usedFallback: boolean;
   /** Constraints dropped to find anything at all — empty on an exact match. */
@@ -607,7 +596,7 @@ export async function quickSearch(
   // paid parse/embed entirely rather than calling and discarding.
   if (opts?.useAi === false) {
     const bare = bareQuery(query, overrides);
-    return { parsed: bare, chips: bare.chips, results: await fallbackSearch(bare, limit), usedFallback: true, relaxed: [] };
+    return { parsed: bare, results: await fallbackSearch(bare, limit), usedFallback: true, relaxed: [] };
   }
 
   // Parsing is the only step with no graceful degradation of its own, and it
@@ -627,7 +616,6 @@ export async function quickSearch(
   if (parseFailed) {
     return {
       parsed,
-      chips: parsed.chips,
       results: await fallbackSearch(parsed, limit),
       usedFallback: true,
       relaxed: [],
@@ -664,7 +652,7 @@ export async function quickSearch(
     ({ results, relaxed } = await searchWithRecovery(parsed, embedding, geo, limit));
   }
 
-  return { parsed, chips: parsed.chips, results, usedFallback, relaxed };
+  return { parsed, results, usedFallback, relaxed };
 }
 
 export async function narrate(
@@ -744,11 +732,10 @@ export async function aiSearch(query: string): Promise<AIResult> {
     console.error("Embedding failed, using fallback:", err);
     const results = await fallbackSearch(parsed);
     if (results.length === 0) {
-      return { chips: parsed.chips, summary: "No vendors match your search.", vendorMatches: [], vendorIds: [] };
+      return { summary: "No vendors match your search.", vendorMatches: [], vendorIds: [] };
     }
     const narration = await narrateResults(query, parsed, results);
     return {
-      chips: parsed.chips,
       summary: narration.summary,
       vendorMatches: narration.vendors,
       vendorIds: results.map((r) => r.vendor_id),
@@ -759,14 +746,13 @@ export async function aiSearch(query: string): Promise<AIResult> {
   const results = await vectorSearch(parsed, queryEmbedding, geo, 15);
 
   if (results.length === 0) {
-    return { chips: parsed.chips, summary: "No vendors match your search. Try broadening your criteria.", vendorMatches: [], vendorIds: [] };
+    return { summary: "No vendors match your search. Try broadening your criteria.", vendorMatches: [], vendorIds: [] };
   }
 
   // 5. Narrate
   const narration = await narrateResults(query, parsed, results);
 
   return {
-    chips: parsed.chips,
     summary: narration.summary,
     vendorMatches: narration.vendors,
     vendorIds: results.map((r) => r.vendor_id),

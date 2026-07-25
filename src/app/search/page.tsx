@@ -17,7 +17,6 @@ import { supabase } from "@/lib/supabase";
 import type { MatchedTag } from "@/types/vendor";
 import Header from "@/components/layout/Header";
 import SearchBar from "@/components/search/SearchBar";
-import ParsedChips from "@/components/search/ParsedChips";
 import AINote from "@/components/search/AINote";
 import VendorRow from "@/components/search/VendorRow";
 import FilterSidebarLive from "@/components/search/FilterSidebarLive";
@@ -271,12 +270,6 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
 
   return (
     <>
-      {quick.chips.length > 0 && (
-        <div className={styles.chipsRow}>
-          <ParsedChips chips={quick.chips} />
-        </div>
-      )}
-
       {quick.usedFallback && (
         <div className={styles.fallbackNote} role="status">
           <strong>Showing basic results.</strong> Patch&apos;s AI matching is busy right now, so
