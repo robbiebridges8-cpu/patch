@@ -25,12 +25,12 @@ Working two-sided product, deployed nowhere. **19 commits unpushed on `main`.**
 
 | Area | State |
 |---|---|
-| Buyer discovery | AI search (parse → embed → vector → narrate), streaming, pagination, no-results recovery, shortlist, quick-view |
+| Buyer discovery | AI search (parse → embed → vector → narrate), streaming, pagination, no-results recovery, shortlist, quick-view, `/services/[category]/[location]` landing pages |
 | Enquiry & comms | Enquiry flow, buyer tracker, in-platform messaging, reviews tied to real enquiries |
 | Vendor | Self-serve onboarding, listing editor, photos, availability, lead inbox, listing-strength meter, buyer preview, analytics |
 | Monetisation | Free + paid tiers, locked leads, feature gates, annual prepay, Stripe scaffold |
 | Admin | Approve/reject, review moderation, tier override, platform stats |
-| Quality | WCAG AA verified, mobile-verified on real WebKit, 44 unit + 5 e2e specs |
+| Quality | WCAG AA verified, mobile-verified on real WebKit, 86 unit + 18 e2e specs |
 
 **Data:** 500 seed vendors (London food), 185 reviews, 0 accounts, 0 real enquiries.
 
@@ -169,10 +169,10 @@ keeping, and a live free listing is a standing upgrade prompt.
 **Ordered by what would hurt most.**
 
 1. **`/search` is unauthenticated and costs ~$0.0064 per request in Claude
-   spend.** The rate limiter is in-memory, so it dissolves across serverless
-   instances. A 100 req/s attacker matches a full legitimate month of spend in
-   under three hours. *Needs distributed rate limiting + CAPTCHA + a hard
-   Anthropic spend cap.* **This is the top priority.**
+   spend.** Now mitigated: distributed rate limiting (Postgres `check_rate_limit`,
+   survives across serverless instances) and a hard daily Anthropic spend cap
+   (`consume_ai_budget`) are live. **Still missing: a CAPTCHA/Turnstile on
+   `/search` and a WAF** — the guard is good but not defence in depth.
 2. **Search takes 6–9s; Netlify's function timeout is 10s.** Will surface as
    random 500s under load, not as slowness.
 3. **`SUPABASE_SERVICE_ROLE_KEY` is unset** — the Stripe webhook can't write

@@ -4,16 +4,18 @@
 
 Strategic decisions live in [PRD.md](./PRD.md). This is the work queue.
 
-> **Full-surface audit (2026-07-25).** Six parallel auditors swept security,
-> correctness, schema, UX, SEO and a11y/tests/monitoring/scale — 51 gaps found,
-> **43 fixed & committed** (see [gap-audit.html](./gap-audit.html) /
-> [register](https://claude.ai/code/artifact/7deba6f3-570c-43a6-8856-2cca8cb40a8d)).
-> The role-escalation blocker, the paid-tier ranking regression, the attribute
-> duplication/clobber, and the silent Stripe-webhook failure are all closed.
-> **Deferred (larger features / assets):** location landing pages, buyer auth UI,
-> cross-device thread access, a designed OG share image, real PWA icons, the
-> sitemap index, and two Supabase-integration test suites (enquiry batch,
-> message/RLS). The first three are detailed below.
+> **Full-surface audit + GEO pass (2026-07-25).** Six parallel auditors swept
+> security, correctness, schema, UX, SEO and a11y/tests/monitoring/scale — 51 gaps
+> found, **43 fixed** (see [gap-audit.html](./gap-audit.html)). The role-escalation
+> blocker, the paid-tier ranking regression, the attribute duplication/clobber and
+> the silent Stripe-webhook failure are all closed. A follow-on GEO pass then
+> **shipped the location/category landing pages** (`/services/[category]/[location]`,
+> 616 pages), `llms.txt`, an explicit AI-crawler policy, entity disambiguation and
+> site-wide structured data ([geo.html](./geo.html)).
+>
+> **Still deferred (larger features / assets):** buyer auth UI, cross-device
+> thread access, a designed OG share image, real PWA icons, and two
+> Supabase-integration test suites (enquiry batch, message/RLS). First two below.
 
 ---
 
@@ -28,17 +30,11 @@ Strategic decisions live in [PRD.md](./PRD.md). This is the work queue.
 | `RESEND_API_KEY` + `ENQUIRY_FROM_EMAIL` | No email at all — vendors never hear about a lead. |
 | Stripe live keys + price IDs | `STRIPE_PRICE_PAID_MONTHLY` / `_YEARLY`. Checkout 503s without them. |
 | Anthropic credit | Search currently degrades to keyword-only. Works, but isn't the product. |
-| **Netlify function timeout** | Search takes 6–9s against a 10s default. Will surface as random 500s under load, not as slowness. Raise the limit or move narration to a client-triggered endpoint. |
+| **Netlify function timeout** | Search takes 6–9s. `/search` now sets `maxDuration = 30` and captures a soft-timeout signal, but the Netlify plan must actually allow 30s — confirm on deploy, or move narration to a client-triggered endpoint. |
 
 ---
 
 ## High value, not started
-
-### Location landing pages — the biggest organic lever
-A `/services/[category]/[location]` route over existing PostGIS data. People search
-*"plumber in Hackney"*, not *"plumber"*. Thousands of indexable pages from data
-already held, and it's what makes free listings pay for themselves. Also the
-main input to being cited by AI answers.
 
 ### Reranking
 At 100k vendors, vector-only recall degrades. Voyage sells rerank models. Real
@@ -102,12 +98,15 @@ search streams a skeleton so the 6–9s feels responsive.
 | **Magic-link auth** | Friction, and a poor fit for the PWA (email→browser→app handoff). Backlogged above; flagged here as a UX cost, not just a tech one. |
 | **Search 6–9s vs Netlify 10s timeout** | Streaming hides it from the user until it 500s under load. Config, above. |
 
-### Consistency / framing gaps (deliberate hold — your call on timing)
-The homepage was made industry-agnostic last week; **`/search` and the metadata
-were not**, so the two now disagree. All food-shaped:
-- **`<title>` / meta / OG**: "mobile food & catering vendors in London" — drives Google + AI-answer text.
-- **`/search` empty state**: renders the food QuickStarts (Popular occasions + Cuisines) and copy "Describe your occasion… the vibe, guest count".
+### Consistency / framing gaps
+Most framing was flipped horizontal in the SEO/GEO pass (root `<title>`/meta/OG,
+homepage, `/about`, vendor-profile fallbacks, the search empty-state label).
+**Still food-shaped**, and constrained by the food-only inventory rather than a
+missed edit:
+- **`/search` quick-starts + `NoResults` starters**: cuisine list and food
+  examples — they map to the real (food) categories, so swapping them to other
+  verticals would dead-end until non-food supply exists.
 - **Search bar placeholder**: "pizza van for a 40th in Hackney…".
 - **Profile capacity label**: "Serves 40–200 **guests**".
 
-None is a bug; all contradict the horizontal positioning. Cheap to flip when you're ready.
+Flip these as non-food inventory lands, vertical by vertical.
