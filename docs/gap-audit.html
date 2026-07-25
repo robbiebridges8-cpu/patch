@@ -62,6 +62,20 @@
   .stat.sev-blocker b { color: var(--blocker); } .stat.sev-high b { color: var(--high); }
   .stat.sev-medium b { color: var(--medium); } .stat.sev-low b { color: var(--low); }
 
+  .banner { margin-top: 22px; background: var(--panel); border: 1px solid var(--line);
+    border-left: 3px solid #2f9e63; border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .banner-title { margin: 0 0 6px; font-size: 15px; font-weight: 680; color: #2f9e63; letter-spacing: -.01em; }
+  @media (prefers-color-scheme: dark) { .banner-title { color: #5fce92; } }
+  :root[data-theme="dark"] .banner-title { color: #5fce92; }
+  :root[data-theme="light"] .banner-title { color: #2f9e63; }
+  .banner-body { margin: 0 0 8px; font-size: 13.5px; color: var(--ink-2); }
+  .banner-body b { color: var(--ink); }
+  .banner-list { margin: 0; padding-left: 18px; font-size: 13px; color: var(--ink-2); }
+  .banner-list li { margin: 3px 0; }
+  .banner-list b { color: var(--ink); }
+  .banner code, .banner-body code { font-family: var(--mono); font-size: 11.5px; background: var(--panel-2);
+    padding: 1px 5px; border-radius: 4px; }
+
   .controls { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 88%, transparent);
     backdrop-filter: blur(8px); padding: 14px 0 12px; margin: 20px 0 8px; border-bottom: 1px solid var(--line);
     display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
@@ -117,6 +131,18 @@
     <p class="eyebrow">Patch · full-surface audit · 25 Jul 2026</p>
     <h1>Gap register</h1>
     <p class="lede">Every gap six parallel auditors found across <b>security, correctness, schema, product/UX, SEO and a11y/tests/monitoring/scale</b> — each read the real code and queried the live database. Excludes the known missing-secrets/config items (Stripe keys, Resend, service-role key, Anthropic credit, <code>SITE_URL</code>). <b>Tracked</b> = already in the backlog; <b>New</b> = surfaced here. Filter, or search a file path.</p>
+    <div class="banner">
+      <p class="banner-title">✓ Fixed &amp; committed — 43 of 51</p>
+      <p class="banner-body">Everything below is resolved in code + migrations (commits <code>813b491</code>→<code>825f75f</code>), verified with a clean build, <b>86 unit tests</b> and the <b>18-test e2e suite</b> green. Eight items are deliberately deferred as larger features or design assets, not skipped:</p>
+      <ul class="banner-list">
+        <li><b>Location landing pages</b> (SEO Blocker + High) — a whole <code>/services/[category]/[location]</code> route tree; the single biggest build.</li>
+        <li><b>Buyer auth UI</b> (UX High) — OTP-vs-Google is a product decision; the buyer confirmation email + tokenised review resolve now soften most of its pain.</li>
+        <li><b>Cross-device thread access</b> (UX High) — the tokenised-link half of buyer auth; same decision.</li>
+        <li><b>Default OG share image</b> (SEO High) — wants a designed asset, not a code stub.</li>
+        <li><b>PWA icons</b> (Low) &amp; <b>sitemap index</b> (Low, warns at 45k) — asset / not-yet-needed.</li>
+        <li><b>Enquiry-batch &amp; message/RLS integration tests</b> (2×) — need a Supabase mock harness; the riskiest pure logic (billing, paywall, search-safety) is now covered.</li>
+      </ul>
+    </div>
     <div class="stats" id="stats"></div>
   </header>
 

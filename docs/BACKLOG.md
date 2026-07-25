@@ -1,8 +1,19 @@
 # Backlog
 
-*Things deliberately deferred, with why. Last updated 2026-07-19.*
+*Things deliberately deferred, with why. Last updated 2026-07-25.*
 
 Strategic decisions live in [PRD.md](./PRD.md). This is the work queue.
+
+> **Full-surface audit (2026-07-25).** Six parallel auditors swept security,
+> correctness, schema, UX, SEO and a11y/tests/monitoring/scale — 51 gaps found,
+> **43 fixed & committed** (see [gap-audit.html](./gap-audit.html) /
+> [register](https://claude.ai/code/artifact/7deba6f3-570c-43a6-8856-2cca8cb40a8d)).
+> The role-escalation blocker, the paid-tier ranking regression, the attribute
+> duplication/clobber, and the silent Stripe-webhook failure are all closed.
+> **Deferred (larger features / assets):** location landing pages, buyer auth UI,
+> cross-device thread access, a designed OG share image, real PWA icons, the
+> sitemap index, and two Supabase-integration test suites (enquiry batch,
+> message/RLS). The first three are detailed below.
 
 ---
 
