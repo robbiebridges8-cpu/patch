@@ -4,13 +4,33 @@ import HeroSearch from "@/components/search/HeroSearch";
 import styles from "./page.module.css";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+// Organization + WebSite (with SearchAction) so answer engines and Google can
+// disambiguate the entity and surface the sitelinks search box.
 const orgJsonLd = {
   "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "Patch",
-  url: SITE,
-  description: "AI-native marketplace matching London event organisers with mobile food vendors and caterers.",
-  areaServed: "London",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE}/#organization`,
+      name: "Patch",
+      url: SITE,
+      logo: `${SITE}/icons/vendor-512.png`,
+      description: "AI-native marketplace matching Londoners with the right local services and trades — described in plain words, shortlisted and reasoned by AI.",
+      areaServed: "London",
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE}/#website`,
+      url: SITE,
+      name: "Patch",
+      publisher: { "@id": `${SITE}/#organization` },
+      potentialAction: {
+        "@type": "SearchAction",
+        target: { "@type": "EntryPoint", urlTemplate: `${SITE}/search?q={search_term_string}` },
+        "query-input": "required name=search_term_string",
+      },
+    },
+  ],
 };
 
 export default function Home() {
@@ -21,7 +41,7 @@ export default function Home() {
 
       {/* ─── FRONT DOOR ─── */}
       <main id="main-content" className={styles.hero}>
-        <span className={styles.eyebrow}>Mobile food &amp; catering</span>
+        <span className={styles.eyebrow}>Local services, London</span>
         <h1 className={styles.heading}>
           Describe what you need in your own words. Get a shortlist in seconds.
         </h1>
@@ -141,11 +161,11 @@ export default function Home() {
             <div className={styles.footerBrand}>
               Patch<span className={styles.footerDot}>.</span>
             </div>
-            <div className={styles.footerTagline}>Mobile food vendors worth booking.</div>
+            <div className={styles.footerTagline}>Local services worth booking.</div>
           </div>
           <div className={styles.footerLinks}>
             <div className={styles.footerCol}>
-              <h4>Find food</h4>
+              <h4>Find services</h4>
               <a href="#how-it-works">How it works</a>
               <a href="/search">Search</a>
             </div>

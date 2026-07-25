@@ -22,7 +22,7 @@ const geistMono = Geist_Mono({
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
 const DESCRIPTION =
-  "Describe your occasion in plain words. Patch returns a short, reasoned shortlist of mobile food vendors and caterers in London who actually fit.";
+  "Describe what you need in plain words. Patch returns a short, reasoned shortlist of local services and trades in London who actually fit — caterers, photographers, cleaners, DJs, tradespeople and more.";
 
 /**
  * viewportFit: "cover" lets the page paint into the notch/home-indicator area;
@@ -44,26 +44,26 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Patch — mobile food & catering vendors in London",
+    default: "Patch — hire local services & trades in London",
     template: "%s · Patch",
   },
   description: DESCRIPTION,
   applicationName: "Patch",
   keywords: [
-    "mobile food vendors", "London caterers", "street food catering",
-    "event catering London", "food trucks", "private party catering",
+    "local services London", "hire tradespeople London", "event services London",
+    "caterers London", "find local businesses London", "book local services",
   ],
   openGraph: {
     type: "website",
     siteName: "Patch",
     locale: "en_GB",
     url: SITE_URL,
-    title: "Patch — mobile food & catering vendors in London",
+    title: "Patch — hire local services & trades in London",
     description: DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Patch — mobile food & catering vendors in London",
+    title: "Patch — hire local services & trades in London",
     description: DESCRIPTION,
   },
   robots: {

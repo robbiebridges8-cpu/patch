@@ -37,7 +37,7 @@ export default function QuickStarts() {
       </div>
 
       <div className={styles.block}>
-        <span className={styles.label}>Or browse by food</span>
+        <span className={styles.label}>Or browse by category</span>
         <div className={styles.cuisines}>
           {CUISINES.map((c) => (
             <button key={c} type="button" className={styles.chip} onClick={() => go(c, c)}>

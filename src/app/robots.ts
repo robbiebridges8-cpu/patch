@@ -7,7 +7,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/admin", "/vendor/dashboard", "/enquiries"],
+      // /shortlist and /enquiries are per-user and thin/empty for a crawler.
+      disallow: ["/api/", "/admin", "/vendor/dashboard", "/enquiries", "/shortlist"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
     host: SITE_URL,

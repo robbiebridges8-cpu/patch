@@ -78,17 +78,22 @@ export async function generateMetadata({
 
   const photos = (vendor.vendor_photos as { url: string; position: number }[]) || [];
   const hero = [...photos].sort((a, b) => a.position - b.position)[0]?.url;
+  const cat = (vendor.primary_category as string) || null;
+  const area = (vendor.area as string) || "London";
   const desc =
     (vendor.description as string) ||
-    `${vendor.name} — mobile food & catering in London on Patch.`;
+    `${vendor.name}${cat ? ` — ${cat}` : ""} in ${area}, on Patch.`;
+  // Title captures the long-tail "[service] in [area]" query on the highest-
+  // volume page type, not just the bare business name.
+  const title = `${vendor.name}${cat ? ` — ${cat}` : ""} in ${area}`;
 
   return {
-    title: vendor.name as string,
+    title,
     description: desc.slice(0, 160),
     alternates: { canonical: `/vendors/${slug}` },
     openGraph: {
       type: "profile",
-      title: `${vendor.name} · Patch`,
+      title: `${title} · Patch`,
       description: desc.slice(0, 200),
       url: `/vendors/${slug}`,
       images: hero ? [{ url: hero }] : undefined,
@@ -132,7 +137,7 @@ export default async function VendorPage({
 
 
   const categories = [...new Set(services.map((s) => s.category as string).filter(Boolean))];
-  const category = categories.slice(0, 2).join(" · ") || "Mobile catering";
+  const category = categories.slice(0, 2).join(" · ") || "Local service";
   const heroFallback = categoryPhoto(categories[0], 1200);
 
   // Attributes are free-form and vertical-specific — merge vendor- and
@@ -189,13 +194,42 @@ export default async function VendorPage({
       ? {
           review: reviews.slice(0, 5).map((r) => ({
             "@type": "Review",
+            author: { "@type": "Person", name: "Patch client" },
             reviewRating: { "@type": "Rating", ratingValue: r.rating as number, bestRating: 5 },
             reviewBody: (r.body as string) || (r.title as string) || undefined,
             datePublished: (r.created_at as string)?.slice(0, 10),
           })),
         }
       : {}),
+    // Priced services are machine-readable offers.
+    ...(services.some((s) => (s.price_from as number | null) != null)
+      ? {
+          makesOffer: services
+            .filter((s) => (s.price_from as number | null) != null)
+            .map((s) => ({
+              "@type": "Offer",
+              name: s.title as string,
+              priceCurrency: "GBP",
+              price: s.price_from as number,
+              ...(s.category ? { category: s.category as string } : {}),
+            })),
+        }
+      : {}),
   };
+
+  // FAQ rich results / AI-answer extraction — only when there are real Q/A pairs.
+  const faqPairs = faq.filter((f) => f.q && f.a);
+  const faqJsonLd = faqPairs.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqPairs.map((f) => ({
+          "@type": "Question",
+          name: f.q,
+          acceptedAnswer: { "@type": "Answer", text: f.a },
+        })),
+      }
+    : null;
 
   const glance: { label: string; value: string; sub?: string }[] = [];
   if (capMax) glance.push({ label: "Serves", value: capMin ? `${capMin}–${capMax}` : `up to ${capMax}`, sub: "guests" });
@@ -206,6 +240,7 @@ export default async function VendorPage({
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
+      {faqJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }} />}
       {!isPreview && <TrackProfileView vendorId={vendor.id as string} slug={slug} />}
       <Header />
 
@@ -339,10 +374,10 @@ export default async function VendorPage({
             </div>
           )}
 
-          {/* Signature dishes */}
+          {/* Signature offerings */}
           {signatureItems.length > 0 && (
             <div className={styles.section}>
-              <h2 className={styles.sectionTitle}>Signature dishes</h2>
+              <h2 className={styles.sectionTitle}>Signature offerings</h2>
               <div className={styles.dishList}>
                 {signatureItems.map((s) => <span key={s} className={styles.dish}>{s}</span>)}
               </div>
