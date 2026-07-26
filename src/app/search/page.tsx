@@ -39,8 +39,7 @@ const PAGE_SIZE = 15;
 
 interface SearchParams {
   q?: string;
-  type?: string; // cuisine pre-filter (from quick-start chips), not a sidebar control
-  diet?: string; // comma-separated dietary needs
+  type?: string; // category pre-filter (from quick-start chips / location pages), not a sidebar control
   budget?: string;
   sort?: string;
 }
@@ -197,7 +196,6 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
   const parsedBudget = params.budget ? parseInt(params.budget, 10) : NaN;
   const overrides = {
     categories: params.type ? params.type.split(",") : undefined,
-    attributes: params.diet ? { dietary: params.diet.split(",") } : undefined,
     budgetMax: Number.isFinite(parsedBudget) && parsedBudget > 0 ? parsedBudget : undefined,
   };
   const rl = await rateLimit(`search:${clientIp(await headers())}`, 25, 60_000);
@@ -452,7 +450,6 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const params = await searchParams;
   const query = (params.q || "").trim();
   const sort = params.sort || "best";
-  const activeDietary = params.diet ? params.diet.split(",") : [];
   const budget = params.budget ? parseInt(params.budget, 10) : undefined;
 
   if (!query) {
@@ -511,8 +508,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     );
   }
 
-  const activeCount = activeDietary.length + (budget ? 1 : 0);
-  const boundaryKey = `${query}|${params.type || ""}|${params.diet || ""}|${params.budget || ""}|${sort}`;
+  const activeCount = budget ? 1 : 0;
+  const boundaryKey = `${query}|${params.type || ""}|${params.budget || ""}|${sort}`;
 
   return (
     <>
@@ -529,12 +526,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
         <div className={styles.layout}>
           <div className={styles.sidebarWrap}>
-            <FilterSidebarLive activeDietary={activeDietary} currentBudget={budget} />
+            <FilterSidebarLive currentBudget={budget} />
           </div>
 
           <div className={styles.results}>
             <SearchToolbar
-              activeDietary={activeDietary}
               currentBudget={budget}
               currentSort={sort}
               activeCount={activeCount}

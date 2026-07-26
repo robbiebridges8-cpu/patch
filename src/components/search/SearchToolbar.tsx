@@ -7,7 +7,6 @@ import SortDropdown from "./SortDropdown";
 import styles from "./SearchToolbar.module.css";
 
 interface Props {
-  activeDietary: string[];
   currentBudget?: number;
   currentSort: string;
   activeCount: number;
@@ -37,10 +36,7 @@ export default function SearchToolbar(props: Props) {
               <span className={styles.sheetTitle}>Filters</span>
               <button type="button" className={styles.done} onClick={() => setOpen(false)}>Done</button>
             </div>
-            <FilterSidebarLive
-              activeDietary={props.activeDietary}
-              currentBudget={props.currentBudget}
-            />
+            <FilterSidebarLive currentBudget={props.currentBudget} />
           </div>
         </div>
       )}

@@ -3,13 +3,13 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import styles from "./FilterSidebar.module.css";
 
-const DIETARY = ["vegan", "vegetarian", "gluten-free", "halal", "dairy-free", "nut-free"];
-
+// Only universal constraints are hard filters (PRD §3.3). Budget is one; price
+// applies to every vertical. Vertical-specific needs (dietary, certifications,
+// setting…) are matched semantically from the plain-language search, not with
+// hardcoded filters — a "Vegan / Halal" panel makes no sense on a plumber search.
 export default function FilterSidebarLive({
-  activeDietary,
   currentBudget,
 }: {
-  activeDietary: string[];
   currentBudget?: number;
 }) {
   const router = useRouter();
@@ -22,13 +22,6 @@ export default function FilterSidebarLive({
       else params.set(k, v);
     }
     router.push(`/search?${params.toString()}`);
-  }
-
-  function toggleDiet(diet: string) {
-    const current = new Set(activeDietary);
-    if (current.has(diet)) current.delete(diet);
-    else current.add(diet);
-    navigate({ diet: Array.from(current).join(",") || undefined });
   }
 
   function handleBudget(e: React.ChangeEvent<HTMLInputElement>) {
@@ -45,28 +38,7 @@ export default function FilterSidebarLive({
         <h2 className={styles.sidebarTitle}>Refine</h2>
       </div>
 
-      {/* Dietary — a real constraint within any cuisine */}
-      <div className={styles.section}>
-        <span className={styles.sectionLabel}>Dietary needs</span>
-        <div className={styles.chipGrid}>
-          {DIETARY.map((diet) => {
-            const isSelected = activeDietary.includes(diet);
-            const label = diet.charAt(0).toUpperCase() + diet.slice(1);
-            return (
-              <button
-                key={diet}
-                type="button"
-                className={`${styles.filterChip} ${isSelected ? styles.filterChipSelected : ""}`}
-                onClick={() => toggleDiet(diet)}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Budget */}
+      {/* Budget — a universal constraint. Everything else lives in the brief. */}
       <div className={styles.section}>
         <span className={styles.sectionLabel}>Budget</span>
         <div className={styles.budgetRow}>
@@ -86,6 +58,7 @@ export default function FilterSidebarLive({
             defaultValue={budgetVal}
             className={styles.sliderInput}
             onChange={handleBudget}
+            aria-label="Maximum budget"
           />
         </div>
       </div>

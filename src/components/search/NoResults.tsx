@@ -14,14 +14,13 @@ export default function NoResults({
 }: {
   query: string;
   parsed: ParsedQuery | null;
-  params: { type?: string; diet?: string; budget?: string; sort?: string };
+  params: { type?: string; budget?: string; sort?: string };
 }) {
   // Each escape hatch drops exactly one constraint and keeps the rest.
-  function urlWithout(drop: "type" | "diet" | "budget"): string {
+  function urlWithout(drop: "type" | "budget"): string {
     const sp = new URLSearchParams();
     sp.set("q", query);
     if (params.type && drop !== "type") sp.set("type", params.type);
-    if (params.diet && drop !== "diet") sp.set("diet", params.diet);
     if (params.budget && drop !== "budget") sp.set("budget", params.budget);
     return `/search?${sp.toString()}`;
   }
@@ -29,9 +28,6 @@ export default function NoResults({
   const escapes: { href: string; label: string }[] = [];
   if (params.budget) {
     escapes.push({ href: urlWithout("budget"), label: `Ignore the £${params.budget} budget` });
-  }
-  if (params.diet) {
-    escapes.push({ href: urlWithout("diet"), label: `Drop the ${params.diet.split(",").join(" + ")} filter` });
   }
   if (params.type) {
     escapes.push({ href: urlWithout("type"), label: `Look beyond ${params.type.split(",").join(" + ")}` });

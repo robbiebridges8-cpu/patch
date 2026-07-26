@@ -23,7 +23,7 @@ refactor dropped 6 tables, 15 columns, and 4 orphaned enum types.
 | `price_range` | The "££" band for JSON-LD structured data — an establishment-level property, not a price anyone pays. The actual price lives on the service (see `vendor_services.price_from`). |
 | `contact_email`, `contact_phone`, `website`, `instagram` | Contact + outbound-click analytics targets. |
 | `faq` (jsonb), `signature_items` (jsonb) | Profile content; signatures also feed the embedding. |
-| `attributes` (jsonb) | **The vertical-agnostic bag.** Dietary, capacity, certifications, `vibe`, `good_for` — anything trade-specific. Folded into the embedding; UI-set values are exact filters. |
+| `attributes` (jsonb) | **The vertical-agnostic bag.** Dietary, capacity, certifications, `vibe`, `good_for` — anything trade-specific. Folded into the embedding and matched **semantically** — not exposed as hardcoded filters (§3.4). Category is the one UI-supplied hard filter. |
 | `rating_avg`, `review_count` | Denormalised from `reviews` by trigger. |
 | `primary_category` | The business's headline category for display + SEO — **never an AI hard filter**. Mirrors `vendor_services.category` today (1:1), but they're distinct concepts: in the 1:many future a vendor offering several service categories still has one primary label. The editor writes both in sync. |
 | `years_active` | "Trading 4 yrs" trust signal. |

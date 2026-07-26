@@ -90,13 +90,22 @@ filtering**. They can be fuzzy or wrong without breaking search.
 
 ### 3.4 The AI never emits hard filters
 
-The parse extracts only budget, location and date. Categories and attributes
-come exclusively from UI with known-good values.
+The parse extracts only budget, location and date. **Category** is the one
+UI-supplied hard filter (from a quick-start chip or a `/services` landing page).
+Everything else — dietary, certifications, setting, guest count — is matched
+**semantically** from the brief (§3.3), never from a hardcoded filter panel.
 
-**Why — safety.** An LLM writing `"nut free"` against a stored `"nut-free"`
-fails a containment filter *silently*. For a dietary or certification filter,
-that's a safety failure, not a UX one. For the same reason the no-results
-relaxation ladder drops budget → area → service type, and **never attributes**.
+**Why.** Two reasons converge. *Agnosticism:* a "Vegan / Halal" sidebar makes no
+sense on a plumber search, so a dietary filter was never horizontal. *Safety:* an
+LLM — or a hardcoded filter — turning `"nut free"` into a silent containment
+filter against a self-declared `"nut-free"` tag fails *silently* on a mismatch,
+and Patch doesn't vet those tags anyway (§3.1). So a critical need stays in the
+semantic query (ranked and surfaced), and the buyer confirms it with the vendor.
+The no-results ladder relaxes budget → area → category, and never touches the
+brief itself.
+
+*(Earlier this session the dietary sidebar filter — a food-vertical vestige that
+contradicted §3.3 — was removed; dietary is now semantic-only.)*
 
 ### 3.5 Free listings, paid to unlock
 
