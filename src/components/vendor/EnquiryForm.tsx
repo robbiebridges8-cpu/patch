@@ -101,6 +101,9 @@ export default function EnquiryButton({ vendorId, vendorName, className, label =
                 {/* autoFocus so a screen reader lands on an actionable control, not
                     the unmounted submit button. */}
                 <button type="button" className={styles.primaryBtn} onClick={close} autoFocus>Done</button>
+                <p className={styles.successFine}>
+                  <a href="/login">Log in</a> to keep this enquiry on every device.
+                </p>
               </div>
             ) : (
               <>

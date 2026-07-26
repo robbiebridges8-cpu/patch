@@ -15,5 +15,7 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/vendor/login?error=Could not sign you in. The link may have expired — please request a new one.`);
+  // Send failures back to the right sign-in for who was signing in.
+  const loginPath = next.startsWith("/vendor") ? "/vendor/login" : "/login";
+  return NextResponse.redirect(`${origin}${loginPath}?error=Could not sign you in. The link may have expired — please request a new one.`);
 }

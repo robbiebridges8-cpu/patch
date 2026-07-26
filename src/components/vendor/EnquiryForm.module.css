@@ -165,6 +165,13 @@
   max-width: 340px;
 }
 
+.successFine {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: var(--color-text-tertiary, #938a7d);
+}
+.successFine a { color: var(--color-accent, #e8563f); text-decoration: underline; }
+
 @media (max-width: 520px) {
   .dialog { padding: 24px 20px; }
   .row { flex-direction: column; gap: 14px; }
