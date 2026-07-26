@@ -40,8 +40,13 @@ narrate) · Voyage `voyage-3` embeddings · Netlify.
 
 ## Working rules
 
-- **Pushing to `main` is fine** (Netlify CD is off, no cost). **Never trigger a
-  deploy** — deploys are manual.
+- **NEVER `git push` or merge to `main` unless the user explicitly asks in that
+  same message.** Netlify CD is **ON**, so a push to `main` triggers a *paid*
+  build and ships the code **live**. Commit locally to save work; leave every
+  push (and therefore every deploy) to the user. A one-off "push this" / "merge
+  and push" is for that moment only — it is **not** standing permission to push
+  later commits. Ask again every time. Never claim "no deploy happened" — with CD
+  on, a push *is* a deploy.
 - **Never claim vendors are vetted or verified.** Listings are self-declared;
   reviews come only from real enquiries.
 - **Keep docs in sync.** A change to the schema, the backlog, or anything that

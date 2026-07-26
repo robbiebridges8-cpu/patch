@@ -21,7 +21,9 @@ contracts happen off-platform.
 
 ## 2. Where we are
 
-Working two-sided product, deployed nowhere. **19 commits unpushed on `main`.**
+Working two-sided product, **deployed live at patchapp.netlify.app**. **Netlify
+CD is ON — any push to `main` triggers a paid build and deploys live, so never
+push without an explicit request** (see `AGENTS.md`).
 
 | Area | State |
 |---|---|
@@ -35,7 +37,8 @@ Working two-sided product, deployed nowhere. **19 commits unpushed on `main`.**
 
 **Data:** 500 seed vendors (London food), 185 reviews, 0 accounts, 0 real enquiries.
 
-**Not live:** no domain, no deploy, no paying vendors, no buyers.
+**Not launched:** live on the Netlify subdomain, but no custom domain, no paying
+vendors, no buyers yet.
 
 ---
 
