@@ -43,18 +43,17 @@ test.describe("search", () => {
     expect(requests, "show-more must not hit the server").toHaveLength(0);
   });
 
-  test("offers a way out when nothing matches", async ({ page }) => {
-    // 'kosher' isn't in the dietary vocabulary, and dietary is never relaxed.
-    await page.goto("/search?q=canapes+for+a+launch&diet=kosher&budget=200&type=Pizza");
+  test("matches dietary needs from the brief, with no dietary filter", async ({ page }) => {
+    // Dietary is semantic now (PRD §3.3), not a hardcoded UI filter — a dietary
+    // word in the brief still returns vendors, and the sidebar has no dietary panel.
+    await page.goto("/search?q=vegan+canapes+for+a+launch+in+Shoreditch");
 
-    await expect(page.getByText(/nothing matched that brief/i)).toBeVisible({ timeout: 30_000 });
+    const cards = page.locator('a[href^="/vendors/"]');
+    await expect(cards.first()).toBeVisible({ timeout: 30_000 });
+    expect(await cards.count()).toBeGreaterThan(0);
 
-    // Each escape hatch drops exactly one constraint and keeps the others.
-    const dropDiet = page.getByRole("link", { name: /drop the kosher filter/i });
-    await expect(dropDiet).toBeVisible();
-    await expect(dropDiet).toHaveAttribute("href", /type=Pizza/);
-    await expect(dropDiet).toHaveAttribute("href", /budget=200/);
-    await expect(dropDiet).not.toHaveAttribute("href", /diet=/);
+    // The removed filter: no "Dietary needs" control anywhere on the page.
+    await expect(page.getByText(/dietary needs/i)).toHaveCount(0);
   });
 
   test("says so when it had to widen the brief", async ({ page }) => {

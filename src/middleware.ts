@@ -37,8 +37,10 @@ export async function middleware(request: NextRequest) {
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/vendor/login";
+    url.pathname = "/login";
+    url.search = "";
     url.searchParams.set("next", path);
+    if (path.startsWith("/vendor")) url.searchParams.set("intent", "vendor");
     return NextResponse.redirect(url);
   }
 

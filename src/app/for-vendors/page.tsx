@@ -99,7 +99,7 @@ export default function ForVendorsPage() {
 
         <h2 style={sectionH2}>Get started</h2>
         <p style={{ ...body, marginBottom: 0 }}>
-          <a href="/vendor/login" style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>
+          <a href="/login?intent=vendor&next=/vendor/dashboard" style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>
             Create your listing
           </a>{" "}
           — it takes a few minutes and you don&apos;t need a card. Questions:{" "}

@@ -99,7 +99,7 @@ export default async function VendorDashboard({
   const { billing } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/vendor/login");
+  if (!user) redirect("/login?next=/vendor/dashboard&intent=vendor");
 
   const { data: vendor } = await supabase
     .from("vendors")

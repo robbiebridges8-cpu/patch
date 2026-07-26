@@ -81,3 +81,18 @@
   cursor: pointer;
   text-decoration: underline;
 }
+
+.ok {
+  margin: 0;
+  font-size: 13.5px;
+  color: #2f9e63;
+}
+.switch {
+  margin: 20px 0 0;
+  font-size: 13.5px;
+  color: var(--color-text-tertiary, #938a7d);
+}
+.switch a {
+  color: var(--color-accent, #e8563f);
+  text-decoration: underline;
+}

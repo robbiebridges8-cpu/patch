@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // Send failures back to the right sign-in for who was signing in.
-  const loginPath = next.startsWith("/vendor") ? "/vendor/login" : "/login";
-  return NextResponse.redirect(`${origin}${loginPath}?error=Could not sign you in. The link may have expired — please request a new one.`);
+  // One sign-in — send failures back to it, preserving where they were headed.
+  const intent = next.startsWith("/vendor") ? "&intent=vendor" : "";
+  return NextResponse.redirect(`${origin}/login?next=${encodeURIComponent(next)}${intent}&error=1`);
 }

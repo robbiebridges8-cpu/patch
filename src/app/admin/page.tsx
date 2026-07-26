@@ -45,7 +45,7 @@ function Stat({ label, value, hint }: { label: string; value: string | number; h
 export default async function AdminPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/vendor/login?next=/admin");
+  if (!user) redirect("/login?next=/admin");
 
   const { data: isAdmin } = await supabase.rpc("is_admin");
   if (isAdmin !== true) {

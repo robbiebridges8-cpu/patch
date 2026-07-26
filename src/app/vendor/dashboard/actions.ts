@@ -429,5 +429,5 @@ export async function publishListing(vendorId: string): Promise<ActionState> {
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/vendor/login");
+  redirect("/");
 }

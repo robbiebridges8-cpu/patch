@@ -67,8 +67,11 @@ test("capture buyer journey", async ({ page }) => {
   await page.waitForLoadState("networkidle").catch(() => {});
   await shot(page, "services-desktop");
 
-  // Login
+  // Login — unified, both contexts
   await page.goto("/login");
-  await page.waitForTimeout(800);
-  await page.screenshot({ path: `${DIR}/login-desktop.png` });
+  await page.waitForTimeout(900);
+  await page.screenshot({ path: `${DIR}/login-customer.png` });
+  await page.goto("/login?intent=vendor&next=/vendor/dashboard");
+  await page.waitForTimeout(900);
+  await page.screenshot({ path: `${DIR}/login-vendor.png` });
 });
