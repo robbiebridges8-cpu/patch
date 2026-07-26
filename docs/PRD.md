@@ -26,7 +26,8 @@ Working two-sided product, deployed nowhere. **19 commits unpushed on `main`.**
 | Area | State |
 |---|---|
 | Buyer discovery | AI search (parse → embed → vector → narrate), streaming, pagination, no-results recovery, shortlist, quick-view, `/services/[category]/[location]` landing pages |
-| Enquiry & comms | Enquiry flow, buyer tracker, in-platform messaging, reviews tied to real enquiries |
+| Enquiry & comms | Enquiry flow, buyer tracker (localStorage + optional account), in-platform messaging, reviews tied to real enquiries |
+| Buyer accounts | Optional passwordless email-OTP login, claim-enquiries-by-email, cross-device history + RLS |
 | Vendor | Self-serve onboarding, listing editor, photos, availability, lead inbox, listing-strength meter, buyer preview, analytics |
 | Monetisation | Free + paid tiers, locked leads, feature gates, annual prepay, Stripe scaffold |
 | Admin | Approve/reject, review moderation, tier override, platform stats |

@@ -13,9 +13,12 @@ Strategic decisions live in [PRD.md](./PRD.md). This is the work queue.
 > 616 pages), `llms.txt`, an explicit AI-crawler policy, entity disambiguation and
 > site-wide structured data ([geo.html](./geo.html)).
 >
-> **Still deferred (larger features / assets):** buyer auth UI, cross-device
-> thread access, a designed OG share image, real PWA icons, and two
-> Supabase-integration test suites (enquiry batch, message/RLS). First two below.
+> A follow-on pass then shipped **buyer accounts** (optional email-OTP login at
+> `/login`, claim-enquiries-by-email, cross-device history + RLS).
+>
+> **Still deferred (larger features / assets):** a designed OG share image, real
+> PWA icons, and two Supabase-integration test suites (enquiry batch, message/RLS).
+> Buyer login needs two config items to fully go live — see below.
 
 ---
 
@@ -31,6 +34,8 @@ Strategic decisions live in [PRD.md](./PRD.md). This is the work queue.
 | Stripe live keys + price IDs | `STRIPE_PRICE_PAID_MONTHLY` / `_YEARLY`. Checkout 503s without them. |
 | Anthropic credit | Search currently degrades to keyword-only. Works, but isn't the product. |
 | **Netlify function timeout** | Search takes 6–9s. `/search` now sets `maxDuration = 30` and captures a soft-timeout signal, but the Netlify plan must actually allow 30s — confirm on deploy, or move narration to a client-triggered endpoint. |
+| Supabase email template (`{{ .Token }}`) | Buyer/vendor OTP login shows a 6-digit code only if the template exposes the token. Magic-link fallback works without it, but the code UX doesn't until the template is edited. |
+| Google OAuth (optional) | The `/login` UI has a slot for "Continue with Google"; needs the Google provider enabled in Supabase + OAuth creds. Email OTP works without it. |
 
 ---
 
@@ -93,9 +98,9 @@ search streams a skeleton so the 6–9s feels responsive.
 ### Functional gaps — the "bulletproof" ones
 | Gap | Impact |
 |---|---|
-| **Buyer enquiry history is localStorage-only** | Clear the browser or switch device and a buyer's sent enquiries / review links vanish. No account to recover them. The single biggest buyer-side UX hole. |
+| ~~Buyer enquiry history is localStorage-only~~ | **Solved** — optional email-OTP login + claim-by-email gives cross-device history. Needs the Supabase email template config to show the 6-digit code (magic-link fallback works meanwhile). |
 | **Free-tier locked lead can read as broken** | A free vendor gets "someone enquired" but can't see who. Correct by design, but needs to *feel* like a paywall, not a bug — worth a usability check with a real vendor. |
-| **Magic-link auth** | Friction, and a poor fit for the PWA (email→browser→app handoff). Backlogged above; flagged here as a UX cost, not just a tech one. |
+| **Vendor** magic-link auth | The *vendor* login is still magic-link (a poor PWA fit). Buyers now use OTP; moving vendors to OTP is the same pattern. |
 | **Search 6–9s vs Netlify 10s timeout** | Streaming hides it from the user until it 500s under load. Config, above. |
 
 ### Consistency / framing gaps

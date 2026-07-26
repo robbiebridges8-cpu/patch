@@ -115,9 +115,18 @@ were dropped in the refactor.
   service (where search already reads). `vendors.price_range` stays — it's the
   categorical £-band for JSON-LD, an establishment property, not a paid price.
 
-## The remaining known gap
-`enquiries.buyer_id` now exists, but **there is no buyer-auth UI yet** — buyers
-still can't log in, so enquiry history is localStorage-only in practice. The
-schema is ready (nullable FK + email index for claim-by-email); the flow
-(optional post-enquiry OTP/Google login, backfill by email) is the next build.
-See BACKLOG.
+## Buyer accounts
+
+Buyers can log in (optional, post-enquiry) via passwordless email OTP at `/login`.
+`enquiries.buyer_id` is set on login by `claim_my_enquiries()` (definer), which
+attaches past anonymous enquiries matching the caller's verified email (indexed
+on `lower(buyer_email)`). `buyer_read_enquiries` RLS then lets them read their own
+enquiries across devices; logged-out buyers still fall back to localStorage.
+
+Role model: `handle_new_user` defaults new accounts to `buyer`, opts into
+`vendor` via signup metadata, and upgrades buyer→vendor on listing creation.
+`admin` is never self-assignable (that path + the `guard_profile_role` trigger).
+
+**Config to finish going live:** the Supabase email template must expose
+`{{ .Token }}` for the 6-digit-code UX (the magic-link fallback works without it);
+Google OAuth needs provider creds if wanted. The login UI is built for both.
