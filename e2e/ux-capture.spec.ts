@@ -26,6 +26,16 @@ test("capture buyer journey", async ({ page }) => {
   await page.waitForLoadState("networkidle").catch(() => {});
   await shot(page, "home-mobile");
 
+  // Search — empty state (browse)
+  await page.setViewportSize(DESKTOP);
+  await page.goto("/search");
+  await page.waitForLoadState("networkidle").catch(() => {});
+  await shot(page, "search-empty-desktop");
+  await page.setViewportSize(MOBILE);
+  await page.goto("/search");
+  await page.waitForLoadState("networkidle").catch(() => {});
+  await shot(page, "search-empty-mobile");
+
   // Search results
   await page.setViewportSize(DESKTOP);
   await page.goto("/search?q=" + encodeURIComponent("pizza for a 40th birthday in Hackney"));

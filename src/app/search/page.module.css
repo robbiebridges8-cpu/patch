@@ -119,3 +119,60 @@
   color: var(--color-text-secondary, #6b6459);
 }
 .fallbackNote strong { color: var(--color-text-primary, #241f19); }
+
+/* ─── Popular vendors (empty-state browse) ─── */
+.popular {
+  margin-top: 48px;
+}
+.popularHead {
+  font-family: var(--font-ui, system-ui);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin: 0 0 16px;
+}
+.popularGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+.popularCard {
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg, 14px);
+  overflow: hidden;
+  background: var(--color-surface-raised, #fff);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.popularCard:hover {
+  box-shadow: 0 10px 28px rgba(40, 30, 20, 0.1);
+  transform: translateY(-2px);
+}
+.popularMedia {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  background: var(--color-surface-sunken, #eee);
+}
+.popularBody {
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.popularName {
+  font-family: var(--font-ui, system-ui);
+  font-weight: 640;
+  font-size: 15px;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.popularMeta {
+  font-family: var(--font-ui, system-ui);
+  font-size: 13px;
+  color: var(--color-text-muted);
+}

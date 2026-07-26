@@ -10,6 +10,8 @@ export const metadata = {
 };
 
 import { Suspense } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { headers } from "next/headers";
 import { rateLimit, clientIp, consumeAiBudget } from "@/lib/rateLimit";
 import { captureException, captureMessage } from "@/lib/monitoring";
@@ -454,6 +456,18 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const budget = params.budget ? parseInt(params.budget, 10) : undefined;
 
   if (!query) {
+    // Popular, top-rated vendors so the empty search is a browsable page, not a
+    // bare form — and it's photo-led, which is the point of the product.
+    const { data: popularData } = await supabase
+      .from("vendors")
+      .select("slug, name, primary_category, rating_avg, review_count")
+      .eq("status", "live")
+      .gt("review_count", 0)
+      .order("rating_avg", { ascending: false })
+      .order("review_count", { ascending: false })
+      .limit(8);
+    const popular = (popularData as { slug: string; name: string; primary_category: string | null; rating_avg: number | null; review_count: number }[] | null) ?? [];
+
     return (
       <>
         <Header />
@@ -463,9 +477,35 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
             <SearchBar query={query} />
           </div>
           <p className={styles.emptyLead}>
-            Describe your occasion above — the vibe, guest count, budget, and area — or start here:
+            Describe what you need above — what, when, where and roughly your budget. Or start here:
           </p>
           <QuickStarts />
+
+          {popular.length >= 4 && (
+            <section className={styles.popular}>
+              <h2 className={styles.popularHead}>Popular right now</h2>
+              <div className={styles.popularGrid}>
+                {popular.map((v) => (
+                  <Link key={v.slug} href={`/vendors/${v.slug}`} className={styles.popularCard}>
+                    <div className={styles.popularMedia}>
+                      <Image
+                        src={categoryPhoto(v.primary_category, 400, v.slug)}
+                        alt={`${v.name} — ${v.primary_category ?? "catering"}`}
+                        fill sizes="(max-width: 700px) 50vw, 240px" style={{ objectFit: "cover" }}
+                      />
+                    </div>
+                    <div className={styles.popularBody}>
+                      <span className={styles.popularName}>{v.name}</span>
+                      <span className={styles.popularMeta}>
+                        {v.primary_category}
+                        {v.rating_avg ? ` · ${Number(v.rating_avg).toFixed(1)}★` : ""}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
         </main>
       </>
     );
