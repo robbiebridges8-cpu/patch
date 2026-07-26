@@ -67,12 +67,12 @@ export default function ReviewPage() {
               <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
             </div>
             <h1 className={styles.h1}>Thanks for your review</h1>
-            <p className={styles.sub}>It helps other people find great vendors. {slug && <>You can view it on <Link href={`/vendors/${slug}`}>their page</Link>.</>}</p>
+            <p className={styles.sub}>It helps other people find great businesses. {slug && <>You can view it on <Link href={`/vendors/${slug}`}>their page</Link>.</>}</p>
           </div>
         ) : (
           <>
             <h1 className={styles.h1}>Leave a review{vendorName ? ` for ${vendorName}` : ""}</h1>
-            <p className={styles.sub}>How was it? Your honest feedback helps other event planners choose well.</p>
+            <p className={styles.sub}>How was it? Your honest feedback helps other people choose well.</p>
 
             <form onSubmit={handleSubmit} className={styles.card}>
               <div className={styles.starRow} role="radiogroup" aria-label="Rating">

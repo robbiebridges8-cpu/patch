@@ -211,6 +211,7 @@ export default async function VendorDashboard({
               <EditListingForm
                 vendor={{
                   id: vendor.id as string,
+                  status: vendor.status as string,
                   name: vendor.name as string,
                   primary_category: vendor.primary_category as string | null,
                   description: vendor.description as string | null,

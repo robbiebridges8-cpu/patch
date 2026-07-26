@@ -13,7 +13,7 @@ interface Props {
   label?: string;
 }
 
-export default function EnquiryButton({ vendorId, vendorName, className, label = "Get in touch" }: Props) {
+export default function EnquiryButton({ vendorId, vendorName, className, label = "Send an enquiry" }: Props) {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
@@ -94,15 +94,15 @@ export default function EnquiryButton({ vendorId, vendorName, className, label =
                 </div>
                 <h3 className={styles.successTitle}>Enquiry sent</h3>
                 <p className={styles.successBody}>
-                  We&apos;ve sent your brief to {vendorName}. If it&apos;s a good fit they&apos;ll reply
-                  directly, usually within a day or two. Comparing options? Shortlist a few more and
-                  enquire them all at once.
+                  We&apos;ve passed your brief to {vendorName} and emailed you a copy. If it&apos;s a
+                  good fit they&apos;ll usually get back to you within a day or two. Comparing options?
+                  Shortlist a few more and enquire them all at once.
                 </p>
                 {/* autoFocus so a screen reader lands on an actionable control, not
                     the unmounted submit button. */}
                 <button type="button" className={styles.primaryBtn} onClick={close} autoFocus>Done</button>
                 <p className={styles.successFine}>
-                  <a href="/login">Log in</a> to keep this enquiry on every device.
+                  <a href="/enquiries">Track your enquiry</a> — or <a href="/login">log in</a> to keep it on every device.
                 </p>
               </div>
             ) : (

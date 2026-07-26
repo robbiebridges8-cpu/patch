@@ -53,6 +53,7 @@ function stubParse(query: string): ParsedQuery {
     location: postcode ?? place ?? null,
     event_date: iso,
     semantic_query: query,
+    in_scope: true, // stub/keyword path can't judge scope — never blocks results
     categories: [],
     attributes: null,
   };
@@ -91,6 +92,10 @@ export interface ParsedQuery {
   location: string | null;
   event_date: string | null;
   semantic_query: string;
+  /** False when the request is clearly outside what Patch covers (food/drink/
+   *  catering today) — e.g. "plumber", "photographer", or gibberish. Lets search
+   *  say "we don't cover that yet" instead of forcing a food shortlist. */
+  in_scope: boolean;
   /** UI-supplied only. */
   categories: string[];
   /** UI-supplied only; jsonb containment against vendor_services.attributes. */
@@ -142,6 +147,7 @@ function bareQuery(
     location: null,
     event_date: null,
     semantic_query: query,
+    in_scope: true, // keyword/fallback path can't judge scope — never blocks results
     categories: overrides?.categories ?? [],
     attributes: overrides?.attributes ?? null,
   };
@@ -159,17 +165,18 @@ async function parseQuery(query: string): Promise<ParsedQuery> {
     max_tokens: 1024,
     system: `You turn a plain-language request for a local service into structured search filters. Today's date is ${today}.
 
-The platform covers every kind of casual service and trade — caterers, plumbers, photographers, cleaners, tutors, DJs, gardeners, mobile bars, lifeguards, anything. Do NOT try to classify the request into a category, and do NOT invent filters for trade-specific requirements. Those are matched semantically.
+Patch's live marketplace today is FOOD, DRINK and CATERING — caterers, street food, pizza, BBQ, grazing, desserts, coffee carts, mobile bars, and the like (including any event that needs catering). Do NOT classify the request into a category or invent trade-specific filters — those are matched semantically.
 
 Extract ONLY these, and only when clearly stated:
 - budget_max: a maximum spend in GBP, as a number. null if not mentioned.
 - location: a UK place name or postcode. null if not mentioned.
 - event_date: if a specific calendar date is implied ("August 15", "next Saturday", "the 3rd"), resolve it to "YYYY-MM-DD" using today's date above. A vague month or season with no day stays null.
+- in_scope: true if the request is for food, drink or catering (or an event that needs it); false if it's clearly a different service Patch doesn't cover yet (e.g. plumber, photographer, cleaner, tutor, gardener, DJ, electrician) or is empty/nonsense.
 
 For semantic_query: rewrite the whole request as a rich, descriptive sentence describing the service needed, including every qualitative requirement — the kind of work, the occasion, the vibe, and any specific needs (dietary, accessibility, certifications, equipment, experience). This string is matched against how vendors describe themselves, so keep the requirement words in it. Drop only the structured parts you extracted above (budget figures, locations, dates).
 
 Respond with ONLY valid JSON:
-{"budget_max": null, "location": null, "event_date": null, "semantic_query": "..."}`,
+{"budget_max": null, "location": null, "event_date": null, "semantic_query": "...", "in_scope": true}`,
     messages: [{ role: "user", content: query }],
   });
 
@@ -188,6 +195,9 @@ Respond with ONLY valid JSON:
         ? raw.event_date : null,
       semantic_query: typeof raw?.semantic_query === "string" && raw.semantic_query.trim()
         ? raw.semantic_query.slice(0, 2000) : query,
+      // Default true — only an explicit false blocks results, so an unsure model
+      // never wrongly hides a legitimate food search.
+      in_scope: raw?.in_scope !== false,
       categories: [],
       attributes: null,
     };
@@ -195,6 +205,7 @@ Respond with ONLY valid JSON:
     return {
       budget_max: null, location: null, event_date: null,
       semantic_query: query,
+      in_scope: true,
       categories: [], attributes: null,
     };
   }
@@ -626,6 +637,13 @@ export async function quickSearch(
   }
   if (overrides?.budgetMax != null) parsed.budget_max = overrides.budgetMax;
   console.log("[quickSearch] parsed:", JSON.stringify(parsed));
+
+  // Off-vertical request (e.g. "plumber", gibberish) → don't force a food
+  // shortlist; return empty so the page can say "we only cover food & catering".
+  // A category override means they clicked a food quick-start, so it's in scope.
+  if (!parsed.in_scope && !parsed.categories.length) {
+    return { parsed, results: [], usedFallback: false, relaxed: [] };
+  }
 
   // Embed and geocode are independent once we have the parse — run them together.
   const [embedding, geo] = await Promise.all([

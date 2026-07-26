@@ -15,6 +15,7 @@ const DIETARY = ["vegetarian", "vegan", "gluten-free", "halal", "dairy-free", "n
 
 export interface EditableVendor {
   id: string;
+  status: string;
   name: string;
   primary_category: string | null;
   description: string | null;
@@ -166,7 +167,13 @@ export default function EditListingForm({ vendor }: { vendor: EditableVendor }) 
       </div>
 
       {state?.error && <div className={`${styles.notice} ${styles.noticeErr}`}>{state.error}</div>}
-      {state?.ok && <div className={`${styles.notice} ${styles.noticeOk}`}>Saved — your listing and search matching are updated.</div>}
+      {state?.ok && (
+        <div className={`${styles.notice} ${styles.noticeOk}`}>
+          {vendor.status === "live"
+            ? "Saved — your changes are live."
+            : "Saved as a draft. Hit Publish (top of the page) to go live and start appearing in search."}
+        </div>
+      )}
 
       <button type="submit" className={styles.btn} disabled={pending}>
         {pending ? "Saving…" : "Save listing"}

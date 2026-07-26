@@ -2,12 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useShortlist } from "@/lib/useShortlist";
 import styles from "./ShortlistTray.module.css";
 
 export default function ShortlistTray() {
   const { items, remove, clear } = useShortlist();
-  if (items.length === 0) return null;
+  const pathname = usePathname();
+  // Suppressed on a vendor's own page — there it would overlap the sticky
+  // "Send an enquiry" bar (both pinned to the bottom on mobile).
+  if (items.length === 0 || pathname?.startsWith("/vendors/")) return null;
 
   return (
     <div className={styles.wrap} role="region" aria-label="Your shortlist">
@@ -15,7 +19,7 @@ export default function ShortlistTray() {
         <div className={styles.left}>
           <span className={styles.count}>{items.length}</span>
           <span className={styles.label}>
-            {items.length === 1 ? "vendor shortlisted" : "vendors shortlisted"}
+            saved
           </span>
           <div className={styles.thumbs}>
             {items.slice(0, 6).map((i) => (

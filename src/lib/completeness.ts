@@ -67,9 +67,12 @@ export function assessListing(v: CompletenessInput): Completeness {
     },
     {
       key: "photos",
-      label: "Three or more photos",
-      why: "Listings with real photos get noticeably more enquiries than stock imagery.",
-      done: v.photoCount >= 3,
+      label: "Add a photo",
+      // Essential is one photo — reachable on every tier. More is better, but a
+      // free vendor must be able to clear an "essential", not be scored down for
+      // a paid-only limit.
+      why: "Listings with a real photo get noticeably more enquiries than stock imagery — add at least one (more is better).",
+      done: v.photoCount >= 1,
       weight: 15,
       essential: true,
     },

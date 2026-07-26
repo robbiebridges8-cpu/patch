@@ -7,11 +7,13 @@ import styles from "./HeroSearch.module.css";
 export default function HeroSearch() {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
+  const [pending, setPending] = useState(false);
   const router = useRouter();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (query.trim()) {
+    if (query.trim() && !pending) {
+      setPending(true); // the search route is a server round-trip — show progress, block double-taps
       router.push(`/search?q=${encodeURIComponent(query.trim())}`);
     }
   }
@@ -36,7 +38,7 @@ export default function HeroSearch() {
           onBlur={() => setFocused(false)}
           placeholder="what do you need, where, and roughly when?"
         />
-        <button type="submit" className={styles.btn}>Find someone</button>
+        <button type="submit" className={styles.btn} disabled={pending}>{pending ? "Searching…" : "Find someone"}</button>
       </form>
 
     </div>

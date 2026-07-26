@@ -77,10 +77,10 @@ function LoginInner() {
     return <><Header /><main id="main-content" className={styles.wrap} aria-busy="true" /></>;
   }
 
-  const heading = vendorContext ? "Sign in to your listing" : "Sign in to Patch";
+  const heading = vendorContext ? "Log in to your listing" : "Log in to Patch";
   const sub = vendorContext
-    ? "Manage your listing, photos and enquiries. No password — we'll email you a 6-digit code. New here? The same code sets your account up."
-    : "Track your enquiries and reviews from any device. No password — we'll email you a 6-digit code. New here? The same code creates your account.";
+    ? "Manage your listing, photos and enquiries. No password — we'll email you a secure sign-in link. New here? It sets your account up too."
+    : "Track your enquiries and reviews from any device. No password — we'll email you a secure sign-in link. New here? It creates your account too.";
 
   return (
     <>
@@ -100,7 +100,7 @@ function LoginInner() {
             />
             {error && <p className={styles.error} role="alert">{error}</p>}
             <button type="submit" className={styles.btn} disabled={loading}>
-              {loading ? "Sending…" : "Email me a code"}
+              {loading ? "Sending…" : "Email me a sign-in link"}
             </button>
 
             {/* "Continue with Google" slots in here once the provider is enabled
@@ -113,34 +113,47 @@ function LoginInner() {
             </p>
           </form>
         ) : (
-          <form onSubmit={verify} className={styles.card}>
-            <label className={styles.label} htmlFor="code">Enter the code we emailed to {email}</label>
-            <input
-              id="code" inputMode="numeric" autoComplete="one-time-code" autoFocus
-              className={styles.input} value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="6-digit code"
-            />
-            {error && <p className={styles.error} role="alert">{error}</p>}
-            {resent && <p className={styles.ok} role="status">New code sent — check your inbox.</p>}
-            <button type="submit" className={styles.btn} disabled={loading}>
-              {loading ? "Signing in…" : "Sign in"}
-            </button>
+          // Lead with the link (every sign-in email contains one and it always
+          // works in this browser). The code is a fallback — only some email
+          // templates surface it — so it must never be the thing we demand.
+          <div className={styles.card}>
+            <div className={styles.sentIcon} aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
+            </div>
+            <p className={styles.sentLead}>
+              Check your email — we sent a sign-in link to <strong>{email}</strong>. Open it in this browser to finish.
+            </p>
+            {resent && <p className={styles.ok} role="status">Sent again — check your inbox.</p>}
             <p className={styles.fine}>
-              No code yet?{" "}
+              No email yet?{" "}
               <button type="button" className={styles.linkBtn} onClick={() => send(true)}>Resend it</button>
               {" · "}
-              <button type="button" className={styles.linkBtn} onClick={() => { setStep("email"); setCode(""); setError(null); setResent(false); }}>Use a different email</button>.
-              You can also just click the link in the email.
+              <button type="button" className={styles.linkBtn} onClick={() => { setStep("email"); setCode(""); setError(null); setResent(false); }}>Use a different email</button>
             </p>
-          </form>
+
+            <details className={styles.codeFallback}>
+              <summary>Got a 6-digit code in the email instead?</summary>
+              <form onSubmit={verify} className={styles.codeForm}>
+                <input
+                  id="code" inputMode="numeric" autoComplete="one-time-code"
+                  className={styles.input} value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="6-digit code"
+                />
+                {error && <p className={styles.error} role="alert">{error}</p>}
+                <button type="submit" className={styles.btn} disabled={loading}>
+                  {loading ? "Signing in…" : "Log in with code"}
+                </button>
+              </form>
+            </details>
+          </div>
         )}
 
         {/* Gentle escape hatch if someone landed in the wrong framing. */}
         {vendorContext ? (
-          <p className={styles.switch}>Just looking to book someone? <a href="/login">Sign in as a customer</a>.</p>
+          <p className={styles.switch}>Just looking to book someone? <a href="/login">Log in as a customer</a>.</p>
         ) : (
-          <p className={styles.switch}>Want to list your business? <a href="/login?intent=vendor&next=/vendor/dashboard">Sign in as a vendor</a>.</p>
+          <p className={styles.switch}>Want to list your business? <a href="/login?intent=vendor&next=/vendor/dashboard">Log in as a vendor</a>.</p>
         )}
       </main>
     </>

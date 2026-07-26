@@ -13,6 +13,9 @@ import {
 import styles from "./page.module.css";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+// Category's natural noun ("mobile cocktail bars", "coffee carts"), sentence-cased.
+// Avoids "Cocktail bar catering", which reads wrong for drinks/desserts/coffee.
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 export const revalidate = 86400; // rebuild daily
 export const dynamicParams = true; // long-tail combos render on demand + cache
 
@@ -48,7 +51,7 @@ export async function generateMetadata(
 
   const vendors = await getVendors(cat, area);
   const where = area.slug === "london" ? "London" : `${area.name}, London`;
-  const title = `${cat.name} catering in ${where}`;
+  const title = `${cap(cat.plural)} in ${where}`;
   const description = vendors.length
     ? `${vendors.length} ${cat.plural} serving ${where}. Compare prices, availability and reviews, or describe your occasion for an AI-matched shortlist.`
     : `Find ${cat.plural} near ${where} on Patch — describe your occasion for an AI-matched shortlist.`;
@@ -87,7 +90,7 @@ export default async function ServiceLocationPage(
     ? {
         "@context": "https://schema.org",
         "@type": "ItemList",
-        name: `${cat.name} catering in ${where}`,
+        name: `${cap(cat.plural)} in ${where}`,
         numberOfItems: vendors.length,
         itemListElement: vendors.map((v, i) => ({
           "@type": "ListItem",
@@ -122,7 +125,7 @@ export default async function ServiceLocationPage(
           a: `${vendors.length} ${cat.plural} on Patch currently cover ${where}, ranked by fit and rating.`,
         },
         {
-          q: `How much does ${cat.name.toLowerCase()} catering cost in ${inWhere}?`,
+          q: `How much do ${cat.plural} cost in ${inWhere}?`,
           a: fromPrice != null
             ? `Listings serving ${where} start from around £${fromPrice}. Most quote per head or per event, so the total depends on guest count and menu.`
             : `Pricing is quoted per head or per event and depends on guest count and menu. Enquire for a quote.`,
@@ -153,7 +156,7 @@ export default async function ServiceLocationPage(
           <span>{where}</span>
         </nav>
 
-        <h1 className={styles.h1}>{cat.name} catering in {where}</h1>
+        <h1 className={styles.h1}>{cap(cat.plural)} in {where}</h1>
         <p className={styles.lede}>
           {vendors.length > 0 ? (
             <>
@@ -196,7 +199,7 @@ export default async function ServiceLocationPage(
 
         {faq.length > 0 && (
           <section className={styles.faq}>
-            <h2 className={styles.h2}>{cat.name} catering in {inWhere} — common questions</h2>
+            <h2 className={styles.h2}>{cap(cat.plural)} in {inWhere} — common questions</h2>
             <dl className={styles.faqList}>
               {faq.map((f) => (
                 <div key={f.q} className={styles.faqItem}>
@@ -218,7 +221,7 @@ export default async function ServiceLocationPage(
             </div>
           </div>
           <div>
-            <h2 className={styles.h3}>Other catering in {inWhere}</h2>
+            <h2 className={styles.h3}>Other services in {inWhere}</h2>
             <div className={styles.pills}>
               {otherCats.map((c) => (
                 <Link key={c.slug} href={`/services/${c.slug}/${area.slug}`} className={styles.pill}>{c.name}</Link>

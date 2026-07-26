@@ -236,7 +236,7 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
   }
 
   if (quick.results.length === 0) {
-    return <NoResults query={query} parsed={quick.parsed} params={params} />;
+    return <NoResults query={query} parsed={quick.parsed} params={params} outOfScope={!quick.parsed.in_scope} />;
   }
 
   // Real vendor photos where they exist (else category stock).

@@ -109,8 +109,56 @@
   font-weight: 600;
 }
 
+/* ─── Mobile menu (hamburger) ─── */
+.mobileMenu { display: none; }
+.menuBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  border-radius: 8px;
+}
+.menuScrim {
+  position: fixed;
+  inset: var(--header-height) 0 0;
+  background: rgba(30, 24, 18, 0.28);
+  z-index: 18;
+}
+.menuSheet {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  z-index: 19;
+  background: var(--color-surface-page);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  padding: 8px var(--gutter-mobile, 18px) 16px;
+  box-shadow: 0 12px 28px rgba(30, 24, 18, 0.12);
+}
+.menuLink {
+  font-family: var(--font-ui);
+  font-size: 17px;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  text-align: left;
+  padding: 14px 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border);
+}
+.menuLink:last-child { border-bottom: none; }
+
 @media (max-width: 760px) {
   .inner { gap: var(--space-3); }
-  .navLink { display: none; }
+  .nav { display: none; }
   .locationPill { display: none; }
+  .mobileMenu { display: block; margin-left: auto; }
 }

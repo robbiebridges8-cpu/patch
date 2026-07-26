@@ -142,6 +142,10 @@ export default async function VendorPage({
   if (!vendor) return notFound();
 
   const previewing = isPreview && vendor.status !== "live";
+  // Only show outbound contact links (website / Instagram / phone) once a vendor
+  // has claimed their listing — unclaimed seed listings carry placeholder
+  // details, and a dead "Visit website" link reads as "this is fake".
+  const claimed = !!vendor.owner_id;
 
   const photos = (vendor.vendor_photos as Record<string, unknown>[]) || [];
   const sortedPhotos = [...photos].sort((a, b) => (a.position as number) - (b.position as number));
@@ -371,7 +375,7 @@ export default async function VendorPage({
                 vendorName={vendor.name as string}
                 className={styles.ctaPrimary}
               />
-              {vendor.website && (
+              {claimed && vendor.website && (
                 <TrackedLink
                   vendorId={vendor.id as string}
                   event="visit_website"
@@ -520,7 +524,7 @@ export default async function VendorPage({
             vendorName={vendor.name as string}
             className={styles.sideCtaPrimary}
           />
-          {vendor.contact_phone && (
+          {claimed && vendor.contact_phone && (
             <a href={`tel:${vendor.contact_phone as string}`} className={styles.sideCtaSecondary}>
               Call {vendor.contact_phone as string}
             </a>
@@ -553,7 +557,7 @@ export default async function VendorPage({
             )}
           </div>
 
-          {(vendor.website || vendor.instagram) && (
+          {claimed && (vendor.website || vendor.instagram) && (
             <div className={styles.contactLinks}>
               {vendor.website && (
                 <TrackedLink

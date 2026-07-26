@@ -11,10 +11,13 @@ export default function NoResults({
   query,
   parsed,
   params,
+  outOfScope = false,
 }: {
   query: string;
   parsed: ParsedQuery | null;
   params: { type?: string; budget?: string; sort?: string };
+  /** The request is for something Patch doesn't cover yet (not just a no-match). */
+  outOfScope?: boolean;
 }) {
   // Each escape hatch drops exactly one constraint and keeps the rest.
   function urlWithout(drop: "type" | "budget"): string {
@@ -45,6 +48,30 @@ export default function NoResults({
     "Vegan canapés for a launch event",
     "Coffee cart for a morning workshop",
   ];
+
+  // Honest scope message — the request is for something we don't cover yet, so
+  // don't pretend a wider search would help. Point at what IS live.
+  if (outOfScope) {
+    return (
+      <div className={styles.wrap}>
+        <h2 className={styles.title}>We don&apos;t cover that yet</h2>
+        <p className={styles.lead}>
+          Patch is live for <strong>food, drink and catering</strong> in London right now, so we
+          couldn&apos;t match &ldquo;{query}&rdquo;. More services are coming — here&apos;s the kind of
+          thing that works today:
+        </p>
+        <div className={styles.block}>
+          <div className={styles.chips}>
+            {STARTERS.map((s) => (
+              <Link key={s} href={`/search?q=${encodeURIComponent(s)}`} className={styles.chip}>
+                {s}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.wrap}>

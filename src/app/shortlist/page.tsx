@@ -58,12 +58,12 @@ export default function ShortlistPage() {
           <div className={styles.successIcon}>
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
           </div>
-          <h1 className={styles.h1}>Enquiry sent to {sentCount} {sentCount === 1 ? "vendor" : "vendors"}</h1>
+          <h1 className={styles.h1}>Enquiry sent to {sentCount} {sentCount === 1 ? "business" : "businesses"}</h1>
           <p className={styles.sub}>
-            Each will get your brief and reply directly — usually within a day. You&apos;ll hear from whoever&apos;s the best fit,
-            and you can compare their responses before you book anything.
+            We&apos;ve emailed you a copy. The ones that are a good fit usually get back to you within a day
+            or two — you can compare their responses before you book anything.
           </p>
-          <Link href="/search" className={styles.cta}>Keep looking</Link>
+          <Link href="/enquiries" className={styles.cta}>Track your enquiries</Link>
         </main>
       </>
     );
@@ -75,8 +75,8 @@ export default function ShortlistPage() {
         <Header />
         <main id="main-content" className={`${styles.wrap} ${styles.center}`}>
           <h1 className={styles.h1}>Your shortlist is empty</h1>
-          <p className={styles.sub}>Search for vendors and tap the heart to save them here — then enquire with everyone at once.</p>
-          <Link href="/search" className={styles.cta}>Find vendors</Link>
+          <p className={styles.sub}>Search and tap the heart to save businesses here — then enquire with everyone at once.</p>
+          <Link href="/search" className={styles.cta}>Find someone</Link>
         </main>
       </>
     );
@@ -116,7 +116,7 @@ export default function ShortlistPage() {
 
         <div className={styles.formCard}>
           <h2 className={styles.formTitle}>Enquire with all {items.length}</h2>
-          <p className={styles.formSub}>Write your brief once — we&apos;ll send it to everyone on your shortlist and they&apos;ll reply directly.</p>
+          <p className={styles.formSub}>Write your brief once — we&apos;ll send it to everyone on your shortlist, and the good-fit ones will get back to you.</p>
 
           <form onSubmit={handleSubmit}>
             <div className={styles.row}>
@@ -157,7 +157,7 @@ export default function ShortlistPage() {
             {error && <div className={styles.error} role="alert">{error}</div>}
 
             <button type="submit" className={styles.submit} disabled={sending}>
-              {sending ? "Sending…" : `Send to all ${items.length} vendors`}
+              {sending ? "Sending…" : `Send to all ${items.length}`}
             </button>
           </form>
         </div>

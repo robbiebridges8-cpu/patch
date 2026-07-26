@@ -1,5 +1,6 @@
 import Link from "next/link";
 import HeaderAuth from "./HeaderAuth";
+import MobileMenu from "./MobileMenu";
 import styles from "./Header.module.css";
 
 export default function Header() {
@@ -17,6 +18,7 @@ export default function Header() {
           <Link href="/for-vendors" className={styles.navLink}>List your service</Link>
           <HeaderAuth />
         </nav>
+        <MobileMenu />
       </div>
     </header>
   );

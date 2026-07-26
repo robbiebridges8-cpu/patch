@@ -37,9 +37,11 @@ describe("assessListing", () => {
     expect(stub.percent).toBeLessThan(100);
   });
 
-  it("requires three photos, not just one", () => {
-    expect(assessListing({ ...FULL, photoCount: 1 }).missing.map((m) => m.key)).toContain("photos");
-    expect(assessListing({ ...FULL, photoCount: 3 }).missing.map((m) => m.key)).not.toContain("photos");
+  it("counts one photo as satisfying the essential (free tier can only add one)", () => {
+    // The essential is reachable on every tier — a free vendor caps at 1 photo,
+    // so scoring them down for <3 would flag an item they can never clear.
+    expect(assessListing({ ...FULL, photoCount: 0 }).missing.map((m) => m.key)).toContain("photos");
+    expect(assessListing({ ...FULL, photoCount: 1 }).missing.map((m) => m.key)).not.toContain("photos");
   });
 
   it("reports missing essentials separately from optional extras", () => {

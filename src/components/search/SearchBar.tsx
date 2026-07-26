@@ -49,7 +49,7 @@ export default function SearchBar({ query }: { query: string }) {
             Searching…
           </span>
         ) : (
-          "Find vendors"
+          "Find someone"
         )}
       </button>
     </form>

@@ -114,17 +114,17 @@ export default function EnquiriesPage() {
           </p>
         )}
         {user && (
-          <p className={styles.sub}>Signed in as {user.email}. Your enquiries follow you across devices.</p>
+          <p className={styles.sub}>Logged in as {user.email}. Your enquiries follow you across devices.</p>
         )}
 
         {isEmpty ? (
           <div className={styles.empty}>
             <p>You haven&apos;t sent any enquiries yet.</p>
-            <Link href="/search" className={styles.cta}>Find vendors</Link>
+            <Link href="/search" className={styles.cta}>Find someone</Link>
           </div>
         ) : (
           <>
-            <p className={styles.sub}>Track responses and message vendors here. Once a vendor marks your booking confirmed, you can leave a review.</p>
+            <p className={styles.sub}>Track responses and message them here. Once your booking is marked confirmed, you can leave a review.</p>
             {loadError && (
               <p className={styles.sub} role="status">
                 We couldn&apos;t load the latest status just now. Your enquiries are safe — refresh to try again.

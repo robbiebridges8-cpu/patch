@@ -26,25 +26,20 @@ export default function HeaderAuth() {
     return <Link href="/login" className={styles.navLink}>Log in</Link>;
   }
 
+  // Just "Log out" — buyers reach their stuff via "My enquiries", vendors via
+  // "List your service". A single account icon pointing at the vendor dashboard
+  // sent buyers to a "create a listing" screen, which read as a dead end.
   return (
-    <>
-      <Link href="/vendor/dashboard" className={styles.accountBtn} aria-label="Your account">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M20 21a8 8 0 0 0-16 0" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
-      </Link>
-      <button
-        type="button"
-        className={styles.navLink}
-        style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer" }}
-        onClick={async () => {
-          await createClient().auth.signOut();
-          window.location.href = "/";
-        }}
-      >
-        Log out
-      </button>
-    </>
+    <button
+      type="button"
+      className={styles.navLink}
+      style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer" }}
+      onClick={async () => {
+        await createClient().auth.signOut();
+        window.location.href = "/";
+      }}
+    >
+      Log out
+    </button>
   );
 }
