@@ -26,6 +26,24 @@ const Check = () => (
   </svg>
 );
 
+// Render a service's free-form attributes as human lines — never raw keys like
+// "setting: either". Capacity is skipped here (it's in the glance bar).
+function humanizeServiceAttrs(attrs: Record<string, unknown> | null): string[] {
+  if (!attrs) return [];
+  const out: string[] = [];
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === "" || Array.isArray(v)) continue;
+    if (k === "capacity_min" || k === "capacity_max") continue;
+    if (k === "setting") {
+      const s = String(v);
+      out.push(s === "either" ? "Indoor or outdoor" : s === "indoor" ? "Indoor" : s === "outdoor" ? "Outdoor" : s);
+      continue;
+    }
+    out.push(`${k.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())}: ${String(v)}`);
+  }
+  return out.slice(0, 4);
+}
+
 const getVendor = cache(async function getVendor(slug: string) {
   const { data } = await supabase
     .from("vendors")
@@ -142,7 +160,7 @@ export default async function VendorPage({
 
   const categories = [...new Set(services.map((s) => s.category as string).filter(Boolean))];
   const category = categories.slice(0, 2).join(" · ") || "Local service";
-  const heroFallback = categoryPhoto(categories[0], 1200);
+  const heroFallback = categoryPhoto(categories[0], 1200, vendor.slug as string);
 
   // Attributes are free-form and vertical-specific — merge vendor- and
   // service-level, and render whatever is there without knowing what it means.
@@ -406,8 +424,10 @@ export default async function VendorPage({
             </div>
           )}
 
-          {/* Services */}
-          {services.length > 0 && (
+          {/* Services — only when a vendor lists more than one. For a single
+              service the header, glance bar and sidebar already say everything;
+              a card here would just repeat it (and leak raw attribute keys). */}
+          {services.length > 1 && (
             <div className={styles.section}>
               <h2 className={styles.sectionTitle}>Services ({services.length})</h2>
               {services.map((s) => (
@@ -422,12 +442,9 @@ export default async function VendorPage({
                     <div className={styles.serviceDesc}>{s.description as string}</div>
                   )}
                   <div className={styles.serviceMeta}>
-                    {Object.entries((s.attributes as Record<string, unknown>) ?? {})
-                      .filter(([, v]) => v != null && v !== "" && !Array.isArray(v))
-                      .slice(0, 3)
-                      .map(([k, v]) => (
-                        <span key={k}>{k.replace(/_/g, " ")}: {String(v)}</span>
-                      ))}
+                    {humanizeServiceAttrs(s.attributes as Record<string, unknown> | null).map((line) => (
+                      <span key={line}>{line}</span>
+                    ))}
                   </div>
                 </div>
               ))}
@@ -522,10 +539,12 @@ export default async function VendorPage({
                 {`${vendor.coverage_radius_miles} miles`}
               </span>
             </div>
-            <div className={styles.sideDetail}>
-              <span className={styles.sideDetailLabel}>Services</span>
-              <span className={styles.sideDetailValue}>{services.length}</span>
-            </div>
+            {services.length > 1 && (
+              <div className={styles.sideDetail}>
+                <span className={styles.sideDetailLabel}>Services</span>
+                <span className={styles.sideDetailValue}>{services.length}</span>
+              </div>
+            )}
             {(vendor.review_count as number) > 0 && (
               <div className={styles.sideDetail}>
                 <span className={styles.sideDetailLabel}>Reviews</span>

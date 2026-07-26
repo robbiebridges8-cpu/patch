@@ -54,15 +54,16 @@ function attrLabel(key: string, value: unknown): string {
   return String(value);
 }
 
+// Keys that are shown elsewhere (glance line / distance) or aren't buyer-facing —
+// never surface them as neutral match chips.
+const CHIP_SKIP = new Set(["setting", "capacity_min", "capacity_max"]);
+
 function matchSignals(parsed: ParsedQuery | null, r: VendorResult): MatchedTag[] {
   const sig: MatchedTag[] = [];
 
-  // Distance (only present when the search had a location).
-  if (r.distance_miles != null) {
-    const d = r.distance_miles;
-    sig.push({ label: `${d < 10 ? d.toFixed(1) : Math.round(d)} mi away`, good: d <= r.vendor_coverage_radius_miles });
-  }
-  // Budget.
+  // Budget fit — a real signal ("under what you said"). Distance is deliberately
+  // not a chip: it's already in the location line, and every result is within
+  // coverage, so the badge would just be noise.
   if (parsed?.budget_max && r.vendor_price_from != null) {
     sig.push({ label: `from £${r.vendor_price_from}`, good: r.vendor_price_from <= parsed.budget_max });
   }
@@ -82,11 +83,12 @@ function matchSignals(parsed: ParsedQuery | null, r: VendorResult): MatchedTag[]
     }
   }
 
-  // Fill remaining room with the vendor's own attributes as neutral badges.
+  // Fill remaining room with the vendor's own attributes as neutral badges —
+  // skipping keys that are shown elsewhere or read as jargon ("either").
   if (sig.length < 3) {
     for (const [k, v] of Object.entries(attrs)) {
       if (sig.length >= 3) break;
-      if (v == null || v === "" || k in asked) continue;
+      if (v == null || v === "" || k in asked || CHIP_SKIP.has(k)) continue;
       const label = attrLabel(k, v);
       if (label && !sig.some((s) => s.label === label)) sig.push({ label, good: false });
     }
@@ -114,7 +116,7 @@ function resultToMatch(r: VendorResult, rank: number, parsed: ParsedQuery | null
     category: r.service_category || "Vendor",
     distance: formatLocationWithDistance(r.vendor_area, r.vendor_base_postcode, r.distance_miles) ?? "",
     metaLine: "",
-    photoUrl: photoUrl || categoryPhoto(r.service_category),
+    photoUrl: photoUrl || categoryPhoto(r.service_category, 800, r.vendor_slug),
     photoCount: 0,
     rating: r.vendor_rating_avg || 0,
     bookingCount: r.vendor_review_count,
@@ -146,7 +148,7 @@ function rowToMatch(v: Record<string, unknown>, rank: number, note: string): Ven
     category: (svc.category as string) || "Vendor",
     distance: formatLocation(v.area as string | null, v.base_postcode as string | null) ?? "",
     metaLine: "",
-    photoUrl: categoryPhoto(svc.category as string),
+    photoUrl: categoryPhoto(svc.category as string, 800, v.slug as string),
     photoCount: 0,
     rating: (v.rating_avg as number) || 0,
     bookingCount: (v.review_count as number) || 0,

@@ -1,7 +1,10 @@
+import Image from "next/image";
+import Link from "next/link";
 import { safeJsonLd } from "@/lib/sanitize";
 import Header from "@/components/layout/Header";
 import HeroSearch from "@/components/search/HeroSearch";
 import { supabase } from "@/lib/supabase";
+import { categoryPhoto } from "@/lib/categoryPhoto";
 import styles from "./page.module.css";
 
 // Live stats keep the citable numbers accurate for both readers and AI engines.
@@ -80,10 +83,22 @@ export default async function Home() {
   // Real, current figures make the on-page facts citable rather than vague.
   // Counted in SQL (platform_stats) so it stays correct + cheap at any catalogue
   // size — not by pulling every row and deduping in JS.
-  const { data: stats } = await supabase.rpc("platform_stats").single();
+  const [{ data: stats }, { data: featuredData }] = await Promise.all([
+    supabase.rpc("platform_stats").single(),
+    // Real, top-rated vendors for the hero — showing the product beats describing it.
+    supabase
+      .from("vendors")
+      .select("slug, name, primary_category, rating_avg, review_count")
+      .eq("status", "live")
+      .gt("review_count", 0)
+      .order("rating_avg", { ascending: false })
+      .order("review_count", { ascending: false })
+      .limit(3),
+  ]);
   const s = stats as { vendor_count: number; area_count: number } | null;
   const areaCount = s?.area_count ?? 0;
   const vendorsRounded = s?.vendor_count ? Math.floor(s.vendor_count / 10) * 10 : 0;
+  const featured = (featuredData as { slug: string; name: string; primary_category: string | null; rating_avg: number | null; review_count: number }[] | null) ?? [];
 
   return (
     <>
@@ -92,20 +107,49 @@ export default async function Home() {
 
       {/* ─── FRONT DOOR ─── */}
       <main id="main-content" className={styles.hero}>
-        <span className={styles.eyebrow}>Local services, London</span>
-        <h1 className={styles.heading}>
-          Describe what you need in your own words. Get a shortlist in seconds.
-        </h1>
-        <p className={styles.sub}>
-          Tell Patch what you&apos;re after in plain words. It reads the detail and comes back with
-          a short, reasoned set — and says why each one fits.
-        </p>
-        <HeroSearch />
-        {vendorsRounded > 0 && (
-          <p className={styles.heroStat}>
-            <strong>{vendorsRounded}+</strong> vendors across <strong>{areaCount}</strong> London areas — matched by AI, hired direct.
-          </p>
-        )}
+        <div className={styles.heroInner}>
+          <div className={styles.heroCopy}>
+            <span className={styles.eyebrow}>Local services, London</span>
+            <h1 className={styles.heading}>
+              Describe what you need in your own words. Get a shortlist in seconds.
+            </h1>
+            <p className={styles.sub}>
+              Tell Patch what you&apos;re after in plain words. It reads the detail and comes back with
+              a short, reasoned set — and says why each one fits.
+            </p>
+            <HeroSearch />
+            {vendorsRounded > 0 && (
+              <p className={styles.heroStat}>
+                <strong>{vendorsRounded}+</strong> vendors across <strong>{areaCount}</strong> London areas — matched by AI, hired direct.
+              </p>
+            )}
+          </div>
+
+          {featured.length >= 2 && (
+            <div className={styles.heroVisual}>
+              <span className={styles.heroVisualLabel}>A shortlist, in seconds</span>
+              {featured.map((f, i) => (
+                <Link key={f.slug} href={`/vendors/${f.slug}`} className={styles.heroCard} data-i={i}>
+                  <div className={styles.heroCardMedia}>
+                    <Image
+                      src={categoryPhoto(f.primary_category, 320, f.slug)}
+                      alt={`${f.name} — ${f.primary_category ?? "catering"}`}
+                      fill sizes="220px" style={{ objectFit: "cover" }}
+                    />
+                  </div>
+                  <div className={styles.heroCardBody}>
+                    {i === 0 && <span className={styles.heroCardRec}>★ Patch recommends</span>}
+                    <span className={styles.heroCardName}>{f.name}</span>
+                    <span className={styles.heroCardMeta}>
+                      {f.primary_category}
+                      {f.rating_avg ? ` · ${Number(f.rating_avg).toFixed(1)}★` : ""}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </main>
 
       {/* ─── TESTIMONIALS ───

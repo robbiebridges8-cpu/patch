@@ -175,7 +175,7 @@ export default async function ServiceLocationPage(
               <li key={v.vendor_id} className={styles.card}>
                 <Link href={`/vendors/${v.slug}`} className={styles.cardLink}>
                   <div className={styles.thumb}>
-                    <Image src={categoryPhoto(cat.name, 480)} alt={`${v.name} — ${cat.name}`} fill sizes="(max-width: 700px) 100vw, 340px" style={{ objectFit: "cover" }} />
+                    <Image src={categoryPhoto(cat.name, 480, v.slug)} alt={`${v.name} — ${cat.name}`} fill sizes="(max-width: 700px) 100vw, 340px" style={{ objectFit: "cover" }} />
                   </div>
                   <div className={styles.cardBody}>
                     <div className={styles.cardName}>{v.name}</div>

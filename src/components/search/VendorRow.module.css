@@ -152,12 +152,15 @@
   font-family: var(--font-ui);
   font-size: var(--type-body-sm-size);
   color: var(--color-text-muted);
+  min-width: 0;
 }
 
 .quickBtn {
   margin-left: auto;
   height: 34px;
   padding: 0 14px;
+  white-space: nowrap;
+  flex-shrink: 0;
   border: 1px solid var(--color-border-control);
   border-radius: 8px;
   background: transparent;
