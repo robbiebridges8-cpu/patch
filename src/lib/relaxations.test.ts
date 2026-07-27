@@ -10,6 +10,7 @@ function query(): ParsedQuery {
     semantic_query: "nut-free birthday catering",
     categories: ["Pizza"],
     attributes: { dietary: ["nut-free"], certifications: ["DBS checked"] },
+    in_scope: true,
   };
 }
 

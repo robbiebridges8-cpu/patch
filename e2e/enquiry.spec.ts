@@ -7,7 +7,7 @@ import { test, expect, type Page } from "@playwright/test";
 const VENDOR = "/vendors/taco-loco";
 
 async function openDialog(page: Page) {
-  const trigger = page.getByRole("button", { name: /get in touch/i }).first();
+  const trigger = page.getByRole("button", { name: /send an enquiry/i }).first();
   const dialog = page.locator('[role="dialog"]');
   // Retried: a click can land before hydration, in which case it does nothing.
   await expect(async () => {

@@ -1,6 +1,6 @@
 # Backlog
 
-*Things deliberately deferred, with why. Last updated 2026-07-25.*
+*Things deliberately deferred, with why. Last updated 2026-07-26.*
 
 Strategic decisions live in [PRD.md](./PRD.md). This is the work queue.
 
@@ -19,6 +19,19 @@ Strategic decisions live in [PRD.md](./PRD.md). This is the work queue.
 > **Still deferred (larger features / assets):** a designed OG share image, real
 > PWA icons, and two Supabase-integration test suites (enquiry batch, message/RLS).
 > Buyer login needs two config items to fully go live — see below.
+>
+> **Synthetic UAT round (2026-07-26).** 50 synthetic buyers exercised discovery →
+> shortlist → enquiry ([uat-report.html](./uat-report.html)). Verdict: front-end
+> loved, trust/loop weak. Five cheap code wins shipped: (1) suppress unearned 5.0★
+> — a vendor reads as **"New"** until it has ≥3 reviews (`src/lib/rating.ts`);
+> (2) homepage now signposts the live vertical (**Food & drink for events · London**);
+> (3) the searching indicator advances and **holds** on the last step instead of
+> looping (testers read the old loop as a stuck screen); (4) a11y — search-input
+> labels, a live result-count region, and Escape/focus-trap on the mobile menu;
+> (5) unclaimed listings are **flagged** and the enquiry copy no longer promises a
+> reply the vendor can't give. The deeper items the round surfaced — closing the
+> enquiry loop with real vendors, real photos, and email deliverability — are
+> product/config, tracked below and in "Blocks launch".
 
 ---
 

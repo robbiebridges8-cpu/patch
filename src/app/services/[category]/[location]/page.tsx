@@ -6,6 +6,7 @@ import Header from "@/components/layout/Header";
 import { supabase } from "@/lib/supabase";
 import { safeJsonLd } from "@/lib/sanitize";
 import { categoryPhoto } from "@/lib/categoryPhoto";
+import { showsRating } from "@/lib/rating";
 import {
   SERVICE_CATEGORIES, LONDON_AREAS, findCategory, findArea,
   type ServiceCategory, type LondonArea,
@@ -99,7 +100,7 @@ export default async function ServiceLocationPage(
             "@type": "LocalBusiness",
             name: v.name,
             url: `${SITE}/vendors/${v.slug}`,
-            ...(v.rating_avg && v.review_count
+            ...(showsRating(v.review_count) && v.rating_avg
               ? { aggregateRating: { "@type": "AggregateRating", ratingValue: Number(v.rating_avg).toFixed(2), reviewCount: v.review_count } }
               : {}),
           },
@@ -184,7 +185,7 @@ export default async function ServiceLocationPage(
                     <div className={styles.cardName}>{v.name}</div>
                     <div className={styles.cardMeta}>
                       {[
-                        v.rating_avg ? `${Number(v.rating_avg).toFixed(1)}★ (${v.review_count ?? 0})` : "New",
+                        showsRating(v.review_count) ? `${Number(v.rating_avg).toFixed(1)}★ (${v.review_count})` : "New",
                         v.area || null,
                         money(v.price_from) ? `from ${money(v.price_from)}` : null,
                       ].filter(Boolean).join(" · ")}

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import type { VendorMatch } from "@/types/vendor";
 import { useShortlist } from "@/lib/useShortlist";
+import { showsRating } from "@/lib/rating";
 import QuickView from "./QuickView";
 import styles from "./VendorRow.module.css";
 
@@ -76,8 +77,9 @@ export default function VendorRow({ match }: { match: VendorMatch }) {
         <div className={styles.bottomRow}>
           <span className={styles.location}>
             {match.distance}
-            {v.ratingAvg && v.ratingAvg > 0 ? ` · ${v.ratingAvg.toFixed(1)}★` : ""}
-            {match.bookingCount > 0 ? ` · ${match.bookingCount} reviews` : ""}
+            {showsRating(match.bookingCount) && v.ratingAvg
+              ? ` · ${v.ratingAvg.toFixed(1)}★ · ${match.bookingCount} reviews`
+              : " · New"}
           </span>
           <button type="button" className={styles.quickBtn} onClick={() => setQv(true)}>
             Quick view

@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import { supabase } from "@/lib/supabase";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { categoryPhoto } from "@/lib/categoryPhoto";
+import { showsRating } from "@/lib/rating";
 import { SERVICE_CATEGORIES } from "@/lib/serviceAreas";
 import Header from "@/components/layout/Header";
 import EnquiryButton from "@/components/vendor/EnquiryForm";
@@ -278,7 +279,9 @@ export default async function VendorPage({
   if (capMax) glance.push({ label: "Serves", value: capMin ? `${capMin}–${capMax}` : `up to ${capMax}`, sub: "guests" });
   if (vendor.coverage_radius_miles) glance.push({ label: "Covers", value: `${vendor.coverage_radius_miles} mi`, sub: formatLocation(vendor.area as string | null, vendor.base_postcode as string | null) ?? undefined });
   if (years) glance.push({ label: "Trading", value: `${years} yr${years > 1 ? "s" : ""}` });
-  if (rating > 0) glance.push({ label: "Rated", value: rating.toFixed(1), sub: `${reviewCount} review${reviewCount !== 1 ? "s" : ""}` });
+  // Only show a score once there are enough reviews to mean something (see rating.ts).
+  const hasRating = showsRating(reviewCount);
+  if (hasRating) glance.push({ label: "Rated", value: rating.toFixed(1), sub: `${reviewCount} review${reviewCount !== 1 ? "s" : ""}` });
 
   return (
     <>
@@ -356,13 +359,17 @@ export default async function VendorPage({
               )}
             </div>
 
-            {(vendor.rating_avg as number) > 0 && (
+            {hasRating ? (
               <div className={styles.rating}>
                 <span className={styles.stars}>
                   <Star />
                   {(vendor.rating_avg as number).toFixed(2)}
                 </span>
                 <span className={styles.ratingCount}>({vendor.review_count as number} reviews)</span>
+              </div>
+            ) : (
+              <div className={styles.rating}>
+                <span className={styles.ratingCount}>New to Patch</span>
               </div>
             )}
 
@@ -374,6 +381,7 @@ export default async function VendorPage({
                 vendorId={vendor.id as string}
                 vendorName={vendor.name as string}
                 className={styles.ctaPrimary}
+                claimed={claimed}
               />
               {claimed && vendor.website && (
                 <TrackedLink
@@ -523,7 +531,14 @@ export default async function VendorPage({
             vendorId={vendor.id as string}
             vendorName={vendor.name as string}
             className={styles.sideCtaPrimary}
+            claimed={claimed}
           />
+          {!claimed && (
+            <p className={styles.unclaimedNote}>
+              This listing hasn&apos;t been confirmed by the business yet. You can still
+              enquire — we&apos;ll invite them to reply.
+            </p>
+          )}
           {claimed && vendor.contact_phone && (
             <a href={`tel:${vendor.contact_phone as string}`} className={styles.sideCtaSecondary}>
               Call {vendor.contact_phone as string}
@@ -603,6 +618,7 @@ export default async function VendorPage({
           vendorId={vendor.id as string}
           vendorName={vendor.name as string}
           className={styles.stickyCta}
+          claimed={claimed}
         />
       </div>
     </>

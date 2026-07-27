@@ -324,6 +324,12 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
         </div>
       )}
 
+      {/* Announce the outcome to screen readers once the cards resolve — the
+          skeleton's "Finding vendors" status is replaced by a concrete count. */}
+      <p className="visuallyHidden" role="status" aria-live="polite">
+        {matches.length} vendor{matches.length !== 1 ? "s" : ""} found for your search.
+      </p>
+
       {recCount > 0 ? (
         <>
           <h2 className={styles.groupLabel}>{recCount > 1 ? "Patch recommends" : "Top match"}</h2>
@@ -459,7 +465,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       .from("vendors")
       .select("slug, name, primary_category, rating_avg, review_count")
       .eq("status", "live")
-      .gt("review_count", 0)
+      // Only surface vendors with enough reviews to show an earned rating (see rating.ts).
+      .gte("review_count", 3)
       .order("rating_avg", { ascending: false })
       .order("review_count", { ascending: false })
       .limit(8);

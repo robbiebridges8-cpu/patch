@@ -5,6 +5,7 @@ import { useRef } from "react";
 import { useDialog } from "@/lib/useDialog";
 import type { VendorMatch } from "@/types/vendor";
 import { useShortlist } from "@/lib/useShortlist";
+import { showsRating } from "@/lib/rating";
 import EnquiryButton from "@/components/vendor/EnquiryForm";
 import styles from "./QuickView.module.css";
 
@@ -38,7 +39,7 @@ export default function QuickView({ match, onClose }: { match: VendorMatch; onCl
           <h2 className={styles.name}>{v.name}</h2>
           <div className={styles.metaRow}>
             {match.distance && <span>{match.distance}</span>}
-            {v.ratingAvg && v.ratingAvg > 0 ? <span>· {v.ratingAvg.toFixed(1)}★ ({match.bookingCount})</span> : null}
+            {showsRating(match.bookingCount) && v.ratingAvg ? <span>· {v.ratingAvg.toFixed(1)}★ ({match.bookingCount})</span> : <span>· New</span>}
             {match.priceLabel && <span className={styles.price}>· {match.priceLabel}</span>}
           </div>
 

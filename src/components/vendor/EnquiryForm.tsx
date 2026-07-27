@@ -11,9 +11,12 @@ interface Props {
   vendorName: string;
   className?: string;
   label?: string;
+  /** Whether the vendor has claimed their listing (has an owner account).
+   *  Unclaimed vendors can't reply yet, so we never promise a reply time. */
+  claimed?: boolean;
 }
 
-export default function EnquiryButton({ vendorId, vendorName, className, label = "Send an enquiry" }: Props) {
+export default function EnquiryButton({ vendorId, vendorName, className, label = "Send an enquiry", claimed = true }: Props) {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
@@ -94,9 +97,19 @@ export default function EnquiryButton({ vendorId, vendorName, className, label =
                 </div>
                 <h3 className={styles.successTitle}>Enquiry sent</h3>
                 <p className={styles.successBody}>
-                  We&apos;ve passed your brief to {vendorName} and emailed you a copy. If it&apos;s a
-                  good fit they&apos;ll usually get back to you within a day or two. Comparing options?
-                  Shortlist a few more and enquire them all at once.
+                  {claimed ? (
+                    <>
+                      We&apos;ve passed your brief to {vendorName} and emailed you a copy. If it&apos;s a
+                      good fit they&apos;ll usually get back to you within a day or two. Comparing options?
+                      Shortlist a few more and enquire them all at once.
+                    </>
+                  ) : (
+                    <>
+                      We&apos;ve emailed you a copy and we&apos;re inviting {vendorName} to Patch to reply.
+                      They haven&apos;t confirmed their listing yet, so we can&apos;t promise a response —
+                      to be safe, shortlist a few more and enquire them all at once.
+                    </>
+                  )}
                 </p>
                 {/* autoFocus so a screen reader lands on an actionable control, not
                     the unmounted submit button. */}
@@ -108,7 +121,11 @@ export default function EnquiryButton({ vendorId, vendorName, className, label =
             ) : (
               <>
                 <h3 className={styles.title}>Enquire with {vendorName}</h3>
-                <p className={styles.sub}>Share a few details and they&apos;ll come back to you directly.</p>
+                <p className={styles.sub}>
+                  {claimed
+                    ? "Share a few details and they'll come back to you directly."
+                    : "Share a few details. This vendor hasn't confirmed their listing yet, so we'll invite them to reply — enquire a couple of others too, just in case."}
+                </p>
 
                 <form onSubmit={handleSubmit} className={styles.form}>
                   <div className={styles.row}>

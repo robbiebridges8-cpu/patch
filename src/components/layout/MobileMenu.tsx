@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./Header.module.css";
@@ -10,6 +10,8 @@ import styles from "./Header.module.css";
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState<string | null | undefined>(undefined);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const sheetRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -25,11 +27,51 @@ export default function MobileMenu() {
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
+  // Keyboard support while open: Escape closes, Tab is trapped inside the sheet
+  // so focus can't wander behind the scrim to the page underneath.
+  useEffect(() => {
+    if (!open) return;
+    // Move focus into the menu when it opens.
+    sheetRef.current?.querySelector<HTMLElement>("a, button")?.focus();
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+      if (e.key !== "Tab" || !sheetRef.current) return;
+      const items = Array.from(
+        sheetRef.current.querySelectorAll<HTMLElement>("a, button"),
+      );
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
+  // Restore focus to the toggle when the menu closes (but not on first mount).
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (wasOpen.current && !open) btnRef.current?.focus();
+    wasOpen.current = open;
+  }, [open]);
+
   const close = () => setOpen(false);
 
   return (
     <div className={styles.mobileMenu}>
       <button
+        ref={btnRef}
         type="button"
         className={styles.menuBtn}
         aria-label={open ? "Close menu" : "Open menu"}
@@ -44,7 +86,7 @@ export default function MobileMenu() {
       {open && (
         <>
           <div className={styles.menuScrim} onClick={close} aria-hidden="true" />
-          <nav className={styles.menuSheet} aria-label="Main menu">
+          <nav className={styles.menuSheet} aria-label="Main menu" ref={sheetRef}>
             <Link href="/enquiries" className={styles.menuLink} onClick={close}>My enquiries</Link>
             <Link href="/for-vendors" className={styles.menuLink} onClick={close}>List your service</Link>
             {email === undefined ? null : email ? (

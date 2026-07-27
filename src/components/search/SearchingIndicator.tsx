@@ -5,7 +5,7 @@ import styles from "./SearchingIndicator.module.css";
 
 const MESSAGES = [
   "Reading your brief…",
-  "Searching 500 vendors…",
+  "Searching the vendors…",
   "Ranking by fit…",
   "Writing your shortlist…",
 ];
@@ -13,8 +13,14 @@ const MESSAGES = [
 export default function SearchingIndicator() {
   const [i, setI] = useState(0);
 
+  // Advance through the steps and hold on the last one. Looping back to
+  // "Reading your brief…" reads as the search restarting — testers called the
+  // old cycling behaviour a "broken loop". Forward-only never regresses.
   useEffect(() => {
-    const t = setInterval(() => setI((v) => (v + 1) % MESSAGES.length), 1400);
+    const t = setInterval(
+      () => setI((v) => Math.min(v + 1, MESSAGES.length - 1)),
+      1600,
+    );
     return () => clearInterval(t);
   }, []);
 

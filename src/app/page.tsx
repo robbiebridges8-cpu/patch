@@ -90,7 +90,8 @@ export default async function Home() {
       .from("vendors")
       .select("slug, name, primary_category, rating_avg, review_count")
       .eq("status", "live")
-      .gt("review_count", 0)
+      // Only surface vendors with enough reviews to show an earned rating (see rating.ts).
+      .gte("review_count", 3)
       .order("rating_avg", { ascending: false })
       .order("review_count", { ascending: false })
       .limit(3),
@@ -109,13 +110,14 @@ export default async function Home() {
       <main id="main-content" className={styles.hero}>
         <div className={styles.heroInner}>
           <div className={styles.heroCopy}>
-            <span className={styles.eyebrow}>Local services, London</span>
+            <span className={styles.eyebrow}>Food &amp; drink for events · London</span>
             <h1 className={styles.heading}>
-              Describe what you need in your own words. Get a shortlist in seconds.
+              Describe your event in your own words. Get a shortlist in seconds.
             </h1>
             <p className={styles.sub}>
-              Tell Patch what you&apos;re after in plain words. It reads the detail and comes back with
-              a short, reasoned set — and says why each one fits.
+              Caterers, street food, bars and more for parties, weddings and work dos.
+              Tell Patch what you&apos;re after in plain words — it comes back with a short,
+              reasoned set and says why each one fits.
             </p>
             <HeroSearch />
             {vendorsRounded > 0 && (

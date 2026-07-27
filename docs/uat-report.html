@@ -1,0 +1,182 @@
+<title>Patch — UAT Report (50 synthetic users)</title>
+<style>
+  :root {
+    --bg:#f6f3ee; --panel:#fffdfa; --panel-2:#efe9e0; --line:#e3ddd2;
+    --ink:#201c18; --ink-2:#6b635a; --ink-3:#948b7e; --accent:#e8563f; --accent-soft:#fbe9e5;
+    --good:#2f9e63; --good-bg:#e6f4ec; --warn:#b6812a; --warn-bg:#f7eed9; --bad:#c0392b; --bad-bg:#fbe7e7;
+    --blocker:#b91c1c; --major:#b45309; --minor:#55606f;
+    --code:#1d4ed8; --product:#7a2ea8; --config:#0e7490; --data:#a1631a;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --shadow:0 1px 2px rgba(40,30,20,.05),0 8px 26px rgba(40,30,20,.06);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#16140f;--panel:#201d17;--panel-2:#2a261e;--line:#35302a;--ink:#f3eee4;--ink-2:#b2a897;--ink-3:#847b6d;
+    --accent:#ff7a63;--accent-soft:#3a221c;--good:#5fce92;--good-bg:#172e20;--warn:#e6b45c;--warn-bg:#33280f;--bad:#f08a80;--bad-bg:#3a1d1d;
+    --blocker:#f87171;--major:#fbbf5a;--minor:#9aa3b0;--code:#7fa6f5;--product:#cd97ee;--config:#5fc9d8;--data:#e0b064;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.3);}}
+  :root[data-theme="light"]{--bg:#f6f3ee;--panel:#fffdfa;--panel-2:#efe9e0;--line:#e3ddd2;--ink:#201c18;--ink-2:#6b635a;--ink-3:#948b7e;--accent:#e8563f;--good:#2f9e63;--good-bg:#e6f4ec;--warn:#b6812a;--warn-bg:#f7eed9;--bad:#c0392b;--bad-bg:#fbe7e7;--blocker:#b91c1c;--major:#b45309;--minor:#55606f;--code:#1d4ed8;--product:#7a2ea8;--config:#0e7490;--data:#a1631a;}
+  :root[data-theme="dark"]{--bg:#16140f;--panel:#201d17;--panel-2:#2a261e;--line:#35302a;--ink:#f3eee4;--ink-2:#b2a897;--ink-3:#847b6d;--accent:#ff7a63;--good:#5fce92;--good-bg:#172e20;--warn:#e6b45c;--warn-bg:#33280f;--bad:#f08a80;--bad-bg:#3a1d1d;--blocker:#f87171;--major:#fbbf5a;--minor:#9aa3b0;--code:#7fa6f5;--product:#cd97ee;--config:#5fc9d8;--data:#e0b064;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:clamp(22px,4vw,56px) clamp(16px,4vw,40px) 90px}
+  header.top{border-bottom:1px solid var(--line);padding-bottom:26px;margin-bottom:26px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);margin:0 0 12px}
+  h1{font-size:clamp(28px,5vw,46px);line-height:1.04;letter-spacing:-.025em;margin:0 0 12px;font-weight:700;text-wrap:balance}
+  .verdict{font-size:clamp(16px,2.5vw,20px);color:var(--ink);max-width:64ch;margin:0}
+  .verdict b{color:var(--accent)}
+  .base{font-size:13px;color:var(--ink-3);margin:10px 0 0}
+  .nps{display:flex;flex-wrap:wrap;gap:12px;margin:26px 0 8px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+  .npsBig{flex:1;min-width:150px}
+  .npsBig b{display:block;font-size:40px;line-height:1;letter-spacing:-.03em;color:var(--bad);font-variant-numeric:tabular-nums}
+  .npsBig span{font-size:12px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em}
+  .npsBar{flex:2;min-width:280px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+  .barRow{display:flex;align-items:center;gap:10px;font-size:12.5px}
+  .barRow .lab{width:130px;color:var(--ink-2);flex-shrink:0}
+  .track{flex:1;height:14px;border-radius:7px;background:var(--panel-2);overflow:hidden}
+  .fill{height:100%;border-radius:7px}
+  .barRow .val{width:52px;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+  section.block{margin-top:42px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-2);margin:0 0 18px;display:flex;align-items:baseline;gap:10px}
+  h2::after{content:"";flex:1;height:1px;background:var(--line)}
+  .row{background:var(--panel);border:1px solid var(--line);border-left-width:3px;border-radius:12px;padding:16px 18px;margin-bottom:11px;box-shadow:var(--shadow)}
+  .row.blocker{border-left-color:var(--blocker)} .row.major{border-left-color:var(--major)} .row.minor{border-left-color:var(--minor)}
+  .rowhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+  .rank{font-family:var(--mono);font-size:12px;color:var(--ink-3);width:22px}
+  .rowhead h3{font-size:16px;margin:0;font-weight:640;letter-spacing:-.01em;flex:1;min-width:200px}
+  .count{font-family:var(--mono);font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+  .pill{font-family:var(--mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:5px}
+  .p-blocker{color:var(--blocker);background:var(--bad-bg)} .p-major{color:var(--major);background:var(--warn-bg)} .p-minor{color:var(--minor);background:var(--panel-2)}
+  .row p{margin:5px 0 0;font-size:13.5px;color:var(--ink-2)}
+  .row .seg{color:var(--ink-3);font-size:12.5px}
+  .quote{margin:9px 0 0;padding-left:12px;border-left:2px solid var(--line);font-style:italic;color:var(--ink);font-size:13.5px}
+  ul.loved{list-style:none;padding:0;margin:0;display:grid;gap:9px}
+  ul.loved li{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--good);border-radius:10px;padding:11px 15px;font-size:14px;color:var(--ink-2)}
+  ul.loved b{color:var(--ink)}
+  ul.loved .n{font-family:var(--mono);font-size:11.5px;color:var(--good);font-weight:700}
+  .segins{display:grid;gap:11px}
+  .segins .row{border-left-color:var(--accent)}
+  .segins b{color:var(--ink)}
+  .fix{display:flex;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+  .fixn{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--ink-3);width:26px;flex-shrink:0}
+  .fixbody{flex:1}
+  .fixbody h3{margin:0 0 4px;font-size:15px;font-weight:640}
+  .fixbody p{margin:0;font-size:13.5px;color:var(--ink-2)}
+  .tag{font-family:var(--mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:5px;margin-right:6px}
+  .t-code{color:var(--code);background:color-mix(in srgb,var(--code) 14%,transparent)}
+  .t-product{color:var(--product);background:color-mix(in srgb,var(--product) 14%,transparent)}
+  .t-config{color:var(--config);background:color-mix(in srgb,var(--config) 14%,transparent)}
+  .t-data{color:var(--data);background:color-mix(in srgb,var(--data) 14%,transparent)}
+  footer{margin-top:46px;padding-top:20px;border-top:1px solid var(--line);color:var(--ink-3);font-size:12.5px}
+  footer code{font-family:var(--mono)}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">Patch · synthetic UAT round · 45 of 50 testers</p>
+    <h1>A loved front-end on a broken loop</h1>
+    <p class="verdict">Testers <b>fall for the AI search</b> and the taste level — then hit a wall the moment they try to <b>transact</b>. Nobody replies to enquiries, every rating is 5.0, and vendors are asked to pay to read a lead they can't verify. It <b>demos brilliantly and converts poorly</b>.</p>
+    <p class="base">50 synthetic users across 10 segments (mobile buyers, older/less-techy, corporate, high-stakes, returning, prospective &amp; active vendors, skeptics, accessibility, off-vertical). One cohort dropped to a transient error → 45 usable. All counts are out of 45.</p>
+    <div class="nps">
+      <div class="card npsBig"><b>−42</b><span>NPS · avg 5.7 / 10</span></div>
+      <div class="card npsBar">
+        <div class="barRow"><span class="lab">Promoters (9–10)</span><span class="track"><span class="fill" style="width:16%;background:var(--good)"></span></span><span class="val">16%</span></div>
+        <div class="barRow"><span class="lab">Passives (7–8)</span><span class="track"><span class="fill" style="width:27%;background:var(--warn)"></span></span><span class="val">27%</span></div>
+        <div class="barRow"><span class="lab">Detractors (0–6)</span><span class="track"><span class="fill" style="width:58%;background:var(--bad)"></span></span><span class="val">58%</span></div>
+      </div>
+    </div>
+    <p class="base">Sentiment: delighted 18% · satisfied 22% · mixed 24% · frustrated 18% · gave up 18%. Almost everyone who gave up did so <em>after</em> praising the search — the failures are downstream, in trust and fulfilment.</p>
+  </header>
+
+  <section class="block">
+    <h2>Top complaints — ranked by how many of 45 raised each</h2>
+
+    <div class="row major"><div class="rowhead"><span class="rank">1</span><h3>Every rated vendor is 5.0 stars — reads as fake</h3><span class="count">24</span><span class="pill p-major">major</span></div>
+      <p class="seg">Every segment — buyers, vendors, skeptics, accessibility, corporate. The most common observation in the whole dataset.</p>
+      <p class="quote">"Every single rated vendor is 5.0 stars. That's not a marketplace, that's a red flag." — Priya, auditor</p></div>
+
+    <div class="row blocker"><div class="rowhead"><span class="rank">2</span><h3>Enquiries go into a black hole — no one replies</h3><span class="count">~18</span><span class="pill p-blocker">blocker</span></div>
+      <p class="seg">Heaviest in mobile-party, corporate, off-vertical, accessibility. Confirmation promises a reply "within a day or two" and delivers silence → people revert to Instagram/phone.</p>
+      <p class="quote">"It promised replies in a day or two and I got total silence on all four — I ended up booking off Instagram like I always do." — Priya, ghosted</p></div>
+
+    <div class="row major"><div class="rowhead"><span class="rank">3</span><h3>Stock / same-y photos — can't tell vendors apart</h3><span class="count">~15</span><span class="pill p-major">major</span></div>
+      <p class="seg">Undermines the product's own "photo-led" promise. Buyers, vendors and accessibility all raised it.</p>
+      <p class="quote">"A lot of the photos look like the same stock shots recycled — made me wonder if these are even real bookable businesses." — Marcus</p></div>
+
+    <div class="row blocker"><div class="rowhead"><span class="rank">4</span><h3>Contact details hidden until a listing is "claimed"</h3><span class="count">11</span><span class="pill p-blocker">blocker</span></div>
+      <p class="seg">Older / procurement / skeptic buyers who want to phone or vet before committing.</p>
+      <p class="quote">"I need to phone a supplier before I put company money near them — every contact detail is hidden, so it's a non-starter." — Tom, corporate</p></div>
+
+    <div class="row major"><div class="rowhead"><span class="rank">5</span><h3>6–9s search with no progress signal reads as "crashed"</h3><span class="count">~8</span><span class="pill p-major">major</span></div>
+      <p class="seg">Mobile / poor-signal users assume it broke and back out.</p>
+      <p class="quote">"Waited like eight seconds staring at grey boxes… I assumed it had crashed and hit back twice." — Jordan</p></div>
+
+    <div class="row blocker"><div class="rowhead"><span class="rank">6</span><h3>Passwordless / magic-link login confuses or scares low-tech users</h3><span class="count">7</span><span class="pill p-blocker">blocker*</span></div>
+      <p class="seg">*Blocker for the group it hits — over-60s and ESL. Several never got the email or opened it on the wrong device. "No password" reads as a scam signal.</p>
+      <p class="quote">"No password, just a link in an email — I don't get it. I'll wait for my daughter to sort it." — Errol</p></div>
+
+    <div class="row major"><div class="rowhead"><span class="rank">7</span><h3>£29/mo to read who enquired — "a hostage situation"</h3><span class="count">7</span><span class="pill p-major">major</span></div>
+      <p class="seg">Entirely within the vendor segments. Repeatedly called "the Bark move."</p>
+      <p class="quote">"Dangling a real customer in front of me and blurring their name until I pay isn't a marketplace — it's a hostage situation." — Priya, vendor</p></div>
+
+    <div class="row major"><div class="rowhead"><span class="rank">8</span><h3>Only Budget is a hard filter — can't lock dietary / date</h3><span class="count">6</span><span class="pill p-major">major</span></div>
+      <p class="seg">Includes a nut-free safety concern and "who's actually free this Saturday."</p>
+      <p class="quote">"The only real gap is I can't hard-filter a safety-critical thing like nut-free." — Gareth</p></div>
+
+    <div class="row major"><div class="rowhead"><span class="rank">9</span><h3>Food-only scope not signposted before you type</h3><span class="count">~5</span><span class="pill p-major">major</span></div>
+      <p class="seg">The out-of-scope message itself was <em>praised</em> — the gripe is it comes after you've typed, not on the homepage.</p>
+      <p class="quote">"Nothing on the front page said clearly it's ONLY food. I wasted my time." — Derek</p></div>
+
+    <div class="row major"><div class="rowhead"><span class="rank">10</span><h3>Vendors get no proof of demand before being asked to pay</h3><span class="count">~6</span><span class="pill p-major">major</span></div>
+      <p class="seg">Compounded by analytics being paywalled — free vendors can't even see their own view count.</p>
+      <p class="quote">"Show me it works before you ask me to subscribe."</p></div>
+
+    <div class="row minor"><div class="rowhead"><span class="rank">·</span><h3>Smaller, but severe on the critical path</h3></div>
+      <p>Stripe <b>billing not configured</b> (a vendor ready to pay was blocked) · <b>review can't be left</b> — status never flips to "confirmed" · <b>"we emailed you a copy" but no email arrived</b> (×2) · <b>London-only not signposted</b> (×2) · <b>instant-alert didn't fire</b> (×3, incl. a paying vendor) · <b>a11y: search box unlabeled, result count not announced</b> (×4).</p></div>
+  </section>
+
+  <section class="block">
+    <h2>What they loved</h2>
+    <ul class="loved">
+      <li><span class="n">15+</span> &nbsp;<b>Natural-language search "just got it"</b> — plain, even broken English → a relevant shortlist. Cited by grandmothers, ESL users and event pros alike.</li>
+      <li><span class="n">~12</span> &nbsp;<b>The "Patch recommends" reasoning note</b> — why the top pick fits the occasion/headcount/budget. Called "the actual magic."</li>
+      <li><span class="n">~11</span> &nbsp;<b>Honest out-of-scope handling</b> — "we don't cover that yet" instead of hallucinating results won trust <em>even from people it turned away</em>.</li>
+      <li><span class="n">~8</span> &nbsp;<b>No commission / free to list / flat £29</b> — the model is understood and respected vs Bark/Checkatrade.</li>
+      <li><span class="n">~7</span> &nbsp;<b>Vendor onboarding</b> — the listing-strength meter, draft-then-publish, "preview as buyer." "It nagged me in a good way."</li>
+      <li><span class="n">~6</span> &nbsp;<b>Save-heart shortlist + enquire to several at once.</b> "Normally my whole afternoon gone."</li>
+      <li><span class="n">~5</span> &nbsp;<b>No account needed to browse or enquire.</b></li>
+      <li><span class="n">3</span> &nbsp;<b>Accessibility fundamentals</b> — focus-trapping/restore in dialogs, working skip link, 250% reflow, reduced-motion. Rare praise from expert AT users.</li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Where segments diverge</h2>
+    <div class="segins">
+      <div class="row"><p><b>Techy vs. not — the sharpest divide, on login.</b> Passwordless is a <em>delight</em> for high-comfort users and a <em>hard blocker</em> for the over-60s and ESL, to whom "no password" reads as a scam signal. Same feature, opposite outcomes.</p></div>
+      <div class="row"><p><b>Mobile vs. desktop — the speed penalty lands on mobile.</b> The 6–9s wait is a minor annoyance on desktop but an "it crashed" abandonment on phones and poor signal.</p></div>
+      <div class="row"><p><b>Buyer vs. vendor — same root, two faces.</b> Buyers hit silence after enquiring; vendors hit pay-to-read-the-lead. Both are the same broken handshake — enquiries landing on unclaimed seed listings with no reachable human. Fix one side and the other's complaint disappears.</p></div>
+      <div class="row"><p><b>Stakes collapse trust tolerance.</b> Casual users forgive the 5.0 stars and stock photos; procurement, finance, planners and parents treat the <em>same signals</em> as disqualifying — they won't stake a real booking on "a beautiful demo."</p></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Highest-leverage fixes — frequency × severity</h2>
+
+    <div class="fix"><div class="fixn">1</div><div class="fixbody"><h3><span class="tag t-data">data</span><span class="tag t-config">config</span>Close the enquiry loop — stop enquiries hitting a void</h3><p>The root of both buyers' and vendors' worst complaints. Get real, reachable vendors on the other end (claim seed listings / route to verified contacts), and stop promising a reply until that's true.</p></div></div>
+    <div class="fix"><div class="fixn">2</div><div class="fixbody"><h3><span class="tag t-code">code</span><span class="tag t-data">data</span>Kill the uniform 5.0 stars</h3><p>Most-mentioned issue (24). Show "New / not yet reviewed" instead of a fake perfect score — an absent rating reads as <em>more</em> trustworthy than an unearned 5.0.</p></div></div>
+    <div class="fix"><div class="fixn">3</div><div class="fixbody"><h3><span class="tag t-data">data</span>Real vendor photography</h3><p>Directly undermines the "photo-led" positioning (15); pairs with #2 as the twin "this is just seed data" tell.</p></div></div>
+    <div class="fix"><div class="fixn">4</div><div class="fixbody"><h3><span class="tag t-code">code</span><span class="tag t-product">copy</span>Set honest expectations; flag unclaimed listings</h3><p>Warn buyers when a listing is unclaimed/may not reply and drop the over-promise. Near-zero cost, big trust return.</p></div></div>
+    <div class="fix"><div class="fixn">5</div><div class="fixbody"><h3><span class="tag t-config">config</span>Fix the two hard blockers: Stripe billing + email deliverability</h3><p>A vendor literally couldn't pay; confirmation and alert emails aren't arriving. Low count, each a total dead-end on a critical path.</p></div></div>
+    <div class="fix"><div class="fixn">6</div><div class="fixbody"><h3><span class="tag t-code">code</span>Progressive search status ("parsing… matching… writing notes")</h3><p>Turns a 6–9s "it crashed" moment into visible work — cheap, saves the mobile abandoners.</p></div></div>
+    <div class="fix"><div class="fixn">7</div><div class="fixbody"><h3><span class="tag t-code">code</span><span class="tag t-config">config</span>Rescue low-tech login</h3><p>A real 6-digit code path (needs the email template), reassuring copy on why magic links are safe, same-device handling. The difference between winning and losing the entire older/ESL segment — high-intent, real-event bookers.</p></div></div>
+    <div class="fix"><div class="fixn">8</div><div class="fixbody"><h3><span class="tag t-product">copy</span>Signpost scope on the homepage — "Food &amp; drink, London"</h3><p>Eliminates the food-only + London-only wasted-time complaints in one line. The honest in-search message exists — just move the signal earlier.</p></div></div>
+    <div class="fix"><div class="fixn">9</div><div class="fixbody"><h3><span class="tag t-code">code</span><span class="tag t-product">product</span>Real hard filters — dietary (incl. nut-free), date/availability</h3><p>Six requests, one safety-critical. Buyers want to <em>lock</em> constraints, not trust the vector match. (Note: this partly reverses the recent dietary-filter removal — worth a deliberate call.)</p></div></div>
+    <div class="fix"><div class="fixn">10</div><div class="fixbody"><h3><span class="tag t-product">product</span>Rethink the vendor free→paid on-ramp</h3><p>Pay-£29-to-read-an-unverified-lead + 1-photo free + paywalled analytics means the free tier can't prove its own value. Consider: first lead unlocked free, a visible "enquiries this month" signal, 2–3 photos on free.</p></div></div>
+
+    <div class="fix"><div class="fixn">+</div><div class="fixbody"><h3><span class="tag t-code">code</span>Accessibility quick wins (one sprint)</h3><p>Label the search input, announce the result count as a live region, add Escape-close + focus-trap to the mobile menu — cheap, and they matter to the procurement/public-sector evaluators.</p></div></div>
+  </section>
+
+  <footer>
+    Compiled from a 45-of-50 synthetic UAT round (10 segment cohorts × 5 users). Tags: <span class="tag t-code">code</span> a build fix · <span class="tag t-product">product</span> a decision · <span class="tag t-config">config</span> keys/env · <span class="tag t-data">data</span> real vendors/reviews/photos. The recurring theme: the discovery experience is genuinely strong; the value leaks entirely at trust &amp; fulfilment.
+  </footer>
+</div>

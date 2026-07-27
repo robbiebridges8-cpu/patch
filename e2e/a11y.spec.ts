@@ -26,7 +26,7 @@ async function activeDescriptor(page: Page) {
  * Playwright's actionability checks can't see a missing event handler.
  */
 async function openEnquiryDialog(page: Page) {
-  const trigger = page.getByRole("button", { name: /get in touch/i }).first();
+  const trigger = page.getByRole("button", { name: /send an enquiry/i }).first();
   const dialog = page.locator('[role="dialog"]');
 
   await expect(async () => {

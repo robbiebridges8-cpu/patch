@@ -29,7 +29,7 @@ test.describe("mobile layout", () => {
     await page.goto("/vendors/taco-loco");
 
     await expect(async () => {
-      await page.getByRole("button", { name: /get in touch/i }).first().click();
+      await page.getByRole("button", { name: /send an enquiry/i }).first().click();
       await expect(page.locator('[role="dialog"]')).toBeVisible({ timeout: 2000 });
     }).toPass({ timeout: 30_000 });
 

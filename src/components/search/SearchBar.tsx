@@ -41,6 +41,7 @@ export default function SearchBar({ query }: { query: string }) {
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         placeholder="pizza van for a 40th in Hackney, July, ~50 in the garden, ~£600"
+        aria-label="Describe what you need"
       />
       <button type="submit" className={styles.btn} disabled={pending}>
         {pending ? (

@@ -322,6 +322,12 @@
   transition: all 0.15s;
 }
 .sideCtaSecondary:hover { border-color: var(--color-text-primary); color: var(--color-text-primary); }
+.unclaimedNote {
+  margin-top: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
 .sideDetail {
   display: flex;
   justify-content: space-between;
