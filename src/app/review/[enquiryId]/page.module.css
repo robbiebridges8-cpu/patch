@@ -14,10 +14,11 @@
 .sub a { color: var(--color-text-primary); text-decoration: underline; }
 
 .card {
-  border: 2px solid var(--color-text-primary);
-  border-radius: var(--radius-panel, 8px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
   padding: 28px;
   background: var(--color-surface-raised, #fff);
+  box-shadow: var(--shadow-e1);
 }
 
 .starRow { display: flex; gap: 6px; margin-bottom: 22px; }

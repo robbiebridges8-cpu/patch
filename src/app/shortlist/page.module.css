@@ -50,10 +50,11 @@
 
 .card {
   position: relative;
-  border: 2px solid var(--color-text-primary);
-  border-radius: var(--radius-card, 6px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
   overflow: hidden;
   background: var(--color-surface-raised, #fff);
+  box-shadow: var(--shadow-e1);
 }
 
 .cardMedia { display: block; position: relative; aspect-ratio: 4 / 3; }
@@ -99,10 +100,11 @@
 
 /* Batch enquiry form */
 .formCard {
-  border: 2px solid var(--color-text-primary);
-  border-radius: var(--radius-panel, 8px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
   padding: 28px;
   background: var(--color-surface-raised, #fff);
+  box-shadow: var(--shadow-e1);
 }
 
 .formTitle {

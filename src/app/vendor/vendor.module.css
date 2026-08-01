@@ -187,8 +187,8 @@ select.input { appearance: none; background-image: none; cursor: pointer; }
   flex-wrap: wrap;
   padding: 16px 20px;
   margin-bottom: 20px;
-  border: 2px solid var(--color-text-primary);
-  border-radius: var(--radius-panel, 8px);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-panel);
   background: var(--color-accent-tint, #f7e4df);
   color: var(--color-text-primary);
   font-size: 15px;

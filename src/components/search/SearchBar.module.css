@@ -12,7 +12,7 @@
 
 .bar.focused {
   border-color: var(--color-accent);
-  box-shadow: var(--shadow-pop);
+  box-shadow: 0 0 0 4px var(--color-accent-tint), var(--shadow-e2);
 }
 
 .icon {

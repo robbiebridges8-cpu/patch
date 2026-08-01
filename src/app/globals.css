@@ -164,15 +164,22 @@
   --sidebar-width: 260px;
   --header-height: 64px;
 
-  /* ── Radius — Kerb runs hard-edged, not rounded ── */
-  --radius-input: 4px;
-  --radius-card:  6px;
-  --radius-panel: 8px;
+  /* ── Radius — softened from hard-edged to a calmer, more modern round ── */
+  --radius-input: 8px;
+  --radius-card:  12px;
+  --radius-panel: 16px;
   --radius-pill:  999px;
 
-  /* ── Elevation — the sticker/hard-offset shadow is the Kerb signature ── */
+  /* ── Elevation ──
+   * Everyday surfaces use a soft, warm ambient lift (e1 resting → e2 raised) for
+   * a contemporary, tactile feel. The hard-offset "sticker" shadow is kept as a
+   * deliberate accent for featured/pinned elements only — it still signs the brand,
+   * just no longer flattens every card into a brutalist box. */
+  --shadow-e1: 0 1px 2px rgba(26, 23, 18, 0.05), 0 3px 10px -2px rgba(26, 23, 18, 0.06);
+  --shadow-e2: 0 2px 4px rgba(26, 23, 18, 0.06), 0 10px 28px -6px rgba(26, 23, 18, 0.12);
   --shadow-none:  none;
-  --shadow-hover: 4px 4px 0 var(--greige-900);
+  --shadow-hover: var(--shadow-e2); /* legacy alias — components that asked for the pop now get the soft raise */
+  --shadow-sticker: 4px 4px 0 var(--greige-900); /* featured accent only */
   --shadow-pop:   6px 6px 0 var(--greige-900);
   --scrim-photo: linear-gradient(to top, rgba(27, 24, 21, 0.55), transparent 60%);
 

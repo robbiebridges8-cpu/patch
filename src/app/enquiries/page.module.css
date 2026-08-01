@@ -23,9 +23,10 @@
 .list { display: flex; flex-direction: column; gap: 12px; }
 
 .card {
-  border: 2px solid var(--color-text-primary);
-  border-radius: var(--radius-card, 6px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
   background: var(--color-surface-raised, #fff);
+  box-shadow: var(--shadow-e1);
 }
 
 .row {

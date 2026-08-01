@@ -263,11 +263,12 @@
 .sideCard {
   background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-panel);
   padding: 24px;
   margin-bottom: 16px;
   position: sticky;
   top: 28px;
+  box-shadow: var(--shadow-e2);
 }
 .sidePrice {
   font-size: 11px;
@@ -395,7 +396,8 @@
   gap: 14px;
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
   background: var(--color-surface-raised, #fff);
-  border-top: 2px solid var(--color-text-primary);
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -4px 20px -6px rgba(26, 23, 18, 0.14);
 }
 
 .stickyPrice {

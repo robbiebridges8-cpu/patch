@@ -144,7 +144,7 @@ export default async function Home() {
                     <span className={styles.heroCardName}>{f.name}</span>
                     <span className={styles.heroCardMeta}>
                       {f.primary_category}
-                      {f.rating_avg ? ` · ${Number(f.rating_avg).toFixed(1)}★` : ""}
+                      {f.rating_avg ? ` · ${Number(f.rating_avg).toFixed(1)}★ (${f.review_count})` : ""}
                     </span>
                   </div>
                 </Link>

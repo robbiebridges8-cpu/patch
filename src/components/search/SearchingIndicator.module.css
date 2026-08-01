@@ -4,9 +4,10 @@
   gap: 14px;
   padding: 18px 20px;
   margin-bottom: var(--space-5);
-  border: 2px solid var(--color-text-primary);
-  border-radius: var(--radius-card, 6px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
   background: var(--color-surface-raised, #fff);
+  box-shadow: var(--shadow-e1);
 }
 
 /* Spinning ring with a solid core — reads as "actively working". */
