@@ -30,7 +30,7 @@ export default function PrivacyPage() {
 
         <h2 style={h2}>Who we are</h2>
         <p style={p}>
-          Patch is a discovery platform that connects people planning events with mobile food vendors and caterers in London.
+          Patch is a discovery platform that connects people with local service providers in London.
           We are based in the United Kingdom and comply with the UK GDPR and the Data Protection Act 2018.
         </p>
 

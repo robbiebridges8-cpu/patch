@@ -92,9 +92,10 @@ export interface ParsedQuery {
   location: string | null;
   event_date: string | null;
   semantic_query: string;
-  /** False when the request is clearly outside what Patch covers (food/drink/
-   *  catering today) — e.g. "plumber", "photographer", or gibberish. Lets search
-   *  say "we don't cover that yet" instead of forcing a food shortlist. */
+  /** False only when the request is empty, gibberish, or plainly not a request to
+   *  hire a local service — never because of the *kind* of service (Patch is
+   *  vertical-agnostic). Lets search say "try describing the job" instead of
+   *  running a meaningless vector search. */
   in_scope: boolean;
   /** UI-supplied only. */
   categories: string[];
@@ -165,13 +166,13 @@ async function parseQuery(query: string): Promise<ParsedQuery> {
     max_tokens: 1024,
     system: `You turn a plain-language request for a local service into structured search filters. Today's date is ${today}.
 
-Patch's live marketplace today is FOOD, DRINK and CATERING — caterers, street food, pizza, BBQ, grazing, desserts, coffee carts, mobile bars, and the like (including any event that needs catering). Do NOT classify the request into a category or invent trade-specific filters — those are matched semantically.
+Patch is a horizontal marketplace for hiring any local service or trade — caterers, photographers, DJs, cleaners, mobile bars, tradespeople, tutors, and anything else someone hires locally. Do NOT classify the request into a category or invent trade-specific filters — the kind of service is matched semantically, never hard-coded.
 
 Extract ONLY these, and only when clearly stated:
 - budget_max: a maximum spend in GBP, as a number. null if not mentioned.
 - location: a UK place name or postcode. null if not mentioned.
 - event_date: if a specific calendar date is implied ("August 15", "next Saturday", "the 3rd"), resolve it to "YYYY-MM-DD" using today's date above. A vague month or season with no day stays null.
-- in_scope: true if the request is for food, drink or catering (or an event that needs it); false if it's clearly a different service Patch doesn't cover yet (e.g. plumber, photographer, cleaner, tutor, gardener, DJ, electrician) or is empty/nonsense.
+- in_scope: true if the request is a coherent request to hire some local service (of any kind); false ONLY if it's empty, gibberish, or plainly not a request to hire anyone. Do NOT judge scope by the type of service — every trade is in scope.
 
 For semantic_query: rewrite the whole request as a rich, descriptive sentence describing the service needed, including every qualitative requirement — the kind of work, the occasion, the vibe, and any specific needs (dietary, accessibility, certifications, equipment, experience). This string is matched against how vendors describe themselves, so keep the requirement words in it. Drop only the structured parts you extracted above (budget figures, locations, dates).
 
@@ -196,7 +197,7 @@ Respond with ONLY valid JSON:
       semantic_query: typeof raw?.semantic_query === "string" && raw.semantic_query.trim()
         ? raw.semantic_query.slice(0, 2000) : query,
       // Default true — only an explicit false blocks results, so an unsure model
-      // never wrongly hides a legitimate food search.
+      // never wrongly hides a legitimate search of any kind.
       in_scope: raw?.in_scope !== false,
       categories: [],
       attributes: null,

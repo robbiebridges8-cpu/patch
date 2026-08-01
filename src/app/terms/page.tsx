@@ -28,9 +28,9 @@ export default function TermsPage() {
 
         <h2 style={h2}>What Patch is</h2>
         <p style={p}>
-          Patch is a discovery platform. We help you find mobile food vendors and caterers and pass on your enquiries — but we are
+          Patch is a discovery platform. We help you find local service providers and pass on your enquiries — but we are
           <strong> not a party to any contract</strong> between you and a vendor. All bookings, payments, cancellations, and the
-          food and service themselves are arranged directly between you and the vendor.
+          services themselves are arranged directly between you and the vendor.
         </p>
 
         <h2 style={h2}>Enquiries and bookings</h2>

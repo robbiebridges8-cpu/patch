@@ -43,22 +43,23 @@ export default function NoResults({
   if (!params.type && parsed?.categories?.length) implied.push(`trying something other than ${parsed.categories.join(" or ")}`);
 
   const STARTERS = [
-    "Street food for a summer party in east London",
-    "Pizza van for 80 guests",
-    "Vegan canapés for a launch event",
-    "Coffee cart for a morning workshop",
+    "A wedding caterer in south London for 80 guests",
+    "A mobile bar for a 30th birthday",
+    "A photographer for a summer party",
+    "A DJ for a Saturday night wedding",
   ];
 
-  // Honest scope message — the request is for something we don't cover yet, so
-  // don't pretend a wider search would help. Point at what IS live.
+  // in_scope=false means the brief wasn't a coherent request to hire anyone
+  // (empty or gibberish) — NOT that the service is the "wrong" kind. Patch is
+  // vertical-agnostic, so we never turn a request away for being off-category;
+  // we just ask for a clearer brief.
   if (outOfScope) {
     return (
       <div className={styles.wrap}>
-        <h2 className={styles.title}>We don&apos;t cover that yet</h2>
+        <h2 className={styles.title}>Tell us what you&apos;re looking for</h2>
         <p className={styles.lead}>
-          Patch is live for <strong>food, drink and catering</strong> in London right now, so we
-          couldn&apos;t match &ldquo;{query}&rdquo;. More services are coming — here&apos;s the kind of
-          thing that works today:
+          We couldn&apos;t make sense of &ldquo;{query}&rdquo;. Describe the job in plain words —
+          what you need, the area, and roughly when. For example:
         </p>
         <div className={styles.block}>
           <div className={styles.chips}>

@@ -24,7 +24,13 @@ Strategic decisions live in [PRD.md](./PRD.md). This is the work queue.
 > shortlist → enquiry ([uat-report.html](./uat-report.html)). Verdict: front-end
 > loved, trust/loop weak. Five cheap code wins shipped: (1) suppress unearned 5.0★
 > — a vendor reads as **"New"** until it has ≥3 reviews (`src/lib/rating.ts`);
-> (2) homepage now signposts the live vertical (**Food & drink for events · London**);
+> (2) ~~homepage signposts the live vertical (Food & drink for events)~~ **reverted
+> 2026-08-01** — this broke the horizontal-platform invariant (PRD §3.3). The whole
+> buyer surface is now **vertical-agnostic**: hero + search + no-results copy talk
+> about "local services", the AI parse no longer hard-codes food (`in_scope` now
+> means "a coherent hire request", not "is it catering"), and legal/structured-data
+> copy is generic. Food stays the *proving* vertical, framed only as "the first
+> vertical, expanding" in the FAQ/about — never as the whole product;
 > (3) the searching indicator advances and **holds** on the last step instead of
 > looping (testers read the old loop as a stuck screen); (4) a11y — search-input
 > labels, a live result-count region, and Escape/focus-trap on the mobile menu;
@@ -32,6 +38,12 @@ Strategic decisions live in [PRD.md](./PRD.md). This is the work queue.
 > reply the vendor can't give. The deeper items the round surfaced — closing the
 > enquiry loop with real vendors, real photos, and email deliverability — are
 > product/config, tracked below and in "Blocks launch".
+>
+> **Remaining vertical-agnostic debt:** vendor onboarding still hard-codes food
+> fields (a **Dietary options** checkbox group, food category suggestions, "Serves
+> (guests)"). Right fix is category-driven attribute fields, not food-specific UI —
+> tracked as a follow-up. `/services` category browse is also food-only (its
+> categories are food); it broadens as non-food inventory lands.
 
 ---
 

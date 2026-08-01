@@ -25,7 +25,7 @@ const SITE_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "How does Patch match vendors?",
-    a: "Patch reads your plain-language brief, works out what actually matters in it — cuisine or service type, occasion, budget, guest count, location — and searches vendor listings by meaning rather than exact keywords. It returns a ranked shortlist rather than a keyword page.",
+    a: "Patch reads your plain-language brief, works out what actually matters in it — the kind of service, the occasion, budget, scale and location — and searches vendor listings by meaning rather than exact keywords. It returns a ranked shortlist rather than a keyword page.",
   },
   {
     q: "Does Patch vet or verify vendors?",
@@ -53,7 +53,7 @@ const orgJsonLd = {
       // Explicitly distinguish from Patch.com (US hyperlocal news).
       disambiguatingDescription: "The UK marketplace for hiring local services in London (patch.london). Not affiliated with Patch.com, the US local-news network.",
       areaServed: { "@type": "City", name: "London", containedInPlace: { "@type": "Country", name: "United Kingdom" } },
-      knowsAbout: ["Catering", "Mobile catering", "Event services", "Local services", "Private hire", "London events"],
+      knowsAbout: ["Local services", "Event services", "Catering", "Photography", "Entertainment", "Mobile bars", "Private hire", "Tradespeople", "London events"],
     },
     {
       "@type": "WebSite",
@@ -110,14 +110,14 @@ export default async function Home() {
       <main id="main-content" className={styles.hero}>
         <div className={styles.heroInner}>
           <div className={styles.heroCopy}>
-            <span className={styles.eyebrow}>Food &amp; drink for events · London</span>
+            <span className={styles.eyebrow}>Local services · London</span>
             <h1 className={styles.heading}>
-              Describe your event in your own words. Get a shortlist in seconds.
+              Describe what you need in your own words. Get a shortlist in seconds.
             </h1>
             <p className={styles.sub}>
-              Caterers, street food, bars and more for parties, weddings and work dos.
-              Tell Patch what you&apos;re after in plain words — it comes back with a short,
-              reasoned set and says why each one fits.
+              Whatever the job — tell Patch in plain words, with the area, date and rough
+              budget. It reads the detail and comes back with a short, reasoned shortlist,
+              and says why each one fits.
             </p>
             <HeroSearch />
             {vendorsRounded > 0 && (
@@ -135,7 +135,7 @@ export default async function Home() {
                   <div className={styles.heroCardMedia}>
                     <Image
                       src={categoryPhoto(f.primary_category, 320, f.slug)}
-                      alt={`${f.name} — ${f.primary_category ?? "catering"}`}
+                      alt={`${f.name} — ${f.primary_category ?? "local service"}`}
                       fill sizes="220px" style={{ objectFit: "cover" }}
                     />
                   </div>
