@@ -17,7 +17,7 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
 const SITE_FAQ: { q: string; a: string }[] = [
   {
     q: "What is Patch?",
-    a: "Patch is an AI-native marketplace for hiring local services in London. You describe a job in plain words — the occasion, area, budget and guest count — and Patch returns a short, reasoned shortlist of vendors that fit, with a note on why each one made the list. It is the UK London services marketplace at patch.london, not to be confused with the US news network Patch.com.",
+    a: "Patch is a marketplace for hiring local services in London. You describe a job in plain words — the occasion, area, budget and guest count — and Patch returns a short shortlist of vendors that fit, with a note on why each one made the list. It is the UK London services marketplace at patch.london, not to be confused with the US news network Patch.com.",
   },
   {
     q: "Is Patch free to use?",
@@ -25,7 +25,7 @@ const SITE_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "How does Patch match vendors?",
-    a: "Patch reads your plain-language brief with AI, works out what actually matters in it — cuisine or service type, occasion, budget, guest count, location — and runs a meaning-based search over vendor listings. It returns a ranked shortlist rather than a keyword page.",
+    a: "Patch reads your plain-language brief, works out what actually matters in it — cuisine or service type, occasion, budget, guest count, location — and searches vendor listings by meaning rather than exact keywords. It returns a ranked shortlist rather than a keyword page.",
   },
   {
     q: "Does Patch vet or verify vendors?",
@@ -49,7 +49,7 @@ const orgJsonLd = {
       alternateName: ["Patch London", "Patch UK"],
       url: SITE,
       logo: `${SITE}/icons/vendor-512.png`,
-      description: "AI-native marketplace matching Londoners with the right local services and trades — described in plain words, shortlisted and reasoned by AI.",
+      description: "A marketplace matching Londoners with the right local services and trades — described in plain words, with a shortlist that explains why each vendor fits.",
       // Explicitly distinguish from Patch.com (US hyperlocal news).
       disambiguatingDescription: "The UK marketplace for hiring local services in London (patch.london). Not affiliated with Patch.com, the US local-news network.",
       areaServed: { "@type": "City", name: "London", containedInPlace: { "@type": "Country", name: "United Kingdom" } },
@@ -122,7 +122,7 @@ export default async function Home() {
             <HeroSearch />
             {vendorsRounded > 0 && (
               <p className={styles.heroStat}>
-                <strong>{vendorsRounded}+</strong> vendors across <strong>{areaCount}</strong> London areas — matched by AI, hired direct.
+                <strong>{vendorsRounded}+</strong> vendors across <strong>{areaCount}</strong> London areas — matched to your brief, hired direct.
               </p>
             )}
           </div>

@@ -41,6 +41,7 @@ interface SearchParams {
   q?: string;
   type?: string; // category pre-filter (from quick-start chips / location pages), not a sidebar control
   budget?: string;
+  loc?: string; // explicit location filter (sidebar) — overrides any place named in the brief
   sort?: string;
 }
 
@@ -197,6 +198,7 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
   const overrides = {
     categories: params.type ? params.type.split(",") : undefined,
     budgetMax: Number.isFinite(parsedBudget) && parsedBudget > 0 ? parsedBudget : undefined,
+    location: params.loc?.trim() || undefined,
   };
   const rl = await rateLimit(`search:${clientIp(await headers())}`, 25, 60_000);
   if (!rl.ok) {
@@ -298,7 +300,7 @@ async function AIResults({ query, params }: { query: string; params: SearchParam
     <>
       {quick.usedFallback && (
         <div className={styles.fallbackNote} role="status">
-          <strong>Showing basic results.</strong> Patch&apos;s AI matching is busy right now, so
+          <strong>Showing basic results.</strong> Patch&apos;s smart matching is busy right now, so
           these are keyword matches rather than a reasoned shortlist — the ranking and match
           notes will be less sharp. Try again in a moment for the full thing.
         </div>
@@ -457,6 +459,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const query = (params.q || "").trim();
   const sort = params.sort || "best";
   const budget = params.budget ? parseInt(params.budget, 10) : undefined;
+  const loc = params.loc?.trim() || undefined;
 
   if (!query) {
     // Popular, top-rated vendors so the empty search is a browsable page, not a
@@ -515,8 +518,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     );
   }
 
-  const activeCount = budget ? 1 : 0;
-  const boundaryKey = `${query}|${params.type || ""}|${params.budget || ""}|${sort}`;
+  const activeCount = (budget ? 1 : 0) + (loc ? 1 : 0);
+  const boundaryKey = `${query}|${params.type || ""}|${params.budget || ""}|${loc || ""}|${sort}`;
 
   return (
     <>
@@ -533,12 +536,13 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
         <div className={styles.layout}>
           <div className={styles.sidebarWrap}>
-            <FilterSidebarLive currentBudget={budget} />
+            <FilterSidebarLive currentBudget={budget} currentLocation={loc} />
           </div>
 
           <div className={styles.results}>
             <SearchToolbar
               currentBudget={budget}
+              currentLocation={loc}
               currentSort={sort}
               activeCount={activeCount}
             />

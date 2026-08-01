@@ -593,7 +593,7 @@ export interface QuickSearchResult {
 
 export async function quickSearch(
   query: string,
-  overrides?: { categories?: string[]; attributes?: Record<string, unknown>; budgetMax?: number },
+  overrides?: { categories?: string[]; attributes?: Record<string, unknown>; budgetMax?: number; location?: string },
   limit: number = SEARCH_LIMIT,
   opts?: { useAi?: boolean },
 ): Promise<QuickSearchResult> {
@@ -636,6 +636,9 @@ export async function quickSearch(
     parsed.attributes = overrides.attributes;
   }
   if (overrides?.budgetMax != null) parsed.budget_max = overrides.budgetMax;
+  // An explicit location filter overrides whatever the model read from the text,
+  // so "near Hackney" in the sidebar always wins over a place named in the brief.
+  if (overrides?.location) parsed.location = overrides.location;
   console.log("[quickSearch] parsed:", JSON.stringify(parsed));
 
   // Off-vertical request (e.g. "plumber", gibberish) → don't force a food
