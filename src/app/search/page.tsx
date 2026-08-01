@@ -10,9 +10,8 @@ export const metadata = {
 };
 
 import { Suspense } from "react";
-import Link from "next/link";
-import Image from "next/image";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { rateLimit, clientIp, consumeAiBudget } from "@/lib/rateLimit";
 import { captureException, captureMessage } from "@/lib/monitoring";
 import { quickSearch, narrateSummary, type VendorResult, type ParsedQuery } from "@/lib/ai";
@@ -26,7 +25,6 @@ import AINote from "@/components/search/AINote";
 import VendorRow from "@/components/search/VendorRow";
 import FilterSidebarLive from "@/components/search/FilterSidebarLive";
 import SearchToolbar from "@/components/search/SearchToolbar";
-import QuickStarts from "@/components/search/QuickStarts";
 import FollowupsCard from "@/components/search/FollowupsCard";
 import ProgressiveList from "@/components/search/ProgressiveList";
 import NoResults from "@/components/search/NoResults";
@@ -461,62 +459,12 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const budget = params.budget ? parseInt(params.budget, 10) : undefined;
   const loc = params.loc?.trim() || undefined;
 
-  if (!query) {
-    // Popular, top-rated vendors so the empty search is a browsable page, not a
-    // bare form — and it's photo-led, which is the point of the product.
-    const { data: popularData } = await supabase
-      .from("vendors")
-      .select("slug, name, primary_category, rating_avg, review_count")
-      .eq("status", "live")
-      // Only surface vendors with enough reviews to show an earned rating (see rating.ts).
-      .gte("review_count", 3)
-      .order("rating_avg", { ascending: false })
-      .order("review_count", { ascending: false })
-      .limit(8);
-    const popular = (popularData as { slug: string; name: string; primary_category: string | null; rating_avg: number | null; review_count: number }[] | null) ?? [];
-
-    return (
-      <>
-        <Header />
-        <main id="main-content" className={styles.main}>
-          <h1 className="visuallyHidden">Search</h1>
-          <div className={styles.searchWrap}>
-            <SearchBar query={query} />
-          </div>
-          <p className={styles.emptyLead}>
-            Describe what you need above — what, when, where and roughly your budget. Or start here:
-          </p>
-          <QuickStarts />
-
-          {popular.length >= 4 && (
-            <section className={styles.popular}>
-              <h2 className={styles.popularHead}>Popular right now</h2>
-              <div className={styles.popularGrid}>
-                {popular.map((v) => (
-                  <Link key={v.slug} href={`/vendors/${v.slug}`} className={styles.popularCard}>
-                    <div className={styles.popularMedia}>
-                      <Image
-                        src={categoryPhoto(v.primary_category, 400, v.slug)}
-                        alt={`${v.name} — ${v.primary_category ?? "catering"}`}
-                        fill sizes="(max-width: 700px) 50vw, 240px" style={{ objectFit: "cover" }}
-                      />
-                    </div>
-                    <div className={styles.popularBody}>
-                      <span className={styles.popularName}>{v.name}</span>
-                      <span className={styles.popularMeta}>
-                        {v.primary_category}
-                        {v.rating_avg ? ` · ${Number(v.rating_avg).toFixed(1)}★` : ""}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
-        </main>
-      </>
-    );
-  }
+  // No query → this isn't a page, it's a search that hasn't happened yet. The
+  // homepage is the one, polished entry point (hero + search + browse), so send
+  // people there rather than rendering a second, weaker copy of it here. Every
+  // "Find someone" / "Search" link that used to land on the empty state now
+  // resolves to the real front door.
+  if (!query) redirect("/");
 
   const activeCount = (budget ? 1 : 0) + (loc ? 1 : 0);
   const boundaryKey = `${query}|${params.type || ""}|${params.budget || ""}|${loc || ""}|${sort}`;
