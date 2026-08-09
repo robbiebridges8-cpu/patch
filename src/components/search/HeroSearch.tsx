@@ -37,7 +37,7 @@ export default function HeroSearch() {
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           placeholder="what do you need, where, and roughly when?"
-          aria-label="Describe your event — what you need, where, and roughly when"
+          aria-label="Describe what you need — the job, where, and roughly when"
         />
         <button type="submit" className={styles.btn} disabled={pending}>{pending ? "Searching…" : "Find someone"}</button>
       </form>
