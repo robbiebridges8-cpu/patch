@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { supabase } from "@/lib/supabase";
 import { SERVICE_CATEGORIES, LONDON_AREAS } from "@/lib/serviceAreas";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://hireonpatch.com";
 
 export const revalidate = 3600; // rebuild the sitemap hourly
 

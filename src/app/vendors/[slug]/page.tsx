@@ -189,7 +189,7 @@ export default async function VendorPage({
   const rating = (vendor.rating_avg as number) || 0;
   const reviewCount = (vendor.review_count as number) || 0;
 
-  const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+  const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://hireonpatch.com";
   const jsonLd = {
     "@context": "https://schema.org",
     // LocalBusiness, not FoodEstablishment: the platform is horizontal, and a

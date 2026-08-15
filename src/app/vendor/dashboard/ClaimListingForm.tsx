@@ -15,7 +15,7 @@ export default function ClaimListingForm() {
       <p className={styles.sub}>
         Your account isn&apos;t linked to a listing yet. Enter your listing&apos;s web address to claim it —
         it&apos;s the last part of your Patch URL, e.g. <strong>dough-and-co</strong> from
-        {" "}patch.london/vendors/<strong>dough-and-co</strong>.
+        {" "}hireonpatch.com/vendors/<strong>dough-and-co</strong>.
       </p>
       <form action={action}>
         <div className={styles.field}>

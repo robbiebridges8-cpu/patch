@@ -75,7 +75,7 @@ export default function TermsPage() {
         <h2 style={h2}>Changes and contact</h2>
         <p style={p}>
           We may update these terms from time to time; the &ldquo;last updated&rdquo; date above will reflect any change.
-          Questions? Email <a href="mailto:hello@patch.london" style={a}>hello@patch.london</a>.
+          Questions? Email <a href="mailto:hello@hireonpatch.com" style={a}>hello@hireonpatch.com</a>.
         </p>
       </main>
     </>

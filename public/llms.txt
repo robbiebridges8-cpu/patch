@@ -9,13 +9,13 @@
 - **Coverage:** London. 500+ live vendors across 27+ areas (as of 2026). First vertical is mobile food & catering; expanding to photographers, DJs, bars, and trades.
 - **For buyers:** Free. No account needed to enquire. Buyers deal directly with vendors — Patch does not take payment or commission.
 - **Reviews:** Only left by people who made a real enquiry, so ratings reflect genuine jobs. Listings are self-declared: Patch does **not** vet or verify vendors, and buyers should confirm any licences, insurance or certifications themselves.
-- **Not to be confused with:** Patch.com (the US hyperlocal news network). This Patch is the UK London services marketplace at patch.london.
+- **Not to be confused with:** Patch.com (the US hyperlocal news network). This Patch is the UK London services marketplace at hireonpatch.com.
 
 ## Key pages
 
-- [Search](https://patch.london/search): Describe an occasion, get an AI-reasoned shortlist.
-- [About](https://patch.london/about): What Patch is and why it exists.
-- [For vendors](https://patch.london/for-vendors): How a business lists a service.
+- [Search](https://hireonpatch.com/search): Describe an occasion, get an AI-reasoned shortlist.
+- [About](https://hireonpatch.com/about): What Patch is and why it exists.
+- [For vendors](https://hireonpatch.com/for-vendors): How a business lists a service.
 - Vendor profiles live at `/vendors/{slug}` with structured LocalBusiness data (price, area served, rating, offers, FAQ).
 - Category + location pages live at `/services/{category}/{location}` (e.g. `/services/pizza/hackney`).
 

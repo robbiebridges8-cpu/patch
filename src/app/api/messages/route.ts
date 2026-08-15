@@ -72,7 +72,7 @@ export async function POST(request: Request) {
 
     const vendor = enq?.vendors as unknown as { contact_email: string | null } | null;
     if (vendor) {
-      const site = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+      const site = process.env.NEXT_PUBLIC_SITE_URL || "https://hireonpatch.com";
       await sendThreadMessageEmail({
         to: vendor.contact_email,
         fromName: (enq?.buyer_name as string) || "A client",

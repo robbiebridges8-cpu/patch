@@ -34,7 +34,7 @@ export async function sendThreadMessageEmail(
   d: ThreadEmailData,
 ): Promise<{ sent: boolean; reason?: string }> {
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.ENQUIRY_FROM_EMAIL || "Patch <enquiries@patch.london>";
+  const from = process.env.ENQUIRY_FROM_EMAIL || "Patch <enquiries@hireonpatch.com>";
 
   if (!key) {
     console.warn("[email] RESEND_API_KEY not set — message stored, notification skipped");
@@ -79,7 +79,7 @@ export async function sendVendorEnquiryEmail(
   d: EnquiryEmailData,
 ): Promise<{ sent: boolean; reason?: string }> {
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.ENQUIRY_FROM_EMAIL || "Patch <enquiries@patch.london>";
+  const from = process.env.ENQUIRY_FROM_EMAIL || "Patch <enquiries@hireonpatch.com>";
 
   if (!key) {
     console.warn("[email] RESEND_API_KEY not set — enquiry stored, vendor email skipped");
@@ -147,11 +147,11 @@ export async function sendBookingReviewEmail(
   d: BookingReviewData,
 ): Promise<{ sent: boolean; reason?: string }> {
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.ENQUIRY_FROM_EMAIL || "Patch <enquiries@patch.london>";
+  const from = process.env.ENQUIRY_FROM_EMAIL || "Patch <enquiries@hireonpatch.com>";
   if (!key) return { sent: false, reason: "no_api_key" };
   if (!d.to) return { sent: false, reason: "no_recipient" };
 
-  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://hireonpatch.com";
   const link = `${site}/review/${encodeURIComponent(d.enquiryId)}?v=${encodeURIComponent(d.vendorSlug)}`;
   const html = `
     <div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;color:#2b2620">
@@ -196,7 +196,7 @@ export async function sendBuyerConfirmationEmail(
   d: BuyerConfirmationData,
 ): Promise<{ sent: boolean; reason?: string }> {
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.ENQUIRY_FROM_EMAIL || "Patch <enquiries@patch.london>";
+  const from = process.env.ENQUIRY_FROM_EMAIL || "Patch <enquiries@hireonpatch.com>";
 
   if (!key) {
     console.warn("[email] RESEND_API_KEY not set — buyer confirmation skipped");
@@ -262,7 +262,7 @@ export async function sendLockedEnquiryEmail(
   d: LockedEnquiryEmailData,
 ): Promise<{ sent: boolean; reason?: string }> {
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.ENQUIRY_FROM_EMAIL || "Patch <enquiries@patch.london>";
+  const from = process.env.ENQUIRY_FROM_EMAIL || "Patch <enquiries@hireonpatch.com>";
 
   if (!key) {
     console.warn("[email] RESEND_API_KEY not set — locked-enquiry notice skipped");
@@ -270,7 +270,7 @@ export async function sendLockedEnquiryEmail(
   }
   if (!d.to) return { sent: false, reason: "no_recipient" };
 
-  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://hireonpatch.com";
   const detail = [
     d.eventDate ? `Date: ${d.eventDate}` : null,
     d.postcode ? `Area: ${d.postcode}` : null,

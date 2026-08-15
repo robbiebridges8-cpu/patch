@@ -13,7 +13,7 @@ import {
 } from "@/lib/serviceAreas";
 import styles from "./page.module.css";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://hireonpatch.com";
 // Category's natural noun ("mobile cocktail bars", "coffee carts"), sentence-cased.
 // Avoids "Cocktail bar catering", which reads wrong for drinks/desserts/coffee.
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

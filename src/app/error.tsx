@@ -21,7 +21,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
       </h1>
       <p style={{ fontSize: 16, lineHeight: 1.7, color: "var(--color-text-secondary)", marginBottom: 28 }}>
         A hiccup on our end — not yours. Try again, and if it keeps happening,
-        drop us a line at <a href="mailto:hello@patch.london" style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>hello@patch.london</a>.
+        drop us a line at <a href="mailto:hello@hireonpatch.com" style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>hello@hireonpatch.com</a>.
       </p>
       <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
         <button

@@ -5,7 +5,7 @@ import { safeJsonLd } from "@/lib/sanitize";
 import { SERVICE_CATEGORIES, LONDON_AREAS } from "@/lib/serviceAreas";
 import styles from "./[category]/[location]/page.module.css";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://hireonpatch.com";
 
 export const metadata: Metadata = {
   title: "Browse local services in London",

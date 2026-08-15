@@ -25,7 +25,7 @@ export default function PrivacyPage() {
         <p style={p}>
           This policy explains what personal data Patch collects, why, and what rights you have over it.
           Patch is the data controller for the personal data described here. You can reach us at{" "}
-          <a href="mailto:privacy@patch.london" style={a}>privacy@patch.london</a>.
+          <a href="mailto:privacy@hireonpatch.com" style={a}>privacy@hireonpatch.com</a>.
         </p>
 
         <h2 style={h2}>Who we are</h2>
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
           <li>withdraw consent where we rely on it.</li>
         </ul>
         <p style={p}>
-          To exercise any of these, email <a href="mailto:privacy@patch.london" style={a}>privacy@patch.london</a>.
+          To exercise any of these, email <a href="mailto:privacy@hireonpatch.com" style={a}>privacy@hireonpatch.com</a>.
           You also have the right to complain to the UK Information Commissioner&apos;s Office (ICO) at{" "}
           <a href="https://ico.org.uk" style={a} target="_blank" rel="noopener noreferrer">ico.org.uk</a>.
         </p>
@@ -92,7 +92,7 @@ export default function PrivacyPage() {
         <h2 style={h2}>Changes</h2>
         <p style={p}>
           We may update this policy from time to time. Material changes will be reflected by the &ldquo;last updated&rdquo; date above.
-          Questions? Email <a href="mailto:privacy@patch.london" style={a}>privacy@patch.london</a>.
+          Questions? Email <a href="mailto:privacy@hireonpatch.com" style={a}>privacy@hireonpatch.com</a>.
         </p>
       </main>
     </>

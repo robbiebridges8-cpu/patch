@@ -1,7 +1,7 @@
 import Header from "@/components/layout/Header";
 import { safeJsonLd } from "@/lib/sanitize";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://hireonpatch.com";
 
 export const metadata = {
   title: "About",
@@ -21,7 +21,7 @@ const aboutJsonLd = {
     alternateName: ["Patch London", "Patch UK"],
     url: SITE,
     description: "A marketplace for hiring local services in London. Describe a job in plain words and get a short shortlist of vendors that fit, each with a note on why.",
-    disambiguatingDescription: "The UK London services marketplace at patch.london. Not affiliated with Patch.com, the US local-news network.",
+    disambiguatingDescription: "The UK London services marketplace at hireonpatch.com. Not affiliated with Patch.com, the US local-news network.",
     areaServed: { "@type": "City", name: "London" },
   },
 };
@@ -41,7 +41,7 @@ export default function AboutPage() {
           worth asking to see the licences, insurance or certifications that matter for your job
           before you book. What Patch does is find the right handful of people to ask.</p>
         <p style={{ fontSize: 16, lineHeight: 1.7, color: "var(--color-text-secondary)" }}>
-          We launched in 2026, starting with London. If you&apos;re a vendor and want to be listed, or a client with feedback, get in touch at <a href="mailto:hello@patch.london" style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>hello@patch.london</a>.
+          We launched in 2026, starting with London. If you&apos;re a vendor and want to be listed, or a client with feedback, get in touch at <a href="mailto:hello@hireonpatch.com" style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>hello@hireonpatch.com</a>.
         </p>
       </main>
     </>

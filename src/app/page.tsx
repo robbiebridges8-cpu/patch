@@ -10,14 +10,14 @@ import styles from "./page.module.css";
 // Live stats keep the citable numbers accurate for both readers and AI engines.
 export const revalidate = 3600;
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://hireonpatch.com";
 
 // Questions people actually ask an assistant about a service like this. Rendered
 // visibly AND as FAQPage structured data — prime answer-engine citation fodder.
 const SITE_FAQ: { q: string; a: string }[] = [
   {
     q: "What is Patch?",
-    a: "Patch is a marketplace for hiring local services in London. You describe a job in plain words — the occasion, area, budget and guest count — and Patch returns a short shortlist of vendors that fit, with a note on why each one made the list. It is the UK London services marketplace at patch.london, not to be confused with the US news network Patch.com.",
+    a: "Patch is a marketplace for hiring local services in London. You describe a job in plain words — the occasion, area, budget and guest count — and Patch returns a short shortlist of vendors that fit, with a note on why each one made the list. It is the UK London services marketplace at hireonpatch.com, not to be confused with the US news network Patch.com.",
   },
   {
     q: "Is Patch free to use?",
@@ -51,7 +51,7 @@ const orgJsonLd = {
       logo: `${SITE}/icons/vendor-512.png`,
       description: "A marketplace matching Londoners with the right local services and trades — described in plain words, with a shortlist that explains why each vendor fits.",
       // Explicitly distinguish from Patch.com (US hyperlocal news).
-      disambiguatingDescription: "The UK marketplace for hiring local services in London (patch.london). Not affiliated with Patch.com, the US local-news network.",
+      disambiguatingDescription: "The UK marketplace for hiring local services in London (hireonpatch.com). Not affiliated with Patch.com, the US local-news network.",
       areaServed: { "@type": "City", name: "London", containedInPlace: { "@type": "Country", name: "United Kingdom" } },
       knowsAbout: ["Local services", "Event services", "Catering", "Photography", "Entertainment", "Mobile bars", "Private hire", "Tradespeople", "London events"],
     },

@@ -176,7 +176,7 @@ export async function claimListing(_prev: ActionState, formData: FormData): Prom
 
   if (error) return { error: error.message };
   if (!data || data.length === 0) {
-    return { error: "No unclaimed listing found at that address — it may already be claimed. Contact hello@patch.london for help." };
+    return { error: "No unclaimed listing found at that address — it may already be claimed. Contact hello@hireonpatch.com for help." };
   }
   revalidatePath("/vendor/dashboard");
   return { ok: true };
@@ -268,7 +268,7 @@ export async function sendVendorMessage(enquiryId: string, body: string): Promis
       .select("name")
       .eq("id", enq.vendor_id as string)
       .maybeSingle();
-    const site = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+    const site = process.env.NEXT_PUBLIC_SITE_URL || "https://hireonpatch.com";
     await sendThreadMessageEmail({
       to: enq.buyer_email as string,
       fromName: (vendor?.name as string) || "Your vendor",

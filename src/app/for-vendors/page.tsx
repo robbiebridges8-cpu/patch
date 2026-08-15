@@ -2,7 +2,7 @@ import Header from "@/components/layout/Header";
 import { safeJsonLd } from "@/lib/sanitize";
 import { TIER_PRICE, TIER, annualPrice } from "@/lib/tiers";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://patch.london";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://hireonpatch.com";
 
 // Prices come from the tier config rather than being written into the copy, so
 // the page and the checkout can never disagree — they did, at £20 vs £29.
@@ -103,8 +103,8 @@ export default function ForVendorsPage() {
             Create your listing
           </a>{" "}
           — it takes a few minutes and you don&apos;t need a card. Questions:{" "}
-          <a href="mailto:vendors@patch.london" style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>
-            vendors@patch.london
+          <a href="mailto:vendors@hireonpatch.com" style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>
+            vendors@hireonpatch.com
           </a>
           .
         </p>
