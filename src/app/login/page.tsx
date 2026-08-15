@@ -62,7 +62,15 @@ function LoginInner() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: "email" });
+    // A returning user's code verifies as "email"; a brand-new account's first
+    // code is a "signup" confirmation. We don't know which this is, so try the
+    // common case and fall back rather than making the user care.
+    const addr = email.trim();
+    const token = code.trim();
+    let { error } = await supabase.auth.verifyOtp({ email: addr, token, type: "email" });
+    if (error) {
+      ({ error } = await supabase.auth.verifyOtp({ email: addr, token, type: "signup" }));
+    }
     if (error) {
       setError("That code didn't work — check it, or request a new one.");
       setLoading(false);
@@ -79,8 +87,8 @@ function LoginInner() {
 
   const heading = vendorContext ? "Log in to your listing" : "Log in to Patch";
   const sub = vendorContext
-    ? "Manage your listing, photos and enquiries. No password — we'll email you a secure sign-in link. New here? It sets your account up too."
-    : "Track your enquiries and reviews from any device. No password — we'll email you a secure sign-in link. New here? It creates your account too.";
+    ? "Manage your listing, photos and enquiries. No password — we'll email you a 6-digit sign-in code. New here? It sets your account up too."
+    : "Track your enquiries and reviews from any device. No password — we'll email you a 6-digit sign-in code. New here? It creates your account too.";
 
   return (
     <>
@@ -100,7 +108,7 @@ function LoginInner() {
             />
             {error && <p className={styles.error} role="alert">{error}</p>}
             <button type="submit" className={styles.btn} disabled={loading}>
-              {loading ? "Sending…" : "Email me a sign-in link"}
+              {loading ? "Sending…" : "Email me a code"}
             </button>
 
             {/* "Continue with Google" slots in here once the provider is enabled
@@ -113,40 +121,39 @@ function LoginInner() {
             </p>
           </form>
         ) : (
-          // Lead with the link (every sign-in email contains one and it always
-          // works in this browser). The code is a fallback — only some email
-          // templates surface it — so it must never be the thing we demand.
-          <div className={styles.card}>
+          // Code-first: the 6-digit code is typed into THIS tab, so it sidesteps
+          // the magic-link redirect handoff that breaks when the email opens in a
+          // different browser. The email still carries a link as a backup.
+          <form onSubmit={verify} className={styles.card}>
             <div className={styles.sentIcon} aria-hidden="true">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
             </div>
             <p className={styles.sentLead}>
-              Check your email — we sent a sign-in link to <strong>{email}</strong>. Open it in this browser to finish.
+              We emailed a 6-digit code to <strong>{email}</strong>. Enter it below to finish signing in.
             </p>
+            <label className={styles.label} htmlFor="code">6-digit code</label>
+            <input
+              id="code" inputMode="numeric" autoComplete="one-time-code" autoFocus
+              maxLength={6} pattern="[0-9]*"
+              className={styles.input} value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              placeholder="123456"
+            />
+            {error && <p className={styles.error} role="alert">{error}</p>}
+            <button type="submit" className={styles.btn} disabled={loading || code.trim().length < 6}>
+              {loading ? "Signing in…" : "Log in"}
+            </button>
             {resent && <p className={styles.ok} role="status">Sent again — check your inbox.</p>}
             <p className={styles.fine}>
-              No email yet?{" "}
+              No code yet?{" "}
               <button type="button" className={styles.linkBtn} onClick={() => send(true)}>Resend it</button>
               {" · "}
               <button type="button" className={styles.linkBtn} onClick={() => { setStep("email"); setCode(""); setError(null); setResent(false); }}>Use a different email</button>
             </p>
-
-            <details className={styles.codeFallback}>
-              <summary>Got a 6-digit code in the email instead?</summary>
-              <form onSubmit={verify} className={styles.codeForm}>
-                <input
-                  id="code" inputMode="numeric" autoComplete="one-time-code"
-                  className={styles.input} value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="6-digit code"
-                />
-                {error && <p className={styles.error} role="alert">{error}</p>}
-                <button type="submit" className={styles.btn} disabled={loading}>
-                  {loading ? "Signing in…" : "Log in with code"}
-                </button>
-              </form>
-            </details>
-          </div>
+            <p className={styles.fine}>
+              Prefer to click? The same email has a sign-in link — just open it in this browser.
+            </p>
+          </form>
         )}
 
         {/* Gentle escape hatch if someone landed in the wrong framing. */}
