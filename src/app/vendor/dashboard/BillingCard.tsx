@@ -41,7 +41,7 @@ export default function BillingCard({ status, hasCustomer, tier }: { status: str
   }
 
   return (
-    <div className={styles.card}>
+    <div className={styles.card} id="billing">
       <div className={styles.cardHead}>
         <span className={styles.cardTitle}>Subscription</span>
         {status && (

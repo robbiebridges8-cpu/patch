@@ -15,21 +15,34 @@ export default function AvailabilityManager({ vendorId, initial }: { vendorId: s
   const now = new Date();
   const [view, setView] = useState(() => new Date(now.getFullYear(), now.getMonth(), 1));
   const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
   const today = ymd(now);
 
   async function toggle(dateStr: string) {
     if (dateStr < today || busy) return;
     setBusy(dateStr);
+    setError(null);
     const isBlocked = blocked.has(dateStr);
     const next = new Set(blocked);
     if (isBlocked) next.delete(dateStr);
     else next.add(dateStr);
     setBlocked(next);
-    if (isBlocked) {
-      await supabase.from("vendor_blocked_dates").delete().eq("vendor_id", vendorId).eq("blocked_date", dateStr);
-    } else {
-      await supabase.from("vendor_blocked_dates").insert({ vendor_id: vendorId, blocked_date: dateStr, reason: "booked" });
+
+    // A silent failure here is commercially dangerous: the calendar would show a
+    // date as closed while the DB says it's open (or vice versa), so buyers keep
+    // enquiring for a date the vendor thinks they've blocked. Check + roll back.
+    const { error: err } = isBlocked
+      ? await supabase.from("vendor_blocked_dates").delete().eq("vendor_id", vendorId).eq("blocked_date", dateStr)
+      : await supabase.from("vendor_blocked_dates").insert({ vendor_id: vendorId, blocked_date: dateStr, reason: "booked" });
+
+    if (err) {
+      setBlocked((cur) => {
+        const rolled = new Set(cur);
+        if (isBlocked) rolled.add(dateStr); else rolled.delete(dateStr);
+        return rolled;
+      });
+      setError("Couldn't update that date — please try again.");
     }
     setBusy(null);
   }
@@ -79,6 +92,8 @@ export default function AvailabilityManager({ vendorId, initial }: { vendorId: s
           );
         })}
       </div>
+
+      {error && <div className={`${styles.notice} ${styles.noticeErr}`}>{error}</div>}
 
       <div className={styles.calLegend}>
         <span><span className={`${styles.calDot} ${styles.calDotFree}`} /> Available</span>
