@@ -17,6 +17,7 @@ import LeadRow, { type Lead } from "./LeadRow";
 import { redactLead } from "@/lib/leadRedaction";
 import { type ThreadMessage } from "./MessageThread";
 import BillingCard from "./BillingCard";
+import UpgradePrompt from "./UpgradePrompt";
 import AnalyticsCard, { type Analytics } from "./AnalyticsCard";
 import CompletenessCard from "./CompletenessCard";
 import NotificationsCard from "./NotificationsCard";
@@ -74,6 +75,17 @@ async function LeadsCard({ vendorId, tier }: { vendorId: string; tier: number })
           </span>
         )}
       </div>
+
+      {locked && leads.length > 0 && (
+        <div className={styles.leadsUpgrade}>
+          <div className={styles.leadsUpgradeText}>
+            <strong>{leads.length} enquir{leads.length === 1 ? "y is" : "ies are"} waiting.</strong>{" "}
+            Unlock to see who they are, their contact details and their message — and reply.
+            Buyers usually message several vendors, so the fast reply wins.
+          </div>
+          <UpgradePrompt compact />
+        </div>
+      )}
 
       {leads.length === 0 ? (
         <div className={styles.empty}>No enquiries yet. They&apos;ll appear here the moment a client gets in touch.</div>

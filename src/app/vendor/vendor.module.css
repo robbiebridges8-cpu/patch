@@ -245,7 +245,8 @@ select.input { appearance: none; background-image: none; cursor: pointer; }
   margin-bottom: 6px;
 }
 
-.leadName { font-weight: 600; color: var(--color-text-primary, #241f19); }
+.leadName { font-weight: 600; color: var(--color-text-primary, #241f19); flex: 1; min-width: 0; }
+.leadFresh { font-size: 12.5px; color: var(--color-text-muted, #9a9186); white-space: nowrap; align-self: center; }
 .leadDate { font-size: 13px; color: var(--color-text-muted, #9a9186); }
 .leadMeta { font-size: 13px; color: var(--color-text-secondary, #6b6459); margin-bottom: 8px; }
 .leadMsg { font-size: 15px; line-height: 1.6; color: var(--color-text-primary, #241f19); white-space: pre-wrap; }
@@ -266,6 +267,57 @@ select.input { appearance: none; background-image: none; cursor: pointer; }
 .status_booked { background: #e9f6ee; color: #2f6d4f; }
 .status_declined { background: #f3efe9; color: #9a9186; }
 .status_replied { background: #eef2fb; color: #3b5ca8; }
+
+/* Redaction row on a locked lead — reads as "hidden on purpose", not broken. */
+.leadRedact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--color-text-muted, #9a9186);
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--color-surface-sunken, #f0ebe4);
+}
+
+/* One card-level upgrade bar instead of one per locked lead. */
+.leadsUpgrade {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--color-accent, #c0392b);
+  background: color-mix(in srgb, var(--color-accent, #c0392b) 7%, transparent);
+}
+.leadsUpgradeText { font-size: 14.5px; line-height: 1.5; color: var(--color-text-primary, #241f19); }
+
+/* Primary "message the buyer" action, distinct from the status toggles. */
+.leadPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: 9px;
+  border: none;
+  background: var(--color-accent, #c0392b);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.leadPrimary:hover { background: var(--color-accent-hover, #a62f22); }
+.leadPrimaryOpen { background: var(--color-text-primary, #241f19); }
+.leadEmail {
+  font-size: 13px;
+  color: var(--color-text-muted, #9a9186);
+  text-decoration: underline;
+  margin-left: 2px;
+}
+.leadEmail:hover { color: var(--color-text-primary, #241f19); }
 
 .leadActions {
   display: flex;
