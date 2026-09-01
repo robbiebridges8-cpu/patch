@@ -26,6 +26,21 @@ import { canAccess, TIER, FREE_PHOTO_LIMIT } from "@/lib/tiers";
 import { signOut } from "./actions";
 import styles from "../vendor.module.css";
 
+// A paid feature shown to free vendors as a teaser (instead of hidden), so they
+// can see what upgrading buys and where to do it.
+function LockedFeature({ title, blurb }: { title: string; blurb: string }) {
+  return (
+    <div className={`${styles.card} ${styles.lockedFeature}`}>
+      <div className={styles.cardHead}>
+        <span className={styles.cardTitle}>{title}</span>
+        <span className={`${styles.badge} ${styles.badgeWarn}`}>Paid</span>
+      </div>
+      <p className={styles.sub}>{blurb}</p>
+      <a href="#billing" className={styles.btnGhost}>Upgrade to unlock →</a>
+    </div>
+  );
+}
+
 async function LeadsCard({ vendorId, tier }: { vendorId: string; tier: number }) {
   const supabase = await createClient();
   // Most-recent 50: a busy vendor accumulates enquiries without bound, and this
@@ -147,13 +162,41 @@ export default async function VendorDashboard({
   const priceFrom = (service?.price_from as number | null) ?? null;
   const priceNotes = (service?.price_notes as string | null) ?? null;
 
+  // Computed once so the publish gate and the strength card agree.
+  const completeness = vendor
+    ? assessListing({
+        name: vendor.name as string,
+        primary_category: vendor.primary_category as string | null,
+        description: vendor.description as string | null,
+        bio: vendor.bio as string | null,
+        price_from: priceFrom,
+        contact_email: vendor.contact_email as string | null,
+        capacityMax: ((vendor.attributes as Record<string, unknown>)?.capacity_max as number | null) ?? null,
+        attributes: (vendor.attributes as Record<string, unknown> | null) ?? null,
+        signature_items: vendor.signature_items as string[] | null,
+        faq: vendor.faq as unknown[] | null,
+        coverage_radius_miles: vendor.coverage_radius_miles as number | null,
+        photoCount: ((photos as { id: string }[]) || []).length,
+        hasAvailability: ((blocked as unknown[]) || []).length > 0,
+      })
+    : null;
+  const blockingCount = completeness?.blocking.length ?? 0;
+  const isLive = vendor?.status === "live";
+
   return (
     <>
       <Header />
       <main id="main-content" className={styles.wrap}>
         <div className={styles.topBar}>
           <div>
-            <h1 className={styles.h1}>{vendor ? (vendor.name as string) : "Your dashboard"}</h1>
+            <div className={styles.topTitle}>
+              <h1 className={styles.h1}>{vendor ? (vendor.name as string) : "Your dashboard"}</h1>
+              {vendor && (
+                <span className={`${styles.badge} ${isLive ? styles.badgeLive : styles.badgeDraft}`}>
+                  {isLive ? "Live" : "Draft"}
+                </span>
+              )}
+            </div>
             <p className={styles.sub} style={{ margin: 0 }}>Signed in as {user.email}</p>
           </div>
           <form action={signOut}>
@@ -179,9 +222,12 @@ export default async function VendorDashboard({
             {vendor.status !== "live" && (
               <div className={styles.publishBanner}>
                 <div>
-                  <strong>Your listing is a draft.</strong> It won&apos;t appear in search or to buyers until you publish it.
+                  <strong>Your listing is a draft.</strong>{" "}
+                  {blockingCount > 0
+                    ? `Add ${blockingCount} essential${blockingCount > 1 ? "s" : ""} below, then publish to appear in search.`
+                    : "It won't appear in search or to buyers until you publish it."}
                 </div>
-                <PublishButton vendorId={vendor.id as string} />
+                <PublishButton vendorId={vendor.id as string} blockingCount={blockingCount} />
               </div>
             )}
 
@@ -191,44 +237,20 @@ export default async function VendorDashboard({
             <LeadsCard vendorId={vendor.id as string} tier={(vendor.tier as number) ?? TIER.FREE} />
 
             <CompletenessCard
-              completeness={assessListing({
-                name: vendor.name as string,
-                primary_category: vendor.primary_category as string | null,
-                description: vendor.description as string | null,
-                bio: vendor.bio as string | null,
-                price_from: priceFrom,
-                contact_email: vendor.contact_email as string | null,
-                capacityMax: ((vendor.attributes as Record<string, unknown>)?.capacity_max as number | null) ?? null,
-                attributes: (vendor.attributes as Record<string, unknown> | null) ?? null,
-                signature_items: vendor.signature_items as string[] | null,
-                faq: vendor.faq as unknown[] | null,
-                coverage_radius_miles: vendor.coverage_radius_miles as number | null,
-                photoCount: ((photos as { id: string }[]) || []).length,
-                hasAvailability: ((blocked as unknown[]) || []).length > 0,
-              })}
+              completeness={completeness!}
               previewHref={`/vendors/${vendor.slug as string}?preview=1`}
             />
 
-            {/* Notifications are the reason the vendor side is installable, so
-                this is available on every tier — the paid feature is the
-                *instant* alert, not the ability to be notified at all. */}
-            <NotificationsCard
-              vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null}
-            />
-
-            {canAccess(vendor.tier as number, "analytics") && (
+            {canAccess(vendor.tier as number, "analytics") ? (
               <AnalyticsCard data={(analytics as Analytics) ?? null} />
+            ) : (
+              <LockedFeature title="Performance" blurb="See who's viewing your listing, how many enquire, and how many become bookings — included with a paid plan." />
             )}
 
-            <div className={styles.card}>
+            <div className={styles.card} id="listing">
               <div className={styles.cardHead}>
-                <span className={styles.cardTitle}>Listing</span>
-                <span className={styles.badge}>{vendor.status as string}</span>
+                <span className={styles.cardTitle}>Edit listing</span>
               </div>
-              <p className={styles.sub}>
-                {(vendor.primary_category as string) || "Mobile catering"} ·{" "}
-                <a href={`/vendors/${vendor.slug}`}>View public page →</a>
-              </p>
               <EditListingForm
                 vendor={{
                   id: vendor.id as string,
@@ -251,7 +273,7 @@ export default async function VendorDashboard({
               />
             </div>
 
-            <div className={styles.card}>
+            <div className={styles.card} id="photos">
               <div className={styles.cardHead}>
                 <span className={styles.cardTitle}>Photos</span>
               </div>
@@ -262,16 +284,18 @@ export default async function VendorDashboard({
               />
             </div>
 
-            {canAccess(vendor.tier as number, "availability") && (
-            <div className={styles.card}>
-              <div className={styles.cardHead}>
-                <span className={styles.cardTitle}>Availability</span>
+            {canAccess(vendor.tier as number, "availability") ? (
+              <div className={styles.card} id="availability">
+                <div className={styles.cardHead}>
+                  <span className={styles.cardTitle}>Availability</span>
+                </div>
+                <AvailabilityManager
+                  vendorId={vendor.id as string}
+                  initial={((blocked as { blocked_date: string }[]) || []).map((b) => b.blocked_date)}
+                />
               </div>
-              <AvailabilityManager
-                vendorId={vendor.id as string}
-                initial={((blocked as { blocked_date: string }[]) || []).map((b) => b.blocked_date)}
-              />
-            </div>
+            ) : (
+              <LockedFeature title="Availability calendar" blurb="Block out dates you're busy and you won't get enquiries for them — you'll also rank lower on days you can't do. Included with a paid plan." />
             )}
 
             <BillingCard
@@ -279,6 +303,10 @@ export default async function VendorDashboard({
               hasCustomer={!!sub?.stripe_customer_id}
               tier={(vendor.tier as number) ?? TIER.FREE}
             />
+
+            {/* Push-alert setup — a one-time task, so it sits below the daily
+                surfaces rather than in prime real estate. */}
+            <NotificationsCard vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null} />
           </>
         )}
       </main>
