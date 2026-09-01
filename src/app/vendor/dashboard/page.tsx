@@ -107,6 +107,10 @@ export default async function VendorDashboard({
     .eq("owner_id", user.id)
     .maybeSingle();
 
+  // No listing yet → the guided onboarding, not a bare form buried in the
+  // dashboard. (Onboarding mirrors this by redirecting listing-owners back here.)
+  if (!vendor) redirect("/vendor/onboarding");
+
   // These five reads are independent once we know the vendor — run them together
   // rather than in six sequential round-trips. Price lives on the service now
   // (1:1 today, so the vendor's one service).

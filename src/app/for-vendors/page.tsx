@@ -62,6 +62,18 @@ export default function ForVendorsPage() {
           subscription.
         </p>
 
+        <a href="/login?intent=vendor&next=/vendor/onboarding" style={{
+          display: "inline-flex", alignItems: "center", gap: 8,
+          background: "var(--color-accent)", color: "var(--color-on-accent)",
+          fontWeight: 600, fontSize: 16, padding: "14px 26px", borderRadius: 12,
+          textDecoration: "none", marginTop: 4,
+        }}>
+          List your service — it&apos;s free →
+        </a>
+        <p style={{ ...body, fontSize: 14, color: "var(--color-text-muted)", marginTop: 12 }}>
+          Takes about two minutes. No card needed.
+        </p>
+
         <h2 style={sectionH2}>Free listing</h2>
         <ul style={{ fontSize: 16, lineHeight: 1.9, color: "var(--color-text-secondary)", paddingLeft: 20 }}>
           <li>Your own profile page, findable on Google and by name on Patch</li>
@@ -99,7 +111,7 @@ export default function ForVendorsPage() {
 
         <h2 style={sectionH2}>Get started</h2>
         <p style={{ ...body, marginBottom: 0 }}>
-          <a href="/login?intent=vendor&next=/vendor/dashboard" style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>
+          <a href="/login?intent=vendor&next=/vendor/onboarding" style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>
             Create your listing
           </a>{" "}
           — it takes a few minutes and you don&apos;t need a card. Questions:{" "}

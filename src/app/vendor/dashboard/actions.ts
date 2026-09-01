@@ -411,6 +411,92 @@ export async function createListing(_prev: ActionState, formData: FormData): Pro
   return { ok: true };
 }
 
+/**
+ * One-shot vendor onboarding: create the listing, configure price/contact/area,
+ * embed it, and (optionally) publish — all from the guided wizard. Returns the
+ * slug so the success screen can deep-link to the live profile.
+ *
+ * Kept separate from createListing (the old bare-form path) so the wizard can
+ * collect everything up front and the vendor lands on a finished, live listing
+ * instead of a half-built draft.
+ */
+export interface OnboardingInput {
+  name: string;
+  category: string;
+  description: string;
+  location: string;
+  coverageMiles: number | null;
+  priceFrom: number | null;
+  priceNotes: string;
+  contactEmail: string;
+  publish: boolean;
+}
+
+export async function completeOnboarding(
+  input: OnboardingInput,
+): Promise<{ ok: boolean; slug?: string; error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Your session expired. Please sign in again." };
+
+  const name = (input.name || "").trim().slice(0, 200);
+  const category = (input.category || "").trim().slice(0, 100);
+  const description = (input.description || "").trim().slice(0, 2000);
+  const location = (input.location || "").trim();
+  const contactEmail = (input.contactEmail || "").trim().slice(0, 320);
+
+  if (!name) return { ok: false, error: "Your business needs a name." };
+  if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+    return { ok: false, error: "That email address doesn't look right." };
+  }
+
+  const loc = location ? await resolveLocation(location) : null;
+
+  const { data: vendorId, error } = await supabase.rpc("create_vendor_listing", {
+    p_name: name,
+    p_category: category || null,
+    p_description: description || null,
+    p_postcode: loc?.postcode ?? (location || null),
+    p_lat: loc?.lat ?? null,
+    p_lng: loc?.lng ?? null,
+  });
+  if (error) return { ok: false, error: error.message };
+  if (typeof vendorId !== "string") return { ok: false, error: "Couldn't create your listing." };
+
+  // Configure the parts the RPC doesn't take: resolved area, contact + coverage.
+  await supabase
+    .from("vendors")
+    .update({
+      area: loc?.area ?? null,
+      contact_email: contactEmail || null,
+      coverage_radius_miles: input.coverageMiles ?? 10,
+    })
+    .eq("id", vendorId)
+    .eq("owner_id", user.id);
+
+  // Price lives on the (single) service row the RPC created.
+  if (input.priceFrom != null || input.priceNotes) {
+    await supabase
+      .from("vendor_services")
+      .update({
+        price_from: input.priceFrom != null && input.priceFrom >= 0 ? input.priceFrom : null,
+        price_notes: (input.priceNotes || "").trim().slice(0, 500) || null,
+      })
+      .eq("vendor_id", vendorId);
+  }
+
+  const r = await reembedVendor(supabase, vendorId);
+  if (!r.ok) console.error("[reembed] onboarding", vendorId, r.error);
+
+  if (input.publish) {
+    await supabase.from("vendors").update({ status: "live" }).eq("id", vendorId).eq("owner_id", user.id);
+  }
+
+  const { data: row } = await supabase.from("vendors").select("slug").eq("id", vendorId).maybeSingle();
+  revalidatePath("/vendor/dashboard");
+  return { ok: true, slug: (row?.slug as string) ?? undefined };
+}
+
 export async function publishListing(vendorId: string): Promise<ActionState> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
