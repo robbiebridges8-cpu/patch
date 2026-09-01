@@ -134,10 +134,10 @@ function LoginInner() {
             <label className={styles.label} htmlFor="code">6-digit code</label>
             <input
               id="code" inputMode="numeric" autoComplete="one-time-code" autoFocus
-              maxLength={6} pattern="[0-9]*"
+              maxLength={10} pattern="[0-9]*"
               className={styles.input} value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              placeholder="123456"
+              placeholder="Enter the code from your email"
             />
             {error && <p className={styles.error} role="alert">{error}</p>}
             <button type="submit" className={styles.btn} disabled={loading || code.trim().length < 6}>
