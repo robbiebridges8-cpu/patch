@@ -173,6 +173,11 @@ export default async function VendorDashboard({
               </div>
             )}
 
+            {/* The daily payoff leads. A returning vendor opens this page to see
+                "did I get a lead?" — not to re-edit their profile. Setup/edit
+                cards follow below. */}
+            <LeadsCard vendorId={vendor.id as string} tier={(vendor.tier as number) ?? TIER.FREE} />
+
             <CompletenessCard
               completeness={assessListing({
                 name: vendor.name as string,
@@ -262,8 +267,6 @@ export default async function VendorDashboard({
               hasCustomer={!!sub?.stripe_customer_id}
               tier={(vendor.tier as number) ?? TIER.FREE}
             />
-
-            <LeadsCard vendorId={vendor.id as string} tier={(vendor.tier as number) ?? TIER.FREE} />
           </>
         )}
       </main>

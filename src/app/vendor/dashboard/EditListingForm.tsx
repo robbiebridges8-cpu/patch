@@ -103,7 +103,7 @@ export default function EditListingForm({ vendor }: { vendor: EditableVendor }) 
       </div>
 
       <div className={styles.field}>
-        <label className={styles.labelText} htmlFor="vibe">Vibe tags <span className={styles.hint}>(comma-separated — helps AI matching)</span></label>
+        <label className={styles.labelText} htmlFor="vibe">Words clients might use <span className={styles.hint}>(comma-separated — style, occasion, feel)</span></label>
         <input id="vibe" name="vibe" maxLength={500} className={styles.input} defaultValue={(Array.isArray(vendor.attributes?.vibe) ? (vendor.attributes!.vibe as string[]) : []).join(", ")} placeholder="e.g. wedding-ready, casual, interactive, instagrammable" />
       </div>
 
