@@ -178,6 +178,28 @@ select.input { appearance: none; background-image: none; cursor: pointer; }
   background: color-mix(in srgb, var(--color-accent, #e2795a) 14%, transparent);
   color: var(--color-accent, #d3684a);
 }
+/* Semantic status badges — distinct from the informational coral badge. */
+.badgeOk {
+  background: color-mix(in srgb, var(--color-success, #3f7a57) 15%, transparent);
+  color: var(--color-success, #3f7a57);
+}
+.badgeWarn {
+  background: color-mix(in srgb, var(--color-warning, #925c10) 16%, transparent);
+  color: var(--color-warning, #925c10);
+}
+.badgeLive {
+  background: color-mix(in srgb, var(--color-success, #3f7a57) 15%, transparent);
+  color: var(--color-success, #3f7a57);
+}
+.badgeDraft {
+  background: color-mix(in srgb, var(--color-warning, #925c10) 16%, transparent);
+  color: var(--color-warning, #925c10);
+}
+.priceAnchor {
+  font-size: 13.5px;
+  color: var(--color-text-secondary, #6b6459);
+  margin: -6px 0 14px;
+}
 
 .publishBanner {
   display: flex;

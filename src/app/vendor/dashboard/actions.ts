@@ -163,8 +163,17 @@ export async function claimListing(_prev: ActionState, formData: FormData): Prom
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Your session expired. Please sign in again." };
 
-  const slug = String(formData.get("slug") || "").trim().toLowerCase().replace(/\s+/g, "-");
-  if (!slug) return { error: "Enter your listing's web address." };
+  // Accept a pasted full URL (…/vendors/<slug>) or a bare slug — a vendor
+  // shouldn't have to know what a "slug" is.
+  let raw = String(formData.get("slug") || "").trim();
+  const inUrl = raw.match(/\/vendors\/([^/?#\s]+)/i);
+  if (inUrl) raw = inUrl[1];
+  const slug = raw
+    .replace(/^https?:\/\//i, "")
+    .replace(/[/?#].*$/, "")
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+  if (!slug) return { error: "Paste the link to your listing, or its last part." };
 
   // RLS "claim_unowned_vendor" only permits claiming rows where owner_id IS NULL.
   const { data, error } = await supabase

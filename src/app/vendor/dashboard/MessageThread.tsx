@@ -35,6 +35,7 @@ export default function MessageThread({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const marked = useRef(false);
+  const listRef = useRef<HTMLUListElement>(null);
 
   const unread = messages.filter((m) => m.sender === "buyer" && m.read_by_vendor === false).length;
 
@@ -46,14 +47,20 @@ export default function MessageThread({
     }
   }, [unread, enquiryId]);
 
-  function send(e: React.FormEvent) {
-    e.preventDefault();
+  // Keep the newest message in view — on open and after every send/receive.
+  // Without this the vendor's own reply lands below the fold and looks like
+  // nothing happened.
+  useEffect(() => {
+    const el = listRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages.length]);
+
+  function send() {
     const text = draft.trim();
     if (!text || pending) return;
 
     setError(null);
     setDraft("");
-    // Optimistic: the server action reconciles on revalidate.
     const optimistic: ThreadMessage = {
       id: `pending-${Date.now()}`,
       sender: "vendor",
@@ -72,6 +79,15 @@ export default function MessageThread({
     });
   }
 
+  function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    // Enter sends (the chat convention); Shift+Enter / Cmd+Enter make a newline
+    // isn't needed — Shift+Enter is the newline, plain Enter sends.
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  }
+
   return (
     <div className={styles.thread}>
       {messages.length === 0 ? (
@@ -80,22 +96,28 @@ export default function MessageThread({
           email with a link back.
         </p>
       ) : (
-        <ul className={styles.threadList} aria-live="polite" aria-relevant="additions">
-          {messages.map((m) => (
-            <li
-              key={m.id}
-              className={`${styles.bubble} ${m.sender === "vendor" ? styles.bubbleMine : styles.bubbleTheirs}`}
-            >
-              <div className={styles.bubbleBody}>{m.body}</div>
-              <div className={styles.bubbleMeta}>
-                {m.sender === "vendor" ? "You" : buyerName} · {time(m.created_at)}
-              </div>
-            </li>
-          ))}
+        <ul className={styles.threadList} ref={listRef} aria-live="polite" aria-relevant="additions">
+          {messages.map((m) => {
+            const sending = m.id.startsWith("pending-");
+            return (
+              <li
+                key={m.id}
+                className={`${styles.bubble} ${m.sender === "vendor" ? styles.bubbleMine : styles.bubbleTheirs}`}
+                style={sending ? { opacity: 0.55 } : undefined}
+              >
+                <div className={styles.bubbleBody}>{m.body}</div>
+                <div className={styles.bubbleMeta}>
+                  {m.sender === "vendor" ? "You" : buyerName}
+                  {" · "}
+                  {sending ? "Sending…" : time(m.created_at)}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
 
-      <form className={styles.threadForm} onSubmit={send}>
+      <form className={styles.threadForm} onSubmit={(e) => { e.preventDefault(); send(); }}>
         <label className={styles.srOnly} htmlFor={`msg-${enquiryId}`}>
           Message {buyerName}
         </label>
@@ -104,7 +126,8 @@ export default function MessageThread({
           className={styles.threadInput}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder={`Reply to ${buyerName}…`}
+          onKeyDown={onKeyDown}
+          placeholder={`Reply to ${buyerName}…  (Enter to send)`}
           rows={2}
           maxLength={4000}
         />

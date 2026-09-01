@@ -42,9 +42,9 @@ export default function UpgradePrompt({ compact = false }: { compact?: boolean }
     return (
       <div className={styles.upgradeCompact}>
         <button type="button" className={styles.btn} disabled={loading} onClick={checkout}>
-          {loading ? "Opening…" : `Unlock — £${monthly}/mo`}
+          {loading ? "Starting checkout…" : `Unlock — £${monthly}/mo`}
         </button>
-        <span className={styles.upgradeHint}>Cancel any time</span>
+        <span className={styles.upgradeHint}>Cancel any time — one booking usually covers the year</span>
         {error && <p className={styles.threadError}>{error}</p>}
       </div>
     );
@@ -56,6 +56,7 @@ export default function UpgradePrompt({ compact = false }: { compact?: boolean }
         <span className={styles.priceBig}>£{annual ? annualPrice(TIER.PAID) : monthly}</span>
         <span className={styles.priceUnit}>{annual ? "per year" : "per month"}</span>
       </div>
+      <p className={styles.priceAnchor}>One booking usually covers the whole year.</p>
 
       <label className={styles.annualToggle}>
         <input type="checkbox" checked={annual} onChange={(e) => setAnnual(e.target.checked)} />
@@ -72,8 +73,9 @@ export default function UpgradePrompt({ compact = false }: { compact?: boolean }
 
       {error && <div className={`${styles.notice} ${styles.noticeErr}`}>{error}</div>}
       <button type="button" className={styles.btn} disabled={loading} onClick={checkout}>
-        {loading ? "Starting…" : `Upgrade — £${annual ? annualPrice(TIER.PAID) : monthly}${annual ? "/year" : "/month"}`}
+        {loading ? "Starting checkout…" : `Upgrade — £${annual ? annualPrice(TIER.PAID) : monthly}${annual ? "/year" : "/month"}`}
       </button>
+      <p className={styles.upgradeHint} style={{ marginTop: 10 }}>Cancel any time · secure checkout by Stripe</p>
     </div>
   );
 }
