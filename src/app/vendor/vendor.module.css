@@ -113,6 +113,65 @@ select.input { appearance: none; background-image: none; cursor: pointer; }
 
 .row2 { display: flex; gap: 14px; }
 .row2 > * { flex: 1; min-width: 0; }
+@media (max-width: 560px) { .row2 { flex-direction: column; gap: 0; } }
+
+/* Editor sections — turn the flat wall of fields into scannable groups. */
+.formSection {
+  padding: 18px 0;
+  border-top: 1px solid var(--color-border, #e7e0d6);
+}
+.formSection:first-of-type { border-top: none; padding-top: 4px; }
+.formSectionTitle {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary, #241f19);
+}
+.fieldset { border: none; padding: 0; margin: 0 0 14px; }
+
+/* Progressive disclosure for the optional/advanced fields. */
+.moreDetail {
+  border-top: 1px solid var(--color-border, #e7e0d6);
+  padding-top: 6px;
+}
+.moreSummary {
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary, #241f19);
+  padding: 12px 0;
+  list-style: none;
+}
+.moreSummary::-webkit-details-marker { display: none; }
+.moreSummary::before { content: "＋ "; color: var(--color-accent, #c0392b); font-weight: 700; }
+.moreDetail[open] .moreSummary::before { content: "－ "; }
+
+/* Repeatable paired inputs (credentials, FAQ) — no delimiter typing. */
+.repWrap { display: flex; flex-direction: column; gap: 8px; }
+.repRow { display: flex; gap: 8px; align-items: center; }
+.repRow > .input:first-of-type { flex: 0 0 38%; }
+.repRow > .input { flex: 1; min-width: 0; }
+.repRemove {
+  flex: 0 0 auto;
+  width: 34px; height: 34px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--color-border-control, #918162);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-muted, #9a9186);
+  cursor: pointer;
+}
+.repRemove:hover { color: var(--color-error, #b23a2e); border-color: var(--color-error, #b23a2e); }
+.repAdd {
+  align-self: flex-start;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-accent, #c0392b);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+}
 
 .btn {
   height: 46px;
