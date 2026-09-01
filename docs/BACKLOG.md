@@ -1,6 +1,6 @@
 # Backlog
 
-*Things deliberately deferred, with why. Last updated 2026-07-26.*
+*Things deliberately deferred, with why. Last updated 2026-09-01.*
 
 Strategic decisions live in [PRD.md](./PRD.md). This is the work queue.
 
@@ -39,28 +39,50 @@ Strategic decisions live in [PRD.md](./PRD.md). This is the work queue.
 > enquiry loop with real vendors, real photos, and email deliverability — are
 > product/config, tracked below and in "Blocks launch".
 >
-> **Remaining vertical-agnostic debt:** vendor onboarding still hard-codes food
-> fields (a **Dietary options** checkbox group, food category suggestions, "Serves
-> (guests)"). Right fix is category-driven attribute fields, not food-specific UI —
-> tracked as a follow-up. `/services` category browse is also food-only (its
-> categories are food); it broadens as non-food inventory lands.
+> **Vendor onboarding + UX pass (2026-09-01).** The vendor side had never been
+> UX-reviewed (all prior review was buyer-side) and it showed. Shipped a guided,
+> high-completion **onboarding wizard** (`/vendor/onboarding` — one question per
+> screen, live preview, autosave, publish-in-one-shot) replacing the bare
+> create-form, and the dashboard now routes listing-less vendors into it. Then a
+> three-reviewer audit of the whole vendor surface drove a full rework: enquiries
+> hoisted to the top, publish gated on completeness essentials, actionable
+> strength to-dos, free-tier locked-feature teasers, a sectioned jargon-free editor
+> (pipe/`Label | Value` fields → repeatable inputs) with an unsaved-changes guard,
+> photo "make cover" + honest errors, availability write rollback, lead urgency +
+> one upgrade bar, message auto-scroll + Enter-to-send, billing that rescues
+> churned vendors, and a claim flow that accepts a pasted URL.
+>
+> **Remaining vertical-agnostic debt:** the editor's food fields (dietary group,
+> "group size") are now scoped "for food & drink" and tucked behind an optional
+> disclosure, but the *right* fix is still **category-driven attribute fields** so
+> a non-food vendor never sees them at all — deferred (the embedding is the schema,
+> PRD §3.3). `/services` category browse is also food-only; it broadens as non-food
+> inventory lands.
 
 ---
 
 ## Blocks launch
 
-**Config, not code — nothing here needs building.**
+**Config, not code.** Much of this is now wired (2026-09-01) — domain live at
+**hireonpatch.com** (SSL, GoDaddy DNS), Resend verified, Supabase SMTP on it.
 
+**Now live / wired:**
+| Item | Status |
+|---|---|
+| `RESEND_API_KEY` + `ENQUIRY_FROM_EMAIL` | ✅ Wired — enquiry lead + buyer confirmation verified sending on prod (`emailed:1`). From-address `enquiries@hireonpatch.com`. |
+| Supabase custom SMTP → Resend | ✅ Auth OTP emails route through Resend (no built-in rate cap). |
+| Supabase email template (`{{ .Token }}`) | ✅ Confirm-signup + Magic-link templates expose the code; login is code-first (accepts any length). |
+| Anthropic credit + Voyage | ✅ Full AI search confirmed on prod (Sonnet narration, not keyword fallback) — occasionally hits a transient Voyage 429 and self-recovers. |
+| `NEXT_PUBLIC_SITE_URL` | Fallback in code now points at `https://hireonpatch.com`; set the Netlify env too to be explicit. |
+
+**Still outstanding:**
 | Item | Why it matters |
 |---|---|
-| `SUPABASE_SERVICE_ROLE_KEY` | Stripe webhook can't write subscription state, so **tiers never update on payment**. Push sending is also dead without it. |
-| `NEXT_PUBLIC_SITE_URL` | Canonical URLs, sitemap, Stripe redirects and the CSP's `upgrade-insecure-requests` all key off it. |
-| `RESEND_API_KEY` + `ENQUIRY_FROM_EMAIL` | No email at all — vendors never hear about a lead. |
-| Stripe live keys + price IDs | `STRIPE_PRICE_PAID_MONTHLY` / `_YEARLY`. Checkout 503s without them. |
-| Anthropic credit | Search currently degrades to keyword-only. Works, but isn't the product. |
-| **Netlify function timeout** | Search takes 6–9s. `/search` now sets `maxDuration = 30` and captures a soft-timeout signal, but the Netlify plan must actually allow 30s — confirm on deploy, or move narration to a client-triggered endpoint. |
-| Supabase email template (`{{ .Token }}`) | Buyer/vendor OTP login shows a 6-digit code only if the template exposes the token. Magic-link fallback works without it, but the code UX doesn't until the template is edited. |
-| Google OAuth (optional) | The `/login` UI has a slot for "Continue with Google"; needs the Google provider enabled in Supabase + OAuth creds. Email OTP works without it. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Stripe webhook can't write subscription state, so **tiers never update on payment**. Web-push sending also needs it. |
+| Stripe live keys + price IDs | `STRIPE_PRICE_PAID_MONTHLY` / `_YEARLY`. Checkout 503s without them. **Not needed for F&F.** |
+| **Netlify function timeout** | Search takes 6–9s. `/search` sets `maxDuration = 30`; confirm the Netlify plan allows 30s on deploy. |
+| Real vendor supply / claimed listings | 426/500 vendors are unclaimed and free-tier, so an enquiry to most of them sends only the upgrade teaser. For F&F the loop closes on ~6 vendors set to paid tier with a monitored `contact_email` (see [FF-UAT-CHECKLIST.md](./FF-UAT-CHECKLIST.md)). |
+| Google OAuth (optional) | `/login` has a slot for "Continue with Google"; needs the provider enabled. Email OTP works without it. |
 
 ---
 
