@@ -9,10 +9,10 @@ export const metadata = {
 const wrap = { maxWidth: 720, margin: "0 auto", padding: "64px 32px 96px" } as const;
 const h1 = { fontFamily: "var(--font-display)", fontSize: 34, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.005em", color: "var(--color-text-primary)", marginBottom: 8 } as const;
 const meta = { fontSize: 13, color: "var(--color-text-muted)", marginBottom: 32 } as const;
-const h2 = { fontSize: 19, fontWeight: 600, color: "var(--color-text-primary)", margin: "32px 0 10px" } as const;
-const p = { fontSize: 15, lineHeight: 1.7, color: "var(--color-text-secondary)", marginBottom: 12 } as const;
-const ul = { fontSize: 15, lineHeight: 1.8, color: "var(--color-text-secondary)", paddingLeft: 20, marginBottom: 12 } as const;
-const a = { color: "var(--color-text-primary)", fontWeight: 500 } as const;
+const h2 = { fontSize: 20, fontWeight: 700, color: "var(--color-text-primary)", letterSpacing: "-0.01em", margin: "36px 0 10px" } as const;
+const p = { fontSize: 15.5, lineHeight: 1.75, color: "var(--color-text-secondary)", marginBottom: 12 } as const;
+const ul = { fontSize: 15.5, lineHeight: 1.8, color: "var(--color-text-secondary)", paddingLeft: 20, marginBottom: 12 } as const;
+const a = { color: "var(--color-accent-on-light)", fontWeight: 500 } as const;
 
 export default function PrivacyPage() {
   return (
