@@ -1,0 +1,54 @@
+.list {
+  margin: 28px 0 0;
+  max-width: 780px;
+}
+.item {
+  border-top: 1px solid var(--color-border);
+}
+.item:last-child { border-bottom: 1px solid var(--color-border); }
+
+.q {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  text-align: left;
+  padding: 22px 0;
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 640;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+  transition: color var(--motion-fast) var(--ease-out);
+}
+.q:hover { color: var(--color-accent-on-light); }
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition: transform var(--motion-slow) var(--ease-out),
+              color var(--motion-fast) var(--ease-out);
+}
+.q[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+  color: var(--color-accent);
+}
+
+/* Smooth open/close via grid-rows 0fr → 1fr — content stays in the DOM (only
+   collapsed), so it's crawlable and works without JS. */
+.answerWrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--motion-slow) var(--ease-out);
+}
+.answerWrap[data-open="true"] { grid-template-rows: 1fr; }
+.answerInner { overflow: hidden; }
+.answer {
+  margin: 0;
+  padding: 0 0 24px;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+  max-width: 680px;
+}

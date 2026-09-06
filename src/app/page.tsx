@@ -3,6 +3,9 @@ import Link from "next/link";
 import { safeJsonLd } from "@/lib/sanitize";
 import Header from "@/components/layout/Header";
 import HeroSearch from "@/components/search/HeroSearch";
+import Reveal from "@/components/Reveal";
+import CountUp from "@/components/CountUp";
+import FaqAccordion from "@/components/FaqAccordion";
 import { supabase } from "@/lib/supabase";
 import { categoryPhoto } from "@/lib/categoryPhoto";
 import styles from "./page.module.css";
@@ -121,9 +124,22 @@ export default async function Home() {
             </p>
             <HeroSearch />
             {vendorsRounded > 0 && (
-              <p className={styles.heroStat}>
-                <strong>{vendorsRounded}+</strong> vendors across <strong>{areaCount}</strong> London areas — matched to your brief, hired direct.
-              </p>
+              <div className={styles.heroStats}>
+                <div className={styles.heroStat}>
+                  <span className={styles.heroStatNum}><CountUp end={vendorsRounded} suffix="+" /></span>
+                  <span className={styles.heroStatLabel}>vendors, hired direct</span>
+                </div>
+                <div className={styles.heroStatDivider} />
+                <div className={styles.heroStat}>
+                  <span className={styles.heroStatNum}><CountUp end={areaCount} /></span>
+                  <span className={styles.heroStatLabel}>London areas covered</span>
+                </div>
+                <div className={styles.heroStatDivider} />
+                <div className={styles.heroStat}>
+                  <span className={styles.heroStatNum}>£0</span>
+                  <span className={styles.heroStatLabel}>commission, ever</span>
+                </div>
+              </div>
             )}
           </div>
 
@@ -162,33 +178,35 @@ export default async function Home() {
       {/* ─── HOW IT WORKS ─── */}
       <section className={styles.how}>
         <div className={styles.howInner}>
-          <span className={styles.sectionEyebrow}>How it works</span>
-          <h2 className={styles.sectionH2}>Skip the spreadsheet. Just say what you need.</h2>
+          <Reveal>
+            <span className={styles.sectionEyebrow}>How it works</span>
+            <h2 className={styles.sectionH2}>Skip the spreadsheet. Just say what you need.</h2>
+          </Reveal>
           <div className={styles.steps}>
-            <div className={styles.step}>
+            <Reveal className={styles.step}>
               <div className={styles.stepNum}>1</div>
               <h3 className={styles.stepTitle}>Describe the job</h3>
               <p className={styles.stepDesc}>
                 Tell us what you need, when, where, and roughly what you want to spend — in plain
                 English. No filters to fiddle with.
               </p>
-            </div>
-            <div className={styles.step}>
+            </Reveal>
+            <Reveal className={styles.step} delay={90}>
               <div className={styles.stepNum}>2</div>
               <h3 className={styles.stepTitle}>Get a reasoned shortlist</h3>
               <p className={styles.stepDesc}>
                 Patch reads your brief, works out what actually matters in it, and returns a short
                 set ranked by fit — with notes explaining why each one made the list.
               </p>
-            </div>
-            <div className={styles.step}>
+            </Reveal>
+            <Reveal className={styles.step} delay={180}>
               <div className={styles.stepNum}>3</div>
               <h3 className={styles.stepTitle}>Book with confidence</h3>
               <p className={styles.stepDesc}>
                 Reviews come only from real enquiries, so ratings mean something. See prices,
                 availability and distance — then get in touch directly.
               </p>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -196,39 +214,47 @@ export default async function Home() {
       {/* ─── TRUST ─── */}
       <section className={styles.trust}>
         <div className={styles.trustInner}>
-          <span className={styles.sectionEyebrow}>How Patch works with you</span>
-          <h2 className={styles.sectionH2}>You choose. We just make choosing easier.</h2>
+          <Reveal>
+            <span className={styles.sectionEyebrow}>How Patch works with you</span>
+            <h2 className={styles.sectionH2}>You choose. We just make choosing easier.</h2>
+          </Reveal>
           <div className={styles.trustGrid}>
-            <div className={styles.trustCard}>
-              <svg className={styles.trustIcon} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M12 2 4 6v6c0 5 3.4 9.4 8 10 4.6-.6 8-5 8-10V6z"/>
-              </svg>
+            <Reveal className={styles.trustCard}>
+              <span className={styles.trustIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 2 4 6v6c0 5 3.4 9.4 8 10 4.6-.6 8-5 8-10V6z"/>
+                </svg>
+              </span>
               <h3 className={styles.trustTitle}>You deal direct</h3>
               <p className={styles.trustDesc}>
                 No commission and no middleman. You contact whoever you like and agree terms
                 between you — Patch never takes a cut or sits in the transaction.
               </p>
-            </div>
-            <div className={styles.trustCard}>
-              <svg className={styles.trustIcon} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
+            </Reveal>
+            <Reveal className={styles.trustCard} delay={90}>
+              <span className={styles.trustIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
               <h3 className={styles.trustTitle}>Transparent pricing</h3>
               <p className={styles.trustDesc}>
                 Listings show what they start at, so you can rule things out before you spend an
                 hour on enquiries.
               </p>
-            </div>
-            <div className={styles.trustCard}>
-              <svg className={styles.trustIcon} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              </svg>
+            </Reveal>
+            <Reveal className={styles.trustCard} delay={180}>
+              <span className={styles.trustIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+              </span>
               <h3 className={styles.trustTitle}>Reviews from real enquiries</h3>
               <p className={styles.trustDesc}>
                 A review can only be left by someone who sent a real enquiry through Patch, so
                 there is a genuine job behind every one.
               </p>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -236,7 +262,7 @@ export default async function Home() {
       {/* ─── VENDOR CTA ─── */}
       <section className={styles.vendorCta}>
         <div className={styles.vendorCtaInner}>
-          <div className={styles.vendorCtaContent}>
+          <Reveal className={styles.vendorCtaContent}>
             <span className={styles.vendorCtaEyebrow}>For vendors</span>
             <h2 className={styles.vendorCtaH2}>
               You do the work. Let Patch fill your calendar.
@@ -252,23 +278,20 @@ export default async function Home() {
                 <path d="M5 12h14M13 6l6 6-6 6"/>
               </svg>
             </a>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ─── FAQ ─── (visible + FAQPage schema above; prime answer-engine content) */}
       <section className={styles.faq}>
         <div className={styles.faqInner}>
-          <span className={styles.sectionEyebrow}>Questions</span>
-          <h2 className={styles.sectionH2}>How Patch works, in plain terms</h2>
-          <dl className={styles.faqList}>
-            {SITE_FAQ.map((f) => (
-              <div key={f.q} className={styles.faqItem}>
-                <dt className={styles.faqQ}>{f.q}</dt>
-                <dd className={styles.faqA}>{f.a}</dd>
-              </div>
-            ))}
-          </dl>
+          <Reveal>
+            <span className={styles.sectionEyebrow}>Questions</span>
+            <h2 className={styles.sectionH2}>How Patch works, in plain terms</h2>
+          </Reveal>
+          <Reveal>
+            <FaqAccordion items={SITE_FAQ} />
+          </Reveal>
         </div>
       </section>
 
@@ -284,19 +307,19 @@ export default async function Home() {
           <div className={styles.footerLinks}>
             <div className={styles.footerCol}>
               <h4>Find services</h4>
-              <a href="/services">Browse by area</a>
-              <a href="/search">Search</a>
+              <Link href="/services">Browse by area</Link>
+              <Link href="/search">Search</Link>
             </div>
             <div className={styles.footerCol}>
               <h4>Vendors</h4>
-              <a href="/for-vendors">List your service</a>
-              <a href="/for-vendors">Vendor FAQ</a>
+              <Link href="/for-vendors">List your service</Link>
+              <Link href="/for-vendors">Vendor FAQ</Link>
             </div>
             <div className={styles.footerCol}>
               <h4>Company</h4>
-              <a href="/about">About</a>
-              <a href="/privacy">Privacy</a>
-              <a href="/terms">Terms</a>
+              <Link href="/about">About</Link>
+              <Link href="/privacy">Privacy</Link>
+              <Link href="/terms">Terms</Link>
             </div>
           </div>
         </div>
