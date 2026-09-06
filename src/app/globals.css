@@ -223,6 +223,16 @@ img { display: block; max-width: 100%; }
   }
 }
 
+/* Scroll-reveal utility, paired with <Reveal/>. The hidden state is applied by
+   JS only after mount, so no-JS clients and crawlers get fully visible content.
+   Reduced motion is handled by the rule above (transition collapses to ~0). */
+.fx-reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.55s var(--ease-out), transform 0.55s var(--ease-out);
+}
+.fx-reveal.is-in { opacity: 1; transform: none; }
+
 /* ── Skip link ──
    Off-screen until focused, then pinned top-left. Uses clip-path rather than
    display:none so it stays in the tab order and reachable by screen readers. */
