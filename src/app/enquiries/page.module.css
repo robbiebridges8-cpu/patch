@@ -24,10 +24,14 @@
 
 .card {
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-panel);
   background: var(--color-surface-raised, #fff);
   box-shadow: var(--shadow-e1);
+  transition: transform var(--motion-base) var(--ease-out),
+              box-shadow var(--motion-base) var(--ease-out),
+              border-color var(--motion-base) var(--ease-out);
 }
+.card:hover { transform: translateY(-2px); box-shadow: var(--shadow-e2); border-color: var(--color-border-strong); }
 
 .row {
   display: flex;
