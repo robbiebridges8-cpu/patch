@@ -11,6 +11,8 @@ import { categoryPhoto } from "@/lib/categoryPhoto";
 import { showsRating } from "@/lib/rating";
 import { SERVICE_CATEGORIES } from "@/lib/serviceAreas";
 import Header from "@/components/layout/Header";
+import Reveal from "@/components/Reveal";
+import FaqAccordion from "@/components/FaqAccordion";
 import EnquiryButton from "@/components/vendor/EnquiryForm";
 import TrackProfileView from "@/components/vendor/TrackProfileView";
 import TrackedLink from "@/components/vendor/TrackedLink";
@@ -400,7 +402,7 @@ export default async function VendorPage({
 
       {glance.length > 0 && (
         <div className={styles.glanceWrap}>
-          <div className={styles.glance}>
+          <Reveal className={styles.glance}>
             {glance.map((g) => (
               <div key={g.label} className={styles.glanceStat}>
                 <span className={styles.glanceLabel}>{g.label}</span>
@@ -408,7 +410,7 @@ export default async function VendorPage({
                 {g.sub && <span className={styles.glanceSub}>{g.sub}</span>}
               </div>
             ))}
-          </div>
+          </Reveal>
         </div>
       )}
 
@@ -416,31 +418,31 @@ export default async function VendorPage({
         <div>
           {/* Dietary */}
           {dietary.length > 0 && (
-            <div className={styles.section}>
+            <Reveal className={styles.section}>
               <h2 className={styles.sectionTitle}>Dietary options</h2>
               <div className={styles.dietRow}>
                 {dietary.map((d) => (
                   <span key={d} className={styles.dietChip}><Check />{d.charAt(0).toUpperCase() + d.slice(1)}</span>
                 ))}
               </div>
-            </div>
+            </Reveal>
           )}
 
           {/* Signature offerings */}
           {signatureItems.length > 0 && (
-            <div className={styles.section}>
+            <Reveal className={styles.section}>
               <h2 className={styles.sectionTitle}>Signature offerings</h2>
               <div className={styles.dishList}>
                 {signatureItems.map((s) => <span key={s} className={styles.dish}>{s}</span>)}
               </div>
-            </div>
+            </Reveal>
           )}
 
           {/* Services — only when a vendor lists more than one. For a single
               service the header, glance bar and sidebar already say everything;
               a card here would just repeat it (and leak raw attribute keys). */}
           {services.length > 1 && (
-            <div className={styles.section}>
+            <Reveal className={styles.section}>
               <h2 className={styles.sectionTitle}>Services ({services.length})</h2>
               {services.map((s) => (
                 <div key={s.id as string} className={styles.serviceCard}>
@@ -460,12 +462,12 @@ export default async function VendorPage({
                   </div>
                 </div>
               ))}
-            </div>
+            </Reveal>
           )}
 
           {/* Reviews */}
           {reviews.length > 0 && (
-            <div className={styles.section}>
+            <Reveal className={styles.section}>
               <h2 className={styles.sectionTitle}>Reviews ({reviews.length})</h2>
               {reviews.map((r) => (
                 <div key={r.id as string} className={styles.reviewCard}>
@@ -490,28 +492,23 @@ export default async function VendorPage({
                   </div>
                 </div>
               ))}
-            </div>
+            </Reveal>
           )}
 
           {/* Bio */}
           {vendor.bio && (
-            <div className={styles.section}>
+            <Reveal className={styles.section}>
               <h2 className={styles.sectionTitle}>About {vendor.name as string}</h2>
               <p className={styles.desc}>{vendor.bio as string}</p>
-            </div>
+            </Reveal>
           )}
 
           {/* FAQ */}
-          {faq.filter((f) => f.q && f.a).length > 0 && (
-            <div className={styles.section}>
+          {faqPairs.length > 0 && (
+            <Reveal className={styles.section}>
               <h2 className={styles.sectionTitle}>Frequently asked</h2>
-              {faq.filter((f) => f.q && f.a).map((f, i) => (
-                <div key={i} className={styles.faqItem}>
-                  <div className={styles.faqQ}>{f.q}</div>
-                  <div className={styles.faqA}>{f.a}</div>
-                </div>
-              ))}
-            </div>
+              <FaqAccordion items={faqPairs.map((f) => ({ q: f.q as string, a: f.a as string }))} />
+            </Reveal>
           )}
         </div>
 
