@@ -3,24 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { useNavAuth } from "./useNavAuth";
 import styles from "./Header.module.css";
 
 // Mobile-only nav. The desktop nav is hidden under 760px, so without this a
 // phone user had no way to reach enquiries, list a service, or even log in.
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
-  const [email, setEmail] = useState<string | null | undefined>(undefined);
+  const auth = useNavAuth();
   const btnRef = useRef<HTMLButtonElement>(null);
   const sheetRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
-      setEmail(session?.user?.email ?? null),
-    );
-    return () => sub.subscription.unsubscribe();
-  }, []);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -88,8 +80,14 @@ export default function MobileMenu() {
           <div className={styles.menuScrim} onClick={close} aria-hidden="true" />
           <nav className={styles.menuSheet} aria-label="Main menu" ref={sheetRef}>
             <Link href="/enquiries" className={styles.menuLink} onClick={close}>My enquiries</Link>
-            <Link href="/for-vendors" className={styles.menuLink} onClick={close}>List your service</Link>
-            {email === undefined ? null : email ? (
+            {auth === "vendor" ? (
+              <Link href="/vendor/dashboard" className={styles.menuLink} onClick={close}>My listings</Link>
+            ) : (
+              <Link href="/for-vendors" className={styles.menuLink} onClick={close}>List your service</Link>
+            )}
+            {auth === "loading" ? null : auth === "out" ? (
+              <Link href="/login" className={styles.menuLink} onClick={close}>Log in</Link>
+            ) : (
               <button
                 type="button"
                 className={styles.menuLink}
@@ -97,8 +95,6 @@ export default function MobileMenu() {
               >
                 Log out
               </button>
-            ) : (
-              <Link href="/login" className={styles.menuLink} onClick={close}>Log in</Link>
             )}
           </nav>
         </>

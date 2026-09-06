@@ -1,5 +1,5 @@
 import Link from "next/link";
-import HeaderAuth from "./HeaderAuth";
+import HeaderNav from "./HeaderNav";
 import MobileMenu from "./MobileMenu";
 import styles from "./Header.module.css";
 
@@ -14,9 +14,7 @@ export default function Header() {
         <div className={styles.spacer} />
 
         <nav className={styles.nav}>
-          <Link href="/enquiries" className={styles.navLink}>My enquiries</Link>
-          <Link href="/for-vendors" className={styles.navLink}>List your service</Link>
-          <HeaderAuth />
+          <HeaderNav />
         </nav>
         <MobileMenu />
       </div>
