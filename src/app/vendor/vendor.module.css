@@ -35,9 +35,10 @@
 .card {
   background: var(--color-surface, #fff);
   border: 1px solid var(--color-border, #e7e0d6);
-  border-radius: var(--radius-lg, 16px);
+  border-radius: var(--radius-panel, 16px);
   padding: 24px;
   margin-bottom: 20px;
+  box-shadow: var(--shadow-e1);
 }
 
 .cardHead {
