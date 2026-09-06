@@ -17,7 +17,7 @@ refactor dropped 6 tables, 15 columns, and 4 orphaned enum types.
 | `slug` (unique) | URL + SEO identity. |
 | `name`, `description`, `bio` | Display copy; all feed the embedding. |
 | `status` (enum draft/live/paused/rejected) | Only `live` is public — the core RLS gate. |
-| `owner_id` (FK auth.users) | Controlling account. Null = unclaimed. |
+| `owner_id` (FK auth.users) | Controlling account. Null = unclaimed. **Every "can this user manage this vendor?" check routes through the `auth_can_manage_vendor(uuid)` SQL function** — ~19 RLS policies + 3 definer RPCs call it, so moving to multi-user (a `vendor_members` join table) is a one-function change, not a policy re-audit. See [BACKLOG.md](./BACKLOG.md). |
 | `tier` (smallint) | 0 free / 1 paid. Drives ranking + the lead paywall. Integer so a 2nd tier needs no migration. |
 | `base_postcode`, `base_location` (geography), `coverage_radius_miles`, `area` | Location — the one clean hard filter (`ST_DWithin` + radius). `area` is the "Hackney (E8)" label. |
 | `price_range` | The "££" band for JSON-LD structured data — an establishment-level property, not a price anyone pays. The actual price lives on the service (see `vendor_services.price_from`). |

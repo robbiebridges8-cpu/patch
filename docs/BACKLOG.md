@@ -98,6 +98,20 @@ Magic links are a poor fit for an installed app — the email → browser → ap
 handoff is fragile and drops people. **Do this before vendors are using the PWA
 on phones, not after.** Also removes a common source of "I can't log in" support.
 
+### Multi-user vendors (teams)
+Today access is 1:1 — `vendors.owner_id = auth.uid()`. A business with staff
+(owner + manager) can't share a login-scoped account. The **prep is done**: every
+ownership check now routes through the `auth_can_manage_vendor(uuid)` SQL function
+(migration `20260906_000043`), so the switch is: add a `vendor_members
+(vendor_id, user_id, role)` table, change that one function to check membership,
+backfill existing `owner_id`s as `owner` members. Still to build on top:
+per-vendor **roles** (owner = billing + member management; member = listing +
+leads — keep it to two), an **email invite flow**, and — if a user can belong to
+several vendors — a **vendor switcher** in the dashboard (nav already says "My
+listings", plural). Buyer stays a universal capability, not a role: anyone can
+enquire, so the header nav is additive (a vendor keeps "My enquiries"). Not needed
+until a real vendor asks for team access.
+
 ### Distributed abuse defences, phase 2
 Rate limiting and a spend cap are done. Still missing: Turnstile on `/search`,
 and a WAF in front of origin. The current guard is good; it isn't defence in
