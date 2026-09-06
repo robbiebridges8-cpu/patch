@@ -10,12 +10,17 @@ export default function Reveal({
   children,
   className = "",
   delay = 0,
+  as: Tag = "div",
 }: {
   children: ReactNode;
   className?: string;
   delay?: number;
+  as?: "div" | "section" | "ul" | "li";
 }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLElement | null>(null);
+  const setRef = (el: HTMLElement | null) => {
+    ref.current = el;
+  };
   const [state, setState] = useState<"idle" | "hidden" | "in">("idle");
 
   useEffect(() => {
@@ -46,12 +51,12 @@ export default function Reveal({
   const fx = state === "hidden" ? "fx-reveal" : state === "in" ? "fx-reveal is-in" : "";
 
   return (
-    <div
-      ref={ref}
+    <Tag
+      ref={setRef}
       className={`${className} ${fx}`.trim()}
       style={delay ? { transitionDelay: `${delay}ms` } : undefined}
     >
       {children}
-    </div>
+    </Tag>
   );
 }

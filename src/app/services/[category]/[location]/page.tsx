@@ -3,6 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import Header from "@/components/layout/Header";
+import Reveal from "@/components/Reveal";
+import FaqAccordion from "@/components/FaqAccordion";
 import { supabase } from "@/lib/supabase";
 import { safeJsonLd } from "@/lib/sanitize";
 import { categoryPhoto } from "@/lib/categoryPhoto";
@@ -174,7 +176,7 @@ export default async function ServiceLocationPage(
         </p>
 
         {vendors.length > 0 && (
-          <ul className={styles.grid}>
+          <Reveal as="ul" className={styles.grid}>
             {vendors.map((v) => (
               <li key={v.vendor_id} className={styles.card}>
                 <Link href={`/vendors/${v.slug}`} className={styles.cardLink}>
@@ -195,24 +197,17 @@ export default async function ServiceLocationPage(
                 </Link>
               </li>
             ))}
-          </ul>
+          </Reveal>
         )}
 
         {faq.length > 0 && (
-          <section className={styles.faq}>
+          <Reveal as="section" className={styles.faq}>
             <h2 className={styles.h2}>{cap(cat.plural)} in {inWhere} — common questions</h2>
-            <dl className={styles.faqList}>
-              {faq.map((f) => (
-                <div key={f.q} className={styles.faqItem}>
-                  <dt className={styles.faqQ}>{f.q}</dt>
-                  <dd className={styles.faqA}>{f.a}</dd>
-                </div>
-              ))}
-            </dl>
-          </section>
+            <FaqAccordion items={faq} />
+          </Reveal>
         )}
 
-        <section className={styles.links}>
+        <Reveal as="section" className={styles.links}>
           <div>
             <h2 className={styles.h3}>{cat.name} in other areas</h2>
             <div className={styles.pills}>
@@ -229,7 +224,7 @@ export default async function ServiceLocationPage(
               ))}
             </div>
           </div>
-        </section>
+        </Reveal>
       </main>
     </>
   );

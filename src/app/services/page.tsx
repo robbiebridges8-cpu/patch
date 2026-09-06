@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/layout/Header";
+import Reveal from "@/components/Reveal";
 import { safeJsonLd } from "@/lib/sanitize";
 import { SERVICE_CATEGORIES, LONDON_AREAS } from "@/lib/serviceAreas";
 import styles from "./[category]/[location]/page.module.css";
@@ -44,22 +45,22 @@ export default function ServicesIndexPage() {
         </p>
 
         <section className={styles.links} style={{ borderTop: "none", paddingTop: 0 }}>
-          <div>
+          <Reveal>
             <h2 className={styles.h3}>By category</h2>
             <div className={styles.pills}>
               {SERVICE_CATEGORIES.map((c) => (
                 <Link key={c.slug} href={`/services/${c.slug}/london`} className={styles.pill}>{c.name}</Link>
               ))}
             </div>
-          </div>
-          <div>
+          </Reveal>
+          <Reveal delay={90}>
             <h2 className={styles.h3}>By area</h2>
             <div className={styles.pills}>
               {POPULAR_AREAS.map((a) => (
                 <Link key={a.slug} href={`/services/pizza/${a.slug}`} className={styles.pill}>{a.name}</Link>
               ))}
             </div>
-          </div>
+          </Reveal>
         </section>
       </main>
     </>
