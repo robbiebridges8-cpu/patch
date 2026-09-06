@@ -1,15 +1,37 @@
 .wrap {
+  position: relative;
+  isolation: isolate;
   max-width: 440px;
   margin: 0 auto;
-  padding: 56px 24px 80px;
+  padding: 72px 24px 96px;
+  overflow: clip;
 }
+.wrap::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 520px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(224, 90, 72, 0.13), transparent 68%);
+  pointer-events: none;
+  animation: loginGlow 1.1s var(--ease-out) both;
+}
+@keyframes loginGlow { from { opacity: 0; transform: translateX(-50%) scale(0.85); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+@keyframes loginRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
 .h1 {
-  font-size: clamp(26px, 4vw, 34px);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 5vw, 40px);
+  line-height: 1.02;
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
   font-weight: 700;
   color: var(--color-text-primary);
   margin: 0 0 12px;
+  animation: loginRise 0.5s var(--ease-out) both;
 }
 .sub {
   font-size: 15.5px;
@@ -21,11 +43,12 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background: var(--color-surface, #fff);
+  background: var(--color-surface-raised, #fff);
   border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 1px 2px rgba(40, 30, 20, 0.05), 0 8px 26px rgba(40, 30, 20, 0.06);
+  border-radius: var(--radius-panel);
+  padding: 26px;
+  box-shadow: var(--shadow-e2);
+  animation: loginRise 0.55s var(--ease-out) 0.08s both;
 }
 .label {
   font-family: var(--font-ui);
@@ -54,12 +77,12 @@
   color: #fff;
   background: var(--color-accent, #e8563f);
   border: none;
-  border-radius: 10px;
-  padding: 12px 16px;
+  border-radius: var(--radius-card);
+  padding: 13px 16px;
   cursor: pointer;
-  transition: opacity 0.12s;
+  transition: background var(--motion-fast) var(--ease-out), transform var(--motion-base) var(--ease-out);
 }
-.btn:hover { opacity: 0.92; }
+.btn:hover { background: var(--color-accent-hover, #a62f22); transform: translateY(-1px); }
 .btn:disabled { opacity: 0.6; cursor: default; }
 .error {
   margin: 0;
